@@ -145,6 +145,7 @@ details.fold .cards{margin-top:10px}
 .bnone{padding:12px 0;font-size:14px;color:var(--sub)}
 .bnote{font-size:11px;color:var(--sub);margin-top:4px}
 .paid{font-size:11px;font-weight:700;color:#fff;background:#b45309;border-radius:5px;padding:0 5px;margin-right:6px;vertical-align:1px}
+.paid.cond{background:#7c3aed}
 .en{font-size:11px;font-weight:500;color:var(--muted)}
 footer{margin-top:28px;font-size:12px;color:var(--sub);line-height:1.7}
 footer a{color:var(--sub)}
@@ -368,6 +369,7 @@ const ACTIONS = [
   [/\bHatch(?:ing)?\b|\bEggs?\b/i, "タマゴをかえしたとき"],
   [/\bTransfer(?:ring)?\b/i, "博士に送ったとき"],
   [/\bMax Battles?\b/i, "マックスバトル"],
+  [/\bPower Spots?\b/i, "パワースポット"],
   [/\bRaids?\b|\bRaid Battles?\b/i, "レイドバトル"],
   [/\bTeam GO Rocket\b|\bRocket\b|\bGrunts?\b/i, "GOロケット団とのバトル"],
   [/\bPurif(?:y|ying|ication)\b/i, "リトレーンしたとき"],
@@ -383,6 +385,17 @@ const ACTIONS = [
   [/\bRoutes?\b/i, "ルート"],
 ];
 function findIn(list, s){ for (const [re, ja] of list) if (re.test(s)) return ja; return null; }
+/** 文中の資源をすべて（出てくる順に）「・」でつなぐ */
+function resList(s){
+  const found = [];
+  let rest = s;
+  for (const [re, ja] of RESOURCES){
+    const m = rest.match(re);
+    if (m){ found.push([m.index, ja]); rest = rest.slice(0, m.index) + " ".repeat(m[0].length) + rest.slice(m.index + m[0].length); }
+  }
+  return found.sort((a, b) => a[0] - b[0]).map(x => x[1]).join("・") || null;
+}
+const TIME12 = (h, m, ap) => `${(+h % 12) + (/p/i.test(ap) ? 12 : 0)}:${m}`;
 function actRes(phrase){
   const res = findIn(RESOURCES, phrase), act = findIn(ACTIONS, phrase.replace(/\bCandy XL\b|\bStardust\b|\bXP\b/gi, ""));
   if (!res) return null;
@@ -404,8 +417,11 @@ const BONUS_RULES = [
   [/^(?:Eggs? (?:will )?hatch at|Hatch Eggs at) (1\/2|1\/4|half|one[- ]quarter) (?:the )?distance/i, (f) => `タマゴの孵化に必要な距離 ${/half/i.test(f) ? "1/2" : /quarter/i.test(f) ? "1/4" : f}`],
   // 出現・色違い
   [/^Increased (?:wild )?(?:Pokémon )?Spawns?(?: .*)?$/i, () => "野生ポケモンの出現数アップ"],
-  [/^Increased (?:Shiny (?:rate|chance|odds)|chance (?:to|of) (?:encounter|encountering|find|finding) Shiny (.+?))$/i,
-    (who) => who ? `色違いの${jaMons(who)}に出会いやすい` : "色違いが出やすい"],
+  [/^Increased Shiny (?:rate|chance|odds)$/i, () => "色違いが出やすい"],
+  [/^Increased chance (?:to|of) (?:encounter|encountering|find|finding) (.+?)(?: from (\d+):(\d+) ([ap])\.?m\.? to (\d+):(\d+) ([ap])\.?m\.?(?: local time)?( each day)?)?$/i,
+    (who, h1, m1, a1, h2, m2, a2, daily) => `${jaMons(who)}に出会いやすい` + (h1 ? `（${daily ? "毎日" : ""}${TIME12(h1, m1, a1)}〜${TIME12(h2, m2, a2)}）` : "")],
+  [/^Increased chance to (?:get|become) Lucky Pokémon (?:in|from|when) trad(?:es|ing).*$/i, () => "交換でキラポケモンになりやすい"],
+  [/^Increased chance to become Lucky Friends.*$/i, () => "キラフレンドになりやすい"],
   // おこう・ルアー
   [/^(\w+)[- ]hour Incense$/i, (h) => `おこうの効果時間 ${toNum(h)}時間`],
   [/^(\w+)[- ]hour Lure(?: Module)?s?$/i, (h) => `ルアーモジュールの効果時間 ${toNum(h)}時間`],
@@ -435,13 +451,32 @@ const BONUS_RULES = [
     (what) => `ポケモンを捕まえると${findIn(RESOURCES, what) || jaMons(what)}がもらえる`],
   // 相棒
   [/^Buddy Pokémon .*?Candy .*?(1\/2|1\/4|half|quarter).*$/i, (f) => `相棒がアメを見つける距離 ${/half/i.test(f) ? "1/2" : /quarter/i.test(f) ? "1/4" : f}`],
+  // マックス粒子・パワースポット（実データの書き方）
+  [/^Chance to (?:receive|get|earn) Max Particles when catching .*$/i, () => "ポケモンを捕まえたとき（マックスバトル後も）マックス粒子をもらえることがある"],
+  [/^More Power Spots than usual.*$/i, () => "パワースポットがいつもより多い"],
+  [/^(1\/2|1\/4|half) (.+?) cost to activate the (.+?) Adventure Effect$/i,
+    (f, what, name) => `おでかけ効果「${name}」に必要な${resList(what) || what} ${/half/i.test(f) ? "1/2" : f}`],
+  // 「◯◯を捕まえたときの△△アップ」「〜からの△△が増える」
+  [/^(?:Increased|Additional|Extra|More) (.+?) (?:for|from|when) catching (?!Pokémon\b)(.+)$/i,
+    (what, mon) => { const r = resList(what); return r ? `${jaMons(mon)}を捕まえたときの${r}アップ` : null; }],
+  [/^(?:Increased|Additional|Extra|More) (.+?) (?:for|from|when|after) (.+)$/i,
+    (what, from) => { const r = resList(what); if (!r) return null; const a = findIn(ACTIONS, from); return a ? `${a}の${r}アップ` : `${r}アップ`; }],
+  // GOパス系
+  [/^One additional Candy (?:for|when) trading Pokémon$/i, () => "交換したときのアメ +1個"],
+  [/^(?:Trainers level (\d+) and above will receive one guaranteed Candy XL when trading Pokémon|One guaranteed Candy XL when trading Pokémon for Trainers level (\d+) and above)$/i,
+    (a, b) => `TL${a || b}以上：交換でアメXLが必ず1個もらえる`],
+  [/^Open up to (\d+) Gifts per day$/i, (n) => `ギフトを1日${n}個まで開けられる`],
+  [/^Receive up to (\d+) Gifts per day from spinning .*$/i, (n) => `フォトディスクからギフトを1日${n}個までもらえる`],
+  [/^Hold (?:up to )?(\d+) more Gifts.*$/i, (n) => `ギフトを${n}個多く持てる`],
+  [/^Increased limits on opening Gifts.*$/i, () => "ギフトの上限アップ（開ける・もらう・持てる数）"],
+  [/^(\d+)\s*[x×]\s+Daily Adventure Incense duration$/i, (n) => `日替わりおこうの効果時間 ${n}倍`],
   // スナップショット
   [/snapshot/i, () => "GOスナップショットでサプライズ"],
 ];
 const BONUS_CATS = [
   ["trade", "🔄", /trade/i], ["stardust", "✨", /stardust/i], ["candy", "🍬", /candy/i], ["xp", "⭐", /\bXP\b/],
-  ["raid", "🎟", /raid/i], ["egg", "🥚", /egg|hatch/i], ["spawn", "🌿", /spawn|shiny|encounter|wild/i],
-  ["max", "⚡", /max particle|power spot|max battle/i], ["item", "🪔", /incense|lure/i],
+  ["raid", "🎟", /raid/i], ["egg", "🥚", /egg|hatch/i], ["max", "⚡", /max particle|power spot|max battle/i],
+  ["spawn", "🌿", /spawn|shiny|encounter|wild/i], ["item", "🪔", /incense|lure/i],
   ["gift", "🎁", /gift/i],
 ];
 function bonusCat(text){ for (const [k, icon, re] of BONUS_CATS) if (re.test(text)) return {key: k, icon}; return {key: "other", icon: "🎁"}; }
@@ -449,7 +484,7 @@ function bonusCat(text){ for (const [k, icon, re] of BONUS_CATS) if (re.test(tex
 function translateBonus(text){
   const raw = String(text || "").trim();
   const star = /\*\s*$/.test(raw);
-  const t = raw.replace(/\*+\s*$/, "").replace(/\.\s*$/, "").replace(/×/g, "×").trim();
+  const t = raw.replace(/\*+\s*$/, "").replace(/\.\s*$/, "").replace(/^GO Pass Deluxe:\s*/i, "").trim();
   const cat = bonusCat(t);
   for (const [re, fn] of BONUS_RULES){
     const m = t.match(re);
@@ -533,7 +568,9 @@ function applyBonuses(){
       list = x.communityday.bonuses.filter(b => b && b.text).map(b => ({text: String(b.text), section: ""}));
     if (!notes.length && x.communityday && Array.isArray(x.communityday.bonusDisclaimers)) notes = x.communityday.bonusDisclaimers.map(String);
     if (x.spotlight && x.spotlight.bonus && !list.some(b => b.text === x.spotlight.bonus)) list.push({text: String(x.spotlight.bonus), section: ""});
-    ev.bonuses = list.map(b => ({...b, ...translateBonus(b.text), paid: /ticket/i.test(b.section)}));
+    ev.bonuses = list.map(b => ({...b, ...translateBonus(b.text),
+      paid: /ticket|deluxe/i.test(b.section) || /^GO Pass Deluxe:/i.test(b.text),
+      cond: /milestone/i.test(b.section)}));
     ev.bonusNotes = notes;
   }
 }
@@ -648,7 +685,7 @@ function cardHtml(ev, now, opts = {}){
   if (x.spotlight) mons += monChips(x.spotlight.list && x.spotlight.list.length ? x.spotlight.list : [x.spotlight]);
 
   const bl = ev.bonuses || [];
-  const bonusHtml = bl.length ? `<ul class="bonuses">${bl.map(b => `<li>${b.paid ? `<span class="paid">チケット</span>` : ""}${esc(b.ja)}${b.ok ? "" : ` <span class="en">（英語）</span>`}</li>`).join("")}</ul>` : "";
+  const bonusHtml = bl.length ? `<ul class="bonuses">${bl.map(b => `<li>${bonusTag(b)}${esc(b.ja)}${b.ok ? "" : ` <span class="en">（英語）</span>`}</li>`).join("")}</ul>` : "";
   const notes = ev.bonusNotes || [];
   const discl = (bl.length || notes.length)
     ? `<details class="small"><summary>ボーナスの原文・注意事項（英語）</summary>${bl.map(b => `<div>・${esc(b.text)}</div>`).join("")}${notes.map(d => `<div>${esc(d)}</div>`).join("")}</details>` : "";
@@ -677,6 +714,11 @@ function sortByStateThen(now, key){
   return (a, b) => (rank[stateOf(a, now)] - rank[stateOf(b, now)]) || key(a, b);
 }
 
+function bonusTag(b){
+  if (b.paid) return `<span class="paid">${/^GO Pass Deluxe:|deluxe/i.test(b.text + b.section) ? "GOパスデラックス" : "チケット"}</span>`;
+  if (b.cond) return `<span class="paid cond">GOパス達成で</span>`;
+  return "";
+}
 const BONUS_ORDER = ["stardust","candy","xp","raid","egg","spawn","max","item","trade","gift","other"];
 function bonusPanel(dayEvents, now, isToday){
   const rank = {live:0, soon:1, unknown:2, over:3};
@@ -686,13 +728,13 @@ function bonusPanel(dayEvents, now, isToday){
     const st = stateOf(ev, now);
     if (isToday && st === "over") continue;
     for (const b of ev.bonuses){
-      const key = b.ja + "|" + b.paid;
+      const key = b.ja + "|" + b.paid + "|" + b.cond;
       if (!map.has(key)) map.set(key, {b, src: []});
       map.get(key).src.push({ev, st});
     }
   }
   const items = [...map.values()].map(it => ({...it, best: Math.min(...it.src.map(s => rank[s.st] ?? 2))}))
-    .sort((a, b) => (a.b.paid - b.b.paid) || (isToday ? a.best - b.best : 0) ||
+    .sort((a, b) => (a.b.paid - b.b.paid) || (a.b.cond - b.b.cond) || (isToday ? a.best - b.best : 0) ||
       (BONUS_ORDER.indexOf(a.b.cat.key) - BONUS_ORDER.indexOf(b.b.cat.key)));
   const title = isToday ? "今日のおトク（ボーナス）" : `${fmtD(selDay)}のおトク（ボーナス）`;
   let body;
@@ -707,7 +749,7 @@ function bonusPanel(dayEvents, now, isToday){
       }).join("");
       return `<div class="brow${isToday && src.every(s => s.st === "soon") ? " later" : ""}">
         <span class="bicon" aria-hidden="true">${b.cat.icon}</span>
-        <div class="btext"><div class="bj">${b.paid ? `<span class="paid">チケット</span>` : ""}${esc(b.ja)}${b.ok ? "" : ` <span class="en">（英語）</span>`}</div>
+        <div class="btext"><div class="bj">${bonusTag(b)}${esc(b.ja)}${b.ok ? "" : ` <span class="en">（英語）</span>`}</div>
         <div class="bsrc">${srcs}</div></div></div>`;
     }).join("");
   } else {
