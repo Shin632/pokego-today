@@ -127,6 +127,25 @@ details.fold>summary{cursor:pointer;font-weight:700;font-size:15px}
 details.fold>summary .count{font-weight:500;font-size:12px;color:var(--sub)}
 details.fold .cards{margin-top:10px}
 
+/* bonus panel */
+.bonus-panel>h2{font-size:17px}
+.bbox{border-radius:var(--radius);padding:4px 12px 8px;background:linear-gradient(135deg,#fff8e6,#fff1f5);
+  border:2px solid #f5b83d}
+@media (prefers-color-scheme: dark){.bbox{background:linear-gradient(135deg,#2f2614,#2c1a22);border-color:#a7731c}}
+.brow{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-bottom:1px dashed color-mix(in srgb,#f5b83d 55%,transparent)}
+.brow:last-of-type{border-bottom:none}
+.brow.later{opacity:.75}
+.bicon{font-size:22px;line-height:1.1;width:28px;text-align:center;flex:0 0 auto}
+.btext{flex:1;min-width:0}
+.bj{font-size:16px;font-weight:700;line-height:1.4;word-break:break-word}
+.bsrc{display:flex;flex-direction:column;gap:1px;margin-top:2px}
+.bsrc1{font-size:12px;color:var(--sub);word-break:break-word}
+.bst{font-size:11px;font-weight:700;border-radius:5px;padding:0 5px;margin-right:5px;border:1px solid currentColor}
+.bst.live{color:var(--live)} .bst.soon{color:var(--accent)}
+.bnone{padding:12px 0;font-size:14px;color:var(--sub)}
+.bnote{font-size:11px;color:var(--sub);margin-top:4px}
+.paid{font-size:11px;font-weight:700;color:#fff;background:#b45309;border-radius:5px;padding:0 5px;margin-right:6px;vertical-align:1px}
+.en{font-size:11px;font-weight:500;color:var(--muted)}
 footer{margin-top:28px;font-size:12px;color:var(--sub);line-height:1.7}
 footer a{color:var(--sub)}
 .cat-raid{--cat:var(--c-raid)} .cat-max{--cat:var(--c-max)} .cat-cd{--cat:var(--c-cd)}
@@ -166,6 +185,9 @@ const SOURCES = [
   "https://cdn.jsdelivr.net/gh/bigfoott/ScrapedDuck@data/events.json",
 ];
 const CACHE_KEY = "pogo-events-cache-v1";
+// ボーナス情報（GitHub Actions が LeekDuck の各イベントページから集めて data ブランチに置くJSON）
+const BONUS_URL = "https://raw.githubusercontent.com/Shin632/pokego-today/data/bonuses.json";
+const BONUS_CACHE_KEY = "pogo-bonuses-cache-v1";
 const REFETCH_MS = 30 * 60 * 1000;      // 30分ごとに再取得
 const TICK_MS = 30 * 1000;              // 30秒ごとに残り時間を更新
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -330,35 +352,112 @@ function translateName(ev){
   return jaMons(s);
 }
 
-const BONUS_RULES = [
-  [/^Increased Spawns\*?$/i, ()=>"野生ポケモンの出現数アップ"],
-  [/^(\S+) Egg Hatch Distance\*?$/i, (a)=>`タマゴの孵化に必要な距離 ${a}`],
-  [/^(\d+)-hour Incense\*?$/i, (a)=>`おこうの効果時間 ${a}時間`],
-  [/^(\d+)-hour Lures?(?: Modules?)?\*?$/i, (a)=>`ルアーモジュールの効果時間 ${a}時間`],
-  [/^(\d+(?:\.\d+)?)[x×] Catch Candy\*?$/i, (a)=>`捕まえたときのアメ ${a}倍`],
-  [/^(\d+(?:\.\d+)?)[x×] Catch Stardust\*?$/i, (a)=>`捕まえたときのほしのすな ${a}倍`],
-  [/^(\d+(?:\.\d+)?)[x×] Catch XP\*?$/i, (a)=>`捕まえたときのXP ${a}倍`],
-  [/^(\d+(?:\.\d+)?)[x×] Transfer Candy\*?$/i, (a)=>`博士に送ったときのアメ ${a}倍`],
-  [/^(\d+(?:\.\d+)?)[x×] Evolution XP\*?$/i, (a)=>`進化させたときのXP ${a}倍`],
-  [/^(\d+(?:\.\d+)?)[x×] Hatch Candy\*?$/i, (a)=>`タマゴ孵化時のアメ ${a}倍`],
-  [/^(\d+(?:\.\d+)?)[x×] Hatch Stardust\*?$/i, (a)=>`タマゴ孵化時のほしのすな ${a}倍`],
-  [/^(\d+(?:\.\d+)?)[x×] Hatch XP\*?$/i, (a)=>`タマゴ孵化時のXP ${a}倍`],
-  [/^(\d+(?:\.\d+)?)[x×] Raid XP\*?$/i, (a)=>`レイドバトルのXP ${a}倍`],
-  [/^(\d+(?:\.\d+)?)[x×] Raid Stardust\*?$/i, (a)=>`レイドバトルのほしのすな ${a}倍`],
-  [/^(\d+(?:\.\d+)?)[x×] Chance for Trainers level 31 and up to receive Candy XL from catching Pokémon\*?$/i,
-    (a)=>`TL31以上：捕まえたときにアメXLをもらえる確率 ${a}倍`],
-  [/^One additional Special Trade.*$/i, ()=>"スペシャル交換が1日1回追加（最大2回）"],
-  [/^Trades made will require 50% less Stardust\*?$/i, ()=>"交換に必要なほしのすなが50%減"],
-  [/^Take a snapshot.*$/i, ()=>"GOスナップショットでサプライズ"],
+// ===== ボーナス文の翻訳 =====
+const NUMWORDS = {one:1,two:2,three:3,four:4,five:5,six:6,seven:7,eight:8,nine:9,ten:10,twenty:20,thirty:30,fifty:50,hundred:100,double:2,triple:3};
+const toNum = (w) => { const k = String(w).toLowerCase(); return NUMWORDS[k] ?? w; };
+// 資源（長いものから判定）
+const RESOURCES = [
+  [/\bRare Candy XL\b/i, "ふしぎなアメXL"], [/\bRare Candy\b/i, "ふしぎなアメ"], [/\bCandy XL\b/i, "アメXL"], [/\bCandy\b/i, "アメ"],
+  [/\bStardust\b/i, "ほしのすな"], [/\bXP\b/, "XP"], [/\bMax Particles?\b/i, "マックス粒子"], [/\bMega Energy\b/i, "メガエナジー"],
+  [/\bPoké ?Balls?\b/i, "モンスターボール"], [/\bRaid Pass(?:es)?\b/i, "レイドパス"], [/\bPoffins?\b/i, "ポフィン"], [/\bRoute Zygarde Cells?\b|\bZygarde Cells?\b/i, "ジガルデセル"],
 ];
+// どの行動で増えるか
+const ACTIONS = [
+  [/\bMega Evolv(?:e|ing)\b|\bMega Evolution\b/i, "メガシンカしたとき"],
+  [/\bEvolv(?:e|ing)\b|\bEvolution\b/i, "進化させたとき"],
+  [/\bHatch(?:ing)?\b|\bEggs?\b/i, "タマゴをかえしたとき"],
+  [/\bTransfer(?:ring)?\b/i, "博士に送ったとき"],
+  [/\bMax Battles?\b/i, "マックスバトル"],
+  [/\bRaids?\b|\bRaid Battles?\b/i, "レイドバトル"],
+  [/\bTeam GO Rocket\b|\bRocket\b|\bGrunts?\b/i, "GOロケット団とのバトル"],
+  [/\bPurif(?:y|ying|ication)\b/i, "リトレーンしたとき"],
+  [/\bTrad(?:e|es|ing)\b/i, "交換したとき"],
+  [/\bGifts?\b/i, "ギフトを開けたとき"],
+  [/\bSpin(?:ning)?\b|\bPokéStops?\b|\bPhoto Discs?\b/i, "ポケストップを回したとき"],
+  [/\bField Research\b|\bResearch\b/i, "リサーチ達成"],
+  [/\bExplor(?:e|ing)\b|\bWalk(?:ing)?\b/i, "歩いて探索したとき"],
+  [/\bBuddy\b/i, "相棒"],
+  [/\bCatch(?:ing)?\b|\bCaught\b/i, "捕まえたとき"],
+  [/\bBattl(?:e|es|ing)\b/i, "バトル"],
+  [/\bShowcases?\b/i, "ショーケース"],
+  [/\bRoutes?\b/i, "ルート"],
+];
+function findIn(list, s){ for (const [re, ja] of list) if (re.test(s)) return ja; return null; }
+function actRes(phrase){
+  const res = findIn(RESOURCES, phrase), act = findIn(ACTIONS, phrase.replace(/\bCandy XL\b|\bStardust\b|\bXP\b/gi, ""));
+  if (!res) return null;
+  return act ? `${act}の${res}` : res;
+}
+const BONUS_RULES = [
+  // 倍率系：「2× Catch Stardust」「2x XP for spinning PokéStops」「Double Stardust from raids」
+  [/^(\d+(?:\.\d+)?|double|triple)\s*(?:[x×]\s+|\s+)(?!chance)(.+)$/i, (n, rest) => { const p = actRes(rest); return p ? `${p} ${toNum(n)}倍` : null; }],
+  // TL31以上のアメXL
+  [/^(\d+(?:\.\d+)?)\s*[x×]\s+chance for Trainers level (\d+) and up to receive Candy XL from (.+)$/i,
+    (n, lv, from) => `TL${lv}以上：${findIn(ACTIONS, from) || from}にアメXLをもらえる確率 ${n}倍`],
+  [/^(\d+(?:\.\d+)?)\s*[x×]\s+chance (?:to|of) (?:receive|receiving|get|getting|earn|earning) (.+?) (?:from|when|for) (.+)$/i,
+    (n, what, from) => `${findIn(ACTIONS, from) || from}に${findIn(RESOURCES, what) || jaMons(what)}をもらえる確率 ${n}倍`],
+  [/^Increased chance (?:to|of) (?:receive|receiving|get|getting|earn|earning) (.+?) (?:from|when|for) (.+)$/i,
+    (what, from) => `${findIn(ACTIONS, from) || from}に${findIn(RESOURCES, what) || jaMons(what)}をもらいやすい`],
+  // タマゴ
+  [/^(1\/2|1\/3|1\/4|½|¼|half|one[- ]quarter|quarter)\s+(?:Egg\s+)?Hatch(?:ing)? Distance$/i,
+    (f) => `タマゴの孵化に必要な距離 ${({"½":"1/2","¼":"1/4",half:"1/2",quarter:"1/4","one-quarter":"1/4","one quarter":"1/4"})[f.toLowerCase()] || f}`],
+  [/^(?:Eggs? (?:will )?hatch at|Hatch Eggs at) (1\/2|1\/4|half|one[- ]quarter) (?:the )?distance/i, (f) => `タマゴの孵化に必要な距離 ${/half/i.test(f) ? "1/2" : /quarter/i.test(f) ? "1/4" : f}`],
+  // 出現・色違い
+  [/^Increased (?:wild )?(?:Pokémon )?Spawns?(?: .*)?$/i, () => "野生ポケモンの出現数アップ"],
+  [/^Increased (?:Shiny (?:rate|chance|odds)|chance (?:to|of) (?:encounter|encountering|find|finding) Shiny (.+?))$/i,
+    (who) => who ? `色違いの${jaMons(who)}に出会いやすい` : "色違いが出やすい"],
+  // おこう・ルアー
+  [/^(\w+)[- ]hour Incense$/i, (h) => `おこうの効果時間 ${toNum(h)}時間`],
+  [/^(\w+)[- ]hour Lure(?: Module)?s?$/i, (h) => `ルアーモジュールの効果時間 ${toNum(h)}時間`],
+  [/^Incense (?:activated|used) .*?last (?:for )?(\w+) hours?$/i, (h) => `おこうの効果時間 ${toNum(h)}時間`],
+  [/^Lure Modules? (?:activated|used) .*?last (?:for )?(\w+) hours?$/i, (h) => `ルアーモジュールの効果時間 ${toNum(h)}時間`],
+  // レイドパス
+  [/^(?:Trainers can )?(?:earn|receive|get)(?: up to)? (\w+)(?: free)? Raid Pass(?:es)? (?:by|from) spinning (?:Photo Discs at )?Gyms?$/i,
+    (n) => `ジムのフォトディスクを回すとレイドパスを最大${toNum(n)}枚もらえる`],
+  [/^Up to (\w+) (?:free )?Raid Pass(?:es)? from (?:spinning )?(?:Gym )?Photo Discs(?: at Gyms)?$/i,
+    (n) => `ジムのフォトディスクを回すとレイドパスを最大${toNum(n)}枚もらえる`],
+  [/Remote Raid (?:Pass )?limit .*?(?:increased|raised) to (\w+)/i, (n) => `リモートレイドの1日の上限が${toNum(n)}回に`],
+  // 交換
+  [/^One additional Special Trade.*$/i, () => "スペシャル交換が1日1回追加"],
+  [/^Trades? .*?(\d+)% less Stardust.*$/i, (p) => `交換に必要なほしのすなが${p}%減`],
+  [/^Increased chance (?:of|for|to get) (?:becoming )?Lucky (?:Pokémon from )?Trades?.*$/i, () => "キラ交換になりやすい"],
+  // ギフト
+  [/^Gift[- ]opening limit (?:increased|raised) to (\d+).*$/i, (n) => `ギフトを開けられる上限が1日${n}個に`],
+  [/^(?:Trainers can )?hold up to (\d+) Gifts.*$/i, (n) => `ギフトを持てる上限が${n}個に`],
+  // マックス粒子・パワースポット
+  [/^Max Particle (?:collection )?limit (?:increased|raised) to (\d[\d,]*).*$/i, (n) => `マックス粒子の1日の上限が${n}に`],
+  [/^Power Spots (?:will )?refresh more (?:frequently|often).*$/i, () => "パワースポットの入れ替わりが早くなる"],
+  [/^Increased (?:number of )?Power Spots.*$/i, () => "パワースポットが増える"],
+  // 捕まえるともらえる
+  [/^(?:Catch|Catching) (?:a |any )?Pokémon (?:to|will|and) (?:earn|receive|get|award)s? (.+)$/i,
+    (what) => `ポケモンを捕まえると${findIn(RESOURCES, what) || jaMons(what)}がもらえる`],
+  [/^(?:Earn|Receive|Get) (.+?) (?:for|when|by|from) (?:catching|you catch) (?:a |any )?Pokémon.*$/i,
+    (what) => `ポケモンを捕まえると${findIn(RESOURCES, what) || jaMons(what)}がもらえる`],
+  // 相棒
+  [/^Buddy Pokémon .*?Candy .*?(1\/2|1\/4|half|quarter).*$/i, (f) => `相棒がアメを見つける距離 ${/half/i.test(f) ? "1/2" : /quarter/i.test(f) ? "1/4" : f}`],
+  // スナップショット
+  [/snapshot/i, () => "GOスナップショットでサプライズ"],
+];
+const BONUS_CATS = [
+  ["trade", "🔄", /trade/i], ["stardust", "✨", /stardust/i], ["candy", "🍬", /candy/i], ["xp", "⭐", /\bXP\b/],
+  ["raid", "🎟", /raid/i], ["egg", "🥚", /egg|hatch/i], ["spawn", "🌿", /spawn|shiny|encounter|wild/i],
+  ["max", "⚡", /max particle|power spot|max battle/i], ["item", "🪔", /incense|lure/i],
+  ["gift", "🎁", /gift/i],
+];
+function bonusCat(text){ for (const [k, icon, re] of BONUS_CATS) if (re.test(text)) return {key: k, icon}; return {key: "other", icon: "🎁"}; }
+/** @returns {{ja:string, ok:boolean, cat:{key,icon}}} ok=false のときは英語のまま */
 function translateBonus(text){
-  const t = String(text || "").trim();
-  const star = /\*$/.test(t) ? "※" : "";
+  const raw = String(text || "").trim();
+  const star = /\*\s*$/.test(raw);
+  const t = raw.replace(/\*+\s*$/, "").replace(/\.\s*$/, "").replace(/×/g, "×").trim();
+  const cat = bonusCat(t);
   for (const [re, fn] of BONUS_RULES){
     const m = t.match(re);
-    if (m) return fn(...m.slice(1)) + star;
+    if (!m) continue;
+    const ja = fn(...m.slice(1));
+    if (ja) return {ja: ja + (star ? "※" : ""), ok: true, cat};
   }
-  return jaMons(t);
+  return {ja: jaMons(raw), ok: false, cat};
 }
 
 // ===== 時刻 =====
@@ -398,6 +497,7 @@ function fmtDur(ms){
 // ===== データ =====
 let EVENTS = [];
 let fetchedAt = null;
+let BONUS = null;          // {updatedAt, events:{id:{bonuses:[{text,section}], notes:[]}}}
 let selDay = startOfDay(new Date());
 let lastRenderDay = startOfDay(new Date());
 
@@ -418,6 +518,35 @@ function normalize(raw){
     ev.isShort = !ev.isBg && ev.dur !== null && ev.dur <= SHORT_MAX_MS;
     return ev;
   });
+}
+/** 各イベントにボーナス一覧を付ける（収集データ優先、無ければ events.json 内のコミュニティ・デイ等の情報） */
+function applyBonuses(){
+  for (const ev of EVENTS){
+    const x = ev.extra || {};
+    const got = BONUS && BONUS.events && BONUS.events[ev.id];
+    let list = [], notes = [];
+    if (got && Array.isArray(got.bonuses)){
+      list = got.bonuses.filter(b => b && b.text).map(b => ({text: String(b.text), section: String(b.section || "")}));
+      notes = Array.isArray(got.notes) ? got.notes.map(String) : [];
+    }
+    if (!list.length && x.communityday && Array.isArray(x.communityday.bonuses))
+      list = x.communityday.bonuses.filter(b => b && b.text).map(b => ({text: String(b.text), section: ""}));
+    if (!notes.length && x.communityday && Array.isArray(x.communityday.bonusDisclaimers)) notes = x.communityday.bonusDisclaimers.map(String);
+    if (x.spotlight && x.spotlight.bonus && !list.some(b => b.text === x.spotlight.bonus)) list.push({text: String(x.spotlight.bonus), section: ""});
+    ev.bonuses = list.map(b => ({...b, ...translateBonus(b.text), paid: /ticket/i.test(b.section)}));
+    ev.bonusNotes = notes;
+  }
+}
+async function fetchBonuses(){
+  const ctl = new AbortController();
+  const timer = setTimeout(()=>ctl.abort(), 12000);
+  try {
+    const res = await fetch(BONUS_URL, {cache: "no-cache", signal: ctl.signal});
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    const data = await res.json();
+    if (!data || typeof data.events !== "object") throw new Error("形式が違います");
+    return data;
+  } finally { clearTimeout(timer); }
 }
 function safeUrl(u){
   try { const x = new URL(u); return x.protocol === "https:" ? x.href : null; } catch { return null; }
@@ -454,6 +583,7 @@ async function refresh(){
   loading = true;
   const btn = document.getElementById("reload");
   btn.disabled = true; btn.textContent = "更新中…";
+  const bonusP = fetchBonuses().then(b => { BONUS = b; try { localStorage.setItem(BONUS_CACHE_KEY, JSON.stringify(b)); } catch {} }, () => {});
   try {
     const data = await fetchEvents();
     saveCache(data);
@@ -463,6 +593,8 @@ async function refresh(){
     if (EVENTS.length) setNotice(`最新データを取得できませんでした（${esc(e.message || e)}）。前回取得したデータを表示しています。`, false);
     else setNotice(`イベント情報を取得できませんでした（${esc(e.message || e)}）。通信環境を確認して「更新」を押してください。`, true);
   } finally {
+    await bonusP;
+    applyBonuses();
     loading = false; btn.disabled = false; btn.textContent = "↻ 更新";
     render();
   }
@@ -515,12 +647,11 @@ function cardHtml(ev, now, opts = {}){
   if (x.communityday && x.communityday.spawns) mons += monChips(x.communityday.spawns);
   if (x.spotlight) mons += monChips(x.spotlight.list && x.spotlight.list.length ? x.spotlight.list : [x.spotlight]);
 
-  let bonuses = [];
-  if (x.communityday && Array.isArray(x.communityday.bonuses)) bonuses = x.communityday.bonuses.map(b => b && b.text).filter(Boolean);
-  if (x.spotlight && x.spotlight.bonus) bonuses.push(x.spotlight.bonus);
-  const bonusHtml = bonuses.length ? `<ul class="bonuses">${bonuses.map(b => `<li>${esc(translateBonus(b))}</li>`).join("")}</ul>` : "";
-  const discl = x.communityday && Array.isArray(x.communityday.bonusDisclaimers) && x.communityday.bonusDisclaimers.length
-    ? `<details class="small"><summary>注意事項（原文・英語）</summary>${x.communityday.bonusDisclaimers.map(d => `<div>${esc(d)}</div>`).join("")}</details>` : "";
+  const bl = ev.bonuses || [];
+  const bonusHtml = bl.length ? `<ul class="bonuses">${bl.map(b => `<li>${b.paid ? `<span class="paid">チケット</span>` : ""}${esc(b.ja)}${b.ok ? "" : ` <span class="en">（英語）</span>`}</li>`).join("")}</ul>` : "";
+  const notes = ev.bonusNotes || [];
+  const discl = (bl.length || notes.length)
+    ? `<details class="small"><summary>ボーナスの原文・注意事項（英語）</summary>${bl.map(b => `<div>・${esc(b.text)}</div>`).join("")}${notes.map(d => `<div>${esc(d)}</div>`).join("")}</details>` : "";
   const codes = Array.isArray(x.promocodes) && x.promocodes.length
     ? `<div class="links">コード：${x.promocodes.map(c => `<span class="code">${esc(c)}</span> <button class="btn copy" type="button" data-copy="${esc(c)}">コピー</button>`).join(" ")}</div>` : "";
 
@@ -544,6 +675,47 @@ function cardHtml(ev, now, opts = {}){
 function sortByStateThen(now, key){
   const rank = {live:0, soon:1, unknown:2, cancel:3, over:4};
   return (a, b) => (rank[stateOf(a, now)] - rank[stateOf(b, now)]) || key(a, b);
+}
+
+const BONUS_ORDER = ["stardust","candy","xp","raid","egg","spawn","max","item","trade","gift","other"];
+function bonusPanel(dayEvents, now, isToday){
+  const rank = {live:0, soon:1, unknown:2, over:3};
+  const map = new Map();
+  for (const ev of dayEvents){
+    if (ev.canceled || ev.isBg || !(ev.bonuses && ev.bonuses.length)) continue;
+    const st = stateOf(ev, now);
+    if (isToday && st === "over") continue;
+    for (const b of ev.bonuses){
+      const key = b.ja + "|" + b.paid;
+      if (!map.has(key)) map.set(key, {b, src: []});
+      map.get(key).src.push({ev, st});
+    }
+  }
+  const items = [...map.values()].map(it => ({...it, best: Math.min(...it.src.map(s => rank[s.st] ?? 2))}))
+    .sort((a, b) => (a.b.paid - b.b.paid) || (isToday ? a.best - b.best : 0) ||
+      (BONUS_ORDER.indexOf(a.b.cat.key) - BONUS_ORDER.indexOf(b.b.cat.key)));
+  const title = isToday ? "今日のおトク（ボーナス）" : `${fmtD(selDay)}のおトク（ボーナス）`;
+  let body;
+  if (items.length){
+    body = items.map(({b, src}) => {
+      const srcs = src.map(({ev, st}) => {
+        let when;
+        if (ev.isShort) when = sameDay(ev.start, ev.end) ? `${fmtT(ev.start)}〜${fmtT(ev.end)}` : `${fmtD(ev.start)} ${fmtT(ev.start)}〜${fmtD(ev.end)} ${fmtT(ev.end)}`;
+        else when = `〜${fmtD(ev.end)} ${fmtT(ev.end)}`;
+        const stTag = isToday ? (st === "live" ? `<span class="bst live">開催中</span>` : st === "soon" ? `<span class="bst soon">${fmtT(ev.start)}から</span>` : "") : "";
+        return `<span class="bsrc1">${stTag}${esc(ev.ja)}（${esc(when)}）</span>`;
+      }).join("");
+      return `<div class="brow${isToday && src.every(s => s.st === "soon") ? " later" : ""}">
+        <span class="bicon" aria-hidden="true">${b.cat.icon}</span>
+        <div class="btext"><div class="bj">${b.paid ? `<span class="paid">チケット</span>` : ""}${esc(b.ja)}${b.ok ? "" : ` <span class="en">（英語）</span>`}</div>
+        <div class="bsrc">${srcs}</div></div></div>`;
+    }).join("");
+  } else {
+    body = `<div class="bnone">${isToday ? "今日" : "この日"}は、ほしのすな・アメ・XPの倍率アップなどの特別なボーナスは見つかりませんでした</div>`;
+  }
+  const note = !BONUS ? `<div class="bnote">※ ボーナス情報（コミュニティ・デイ以外）を読み込めていません。</div>`
+    : `<div class="bnote">※ 一覧は自動で集めた情報を日本語に置き換えたものです。正確な条件は各イベントの詳細で確認してください。</div>`;
+  return `<section class="block bonus-panel"><h2>🎁 ${title} <span class="count">${items.length}件</span></h2><div class="bbox">${body}${note}</div></section>`;
 }
 
 function renderDays(now){
@@ -599,7 +771,7 @@ function render(){
   document.getElementById("summary").innerHTML = sum.join("");
 
   const o = {isToday, dayStart};
-  let html = "";
+  let html = bonusPanel(dayEvents, now, isToday);
   html += `<section class="block"><h2>⏰ ${isToday ? "今日" : fmtD(selDay)}の時間限定イベント <span class="count">${short.length}件</span></h2>`;
   if (short.length) html += `<div class="cards">${short.map(ev => cardHtml(ev, now, o)).join("")}</div>`;
   else {
@@ -674,7 +846,8 @@ setInterval(() => { if (document.visibilityState === "visible") refresh(); }, RE
 
 // 起動：キャッシュがあれば即表示 → 最新を取得
 const cached = loadCache();
-if (cached){ try { EVENTS = normalize(cached.data); fetchedAt = new Date(cached.fetchedAt); } catch {} }
+try { const cb = JSON.parse(localStorage.getItem(BONUS_CACHE_KEY) || "null"); if (cb && typeof cb.events === "object") BONUS = cb; } catch {}
+if (cached){ try { EVENTS = normalize(cached.data); fetchedAt = new Date(cached.fetchedAt); applyBonuses(); } catch {} }
 render();
 refresh();
 </script>
