@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1f6feb">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="ポケGO今日">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<title>今日のポケGOイベント</title>
+<style>
+:root{
+  --bg:#f4f6fa; --panel:#ffffff; --text:#14171c; --sub:#5b6472; --line:#e3e7ee;
+  --accent:#1f6feb; --live:#e5484d; --ok:#2f9e5b; --muted:#9aa3b1;
+  --c-raid:#e5484d; --c-max:#8e4ec6; --c-cd:#2f9e5b; --c-spot:#d98a00; --c-event:#1f6feb;
+  --c-gbl:#4655d4; --c-bg:#6b7280; --c-tour:#d6409f;
+  --radius:14px;
+}
+@media (prefers-color-scheme: dark){
+  :root{ --bg:#0f1115; --panel:#1a1d24; --text:#eceff4; --sub:#a3acba; --line:#2b303a; --muted:#6c7584; }
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg); color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic UI",Meiryo,sans-serif;
+  font-size:15px; line-height:1.5; -webkit-text-size-adjust:100%;
+  padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+.wrap{max-width:760px;margin:0 auto;padding:12px 14px 40px}
+header.top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;padding:6px 2px 10px}
+header.top h1{font-size:20px;margin:0;letter-spacing:.02em}
+header.top .today{font-size:14px;color:var(--sub);margin-top:2px}
+header.top .clock{font-variant-numeric:tabular-nums}
+.btn{appearance:none;border:1px solid var(--line);background:var(--panel);color:var(--text);
+  border-radius:999px;padding:7px 12px;font-size:13px;cursor:pointer;white-space:nowrap}
+.btn:active{transform:scale(.97)}
+.btn[disabled]{opacity:.5}
+.meta{font-size:12px;color:var(--sub);text-align:right;margin-top:6px}
+.notice{background:#fff4d6;color:#6b4b00;border-radius:10px;padding:8px 12px;font-size:13px;margin:8px 0}
+@media (prefers-color-scheme: dark){.notice{background:#3a2f12;color:#f3d999}}
+.notice.err{background:#ffe1e1;color:#8a1c1c}
+@media (prefers-color-scheme: dark){.notice.err{background:#3f1a1a;color:#ffb4b4}}
+
+/* day strip */
+.days{display:flex;gap:6px;overflow-x:auto;padding:4px 2px 8px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.days::-webkit-scrollbar{display:none}
+.day{flex:0 0 auto;min-width:54px;text-align:center;border:1px solid var(--line);background:var(--panel);
+  border-radius:12px;padding:6px 6px 5px;cursor:pointer;color:var(--text);font:inherit}
+.day .dw{font-size:11px;color:var(--sub)}
+.day .dd{font-size:17px;font-weight:700;line-height:1.2}
+.day .dots{height:8px;display:flex;gap:2px;justify-content:center;margin-top:2px}
+.day .dots i{width:6px;height:6px;border-radius:50%;background:var(--accent);display:block}
+.day.sun .dw{color:#e5484d}.day.sat .dw{color:#1f6feb}
+.day.sel{background:var(--accent);border-color:var(--accent);color:#fff}
+.day.sel .dw{color:#dfe9ff}.day.sel .dots i{background:#fff}
+
+/* summary */
+.summary{display:flex;gap:8px;margin:4px 0 10px;flex-wrap:wrap}
+.pill{background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:5px 11px;font-size:13px}
+.pill b{font-size:15px}
+.pill.live b{color:var(--live)}
+
+section.block{margin-top:18px}
+section.block>h2{font-size:16px;margin:0 0 8px;display:flex;align-items:center;gap:6px}
+section.block>h2 .count{font-size:12px;font-weight:500;color:var(--sub)}
+.empty{color:var(--sub);font-size:14px;background:var(--panel);border:1px dashed var(--line);border-radius:var(--radius);padding:14px;text-align:center}
+
+/* cards */
+.cards{display:grid;gap:10px}
+.card{background:var(--panel);border:1px solid var(--line);border-left:5px solid var(--cat,var(--c-event));
+  border-radius:var(--radius);padding:11px 12px 10px;position:relative;overflow:hidden}
+.card.live{box-shadow:0 0 0 2px color-mix(in srgb,var(--live) 35%,transparent)}
+.card.over{opacity:.55}
+.card.canceled{opacity:.6}
+.card.canceled .title{text-decoration:line-through}
+.card-head{display:flex;gap:10px}
+.card-main{flex:1;min-width:0}
+.thumb{width:76px;height:52px;object-fit:cover;border-radius:8px;flex:0 0 auto;background:var(--line)}
+.tags{display:flex;flex-wrap:wrap;gap:5px;align-items:center;margin-bottom:3px}
+.badge{font-size:11px;font-weight:700;color:#fff;background:var(--cat,var(--c-event));border-radius:6px;padding:2px 7px;letter-spacing:.02em}
+.status{font-size:12px;font-weight:700;border-radius:6px;padding:1px 7px;border:1px solid currentColor}
+.status.live{color:var(--live)}
+.status.soon{color:var(--accent)}
+.status.over{color:var(--muted)}
+.status.cancel{color:var(--muted)}
+.flag{font-size:11px;font-weight:700;border-radius:6px;padding:1px 6px;background:var(--bg);color:var(--sub);border:1px solid var(--line)}
+.flag.last{color:#c2410c;border-color:#fdba74;background:#fff7ed}
+@media (prefers-color-scheme: dark){.flag.last{background:#3a2412;border-color:#7c3f12;color:#fdba74}}
+.title{font-size:16px;font-weight:700;margin:2px 0 0;line-height:1.35;word-break:break-word}
+.orig{font-size:12px;color:var(--sub);margin:1px 0 0;word-break:break-word}
+.when{font-size:13px;margin:6px 0 0;color:var(--text);font-variant-numeric:tabular-nums}
+.when .cd{font-weight:700}
+.when .cd.live{color:var(--live)}
+.when .cd.soon{color:var(--accent)}
+.mons{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.mon{display:flex;align-items:center;gap:3px;background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:2px 9px 2px 3px;font-size:13px}
+.mon img{width:26px;height:26px;object-fit:contain}
+.mon .sh{font-size:11px}
+.mon.noimg{padding-left:9px}
+.bonuses{margin:8px 0 0;padding:0;list-style:none;display:grid;gap:3px}
+.bonuses li{font-size:13px;display:flex;gap:6px;align-items:flex-start}
+.bonuses li::before{content:"＋";color:var(--cat,var(--accent));font-weight:700}
+details.small{margin-top:6px;font-size:12px;color:var(--sub)}
+details.small summary{cursor:pointer}
+.links{display:flex;gap:12px;align-items:center;margin-top:8px;flex-wrap:wrap}
+.links a{font-size:12px;color:var(--accent);text-decoration:none}
+.code{font-family:ui-monospace,Menlo,monospace;background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:1px 6px;font-size:13px}
+.copy{font-size:12px;padding:3px 9px}
+
+/* compact list (upcoming) */
+.list{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+.list .dhead{font-size:12px;font-weight:700;color:var(--sub);padding:7px 12px 3px;background:var(--bg);border-top:1px solid var(--line)}
+.list .dhead:first-child{border-top:none}
+.row{display:flex;gap:10px;align-items:baseline;padding:8px 12px;border-top:1px solid var(--line);cursor:pointer}
+.list .dhead + .row{border-top:none}
+.row .t{font-size:13px;color:var(--sub);font-variant-numeric:tabular-nums;min-width:86px}
+.row .n{font-size:14px;flex:1;min-width:0}
+.row .n .badge{margin-right:6px;font-size:10px;vertical-align:1px}
+.row.canceled .n{text-decoration:line-through;opacity:.6}
+
+details.fold{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:10px 12px}
+details.fold>summary{cursor:pointer;font-weight:700;font-size:15px}
+details.fold>summary .count{font-weight:500;font-size:12px;color:var(--sub)}
+details.fold .cards{margin-top:10px}
+
+footer{margin-top:28px;font-size:12px;color:var(--sub);line-height:1.7}
+footer a{color:var(--sub)}
+.cat-raid{--cat:var(--c-raid)} .cat-max{--cat:var(--c-max)} .cat-cd{--cat:var(--c-cd)}
+.cat-spot{--cat:var(--c-spot)} .cat-event{--cat:var(--c-event)} .cat-gbl{--cat:var(--c-gbl)}
+.cat-bg{--cat:var(--c-bg)} .cat-tour{--cat:var(--c-tour)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>今日のポケGOイベント</h1>
+      <div class="today"><span id="todayLabel"></span> <span class="clock" id="clock"></span></div>
+    </div>
+    <button class="btn" id="reload" type="button">↻ 更新</button>
+  </header>
+  <div id="notice"></div>
+  <nav class="days" id="days" aria-label="日付を選ぶ"></nav>
+  <div class="summary" id="summary"></div>
+  <main id="main"><div class="empty">読み込み中…</div></main>
+  <footer>
+    <div>※ 非公式のファンツールです。イベント情報は有志サイト <a href="https://leekduck.com/events/" target="_blank" rel="noopener">LeekDuck</a> の内容を <a href="https://github.com/bigfoott/ScrapedDuck" target="_blank" rel="noopener">ScrapedDuck</a> 経由で取得し、名前などを自動で日本語に置き換えています。訳が不自然・未翻訳の部分があります。正確な内容はゲーム内のお知らせで確認してください。</div>
+    <div>※ 時刻はこの端末の時刻（日本なら日本時間）で表示しています。「現地時間」開催のイベントは、どの地域でもその地域の時刻で始まります。</div>
+    <div id="lastUpdated"></div>
+  </footer>
+</div>
+
+<script>
+/* ポケモン名 英語→日本語（PokeAPI pokemon_species_names.csv から生成。tools/build_names.py で更新） */
+const POKE_JA = /*NAMES-BEGIN*/{"Abomasnow":"ユキノオー","Abra":"ケーシィ","Absol":"アブソル","Accelgor":"アギルダー","Aegislash":"ギルガルド","Aerodactyl":"プテラ","Aggron":"ボスゴドラ","Aipom":"エイパム","Alakazam":"フーディン","Alcremie":"マホイップ","Alomomola":"ママンボウ","Altaria":"チルタリス","Amaura":"アマルス","Ambipom":"エテボース","Amoonguss":"モロバレル","Ampharos":"デンリュウ","Annihilape":"コノヨザル","Anorith":"アノプス","Appletun":"タルップル","Applin":"カジッチュ","Araquanid":"オニシズクモ","Arbok":"アーボック","Arboliva":"オリーヴァ","Arcanine":"ウインディ","Arceus":"アルセウス","Archaludon":"ブリジュラス","Archen":"アーケン","Archeops":"アーケオス","Arctibax":"セゴール","Arctovish":"ウオチルドン","Arctozolt":"パッチルドン","Ariados":"アリアドス","Armaldo":"アーマルド","Armarouge":"グレンアルマ","Aromatisse":"フレフワン","Aron":"ココドラ","Arrokuda":"サシカマス","Articuno":"フリーザー","Audino":"タブンネ","Aurorus":"アマルルガ","Avalugg":"クレベース","Axew":"キバゴ","Azelf":"アグノム","Azumarill":"マリルリ","Azurill":"ルリリ","Bagon":"タツベイ","Baltoy":"ヤジロン","Banette":"ジュペッタ","Barbaracle":"ガメノデス","Barboach":"ドジョッチ","Barraskewda":"カマスジョー","Basculegion":"イダイトウ","Basculin":"バスラオ","Bastiodon":"トリデプス","Baxcalibur":"セグレイブ","Bayleef":"ベイリーフ","Beartic":"ツンベアー","Beautifly":"アゲハント","Beedrill":"スピアー","Beheeyem":"オーベム","Beldum":"ダンバル","Bellibolt":"ハラバリー","Bellossom":"キレイハナ","Bellsprout":"マダツボミ","Bergmite":"カチコール","Bewear":"キテルグマ","Bibarel":"ビーダル","Bidoof":"ビッパ","Binacle":"カメテテ","Bisharp":"キリキザン","Blacephalon":"ズガドーン","Blastoise":"カメックス","Blaziken":"バシャーモ","Blipbug":"サッチムシ","Blissey":"ハピナス","Blitzle":"シママ","Boldore":"ガントル","Boltund":"パルスワン","Bombirdier":"オトシドリ","Bonsly":"ウソハチ","Bouffalant":"バッフロン","Bounsweet":"アマカジ","Braixen":"テールナー","Brambleghast":"アノホラグサ","Bramblin":"アノクサ","Braviary":"ウォーグル","Breloom":"キノガッサ","Brionne":"オシャマリ","Bronzong":"ドータクン","Bronzor":"ドーミラー","Brute Bonnet":"アラブルタケ","Bruxish":"ハギギシリ","Budew":"スボミー","Buizel":"ブイゼル","Bulbasaur":"フシギダネ","Buneary":"ミミロル","Bunnelby":"ホルビー","Burmy":"ミノムッチ","Butterfree":"バタフリー","Buzzwole":"マッシブーン","Cacnea":"サボネア","Cacturne":"ノクタス","Calyrex":"バドレックス","Camerupt":"バクーダ","Capsakid":"カプサイジ","Carbink":"メレシー","Carkol":"トロッゴン","Carnivine":"マスキッパ","Carracosta":"アバゴーラ","Carvanha":"キバニア","Cascoon":"マユルド","Castform":"ポワルン","Caterpie":"キャタピー","Celebi":"セレビィ","Celesteela":"テッカグヤ","Centiskorch":"マルヤクデ","Ceruledge":"ソウブレイズ","Cetitan":"ハルクジラ","Cetoddle":"アルクジラ","Chandelure":"シャンデラ","Chansey":"ラッキー","Charcadet":"カルボウ","Charizard":"リザードン","Charjabug":"デンヂムシ","Charmander":"ヒトカゲ","Charmeleon":"リザード","Chatot":"ペラップ","Cherrim":"チェリム","Cherubi":"チェリンボ","Chesnaught":"ブリガロン","Chespin":"ハリマロン","Chewtle":"カムカメ","Chi-Yu":"イーユイ","Chien-Pao":"パオジアン","Chikorita":"チコリータ","Chimchar":"ヒコザル","Chimecho":"チリーン","Chinchou":"チョンチー","Chingling":"リーシャン","Cinccino":"チラチーノ","Cinderace":"エースバーン","Clamperl":"パールル","Clauncher":"ウデッポウ","Clawitzer":"ブロスター","Claydol":"ネンドール","Clefable":"ピクシー","Clefairy":"ピッピ","Cleffa":"ピィ","Clobbopus":"タタッコ","Clodsire":"ドオー","Cloyster":"パルシェン","Coalossal":"セキタンザン","Cobalion":"コバルオン","Cofagrigus":"デスカーン","Combee":"ミツハニー","Combusken":"ワカシャモ","Comfey":"キュワワー","Conkeldurr":"ローブシン","Copperajah":"ダイオウドウ","Corphish":"ヘイガニ","Corsola":"サニーゴ","Corviknight":"アーマーガア","Corvisquire":"アオガラス","Cosmoem":"コスモウム","Cosmog":"コスモッグ","Cottonee":"モンメン","Crabominable":"ケケンカニ","Crabrawler":"マケンカニ","Cradily":"ユレイドル","Cramorant":"ウッウ","Cranidos":"ズガイドス","Crawdaunt":"シザリガー","Cresselia":"クレセリア","Croagunk":"グレッグル","Crobat":"クロバット","Crocalor":"アチゲータ","Croconaw":"アリゲイツ","Crustle":"イワパレス","Cryogonal":"フリージオ","Cubchoo":"クマシュン","Cubone":"カラカラ","Cufant":"ゾウドウ","Cursola":"サニゴーン","Cutiefly":"アブリー","Cyclizar":"モトトカゲ","Cyndaquil":"ヒノアラシ","Dachsbun":"バウッツェル","Darkrai":"ダークライ","Darmanitan":"ヒヒダルマ","Dartrix":"フクスロー","Darumaka":"ダルマッカ","Decidueye":"ジュナイパー","Dedenne":"デデンネ","Deerling":"シキジカ","Deino":"モノズ","Delcatty":"エネコロロ","Delibird":"デリバード","Delphox":"マフォクシー","Deoxys":"デオキシス","Dewgong":"ジュゴン","Dewott":"フタチマル","Dewpider":"シズクモ","Dhelmise":"ダダリン","Dialga":"ディアルガ","Diancie":"ディアンシー","Diggersby":"ホルード","Diglett":"ディグダ","Dipplin":"カミッチュ","Ditto":"メタモン","Dodrio":"ドードリオ","Doduo":"ドードー","Dolliv":"オリーニョ","Dondozo":"ヘイラッシャ","Donphan":"ドンファン","Dottler":"レドームシ","Doublade":"ニダンギル","Dracovish":"ウオノラゴン","Dracozolt":"パッチラゴン","Dragalge":"ドラミドロ","Dragapult":"ドラパルト","Dragonair":"ハクリュー","Dragonite":"カイリュー","Drakloak":"ドロンチ","Drampa":"ジジーロン","Drapion":"ドラピオン","Dratini":"ミニリュウ","Drednaw":"カジリガメ","Dreepy":"ドラメシヤ","Drifblim":"フワライド","Drifloon":"フワンテ","Drilbur":"モグリュー","Drizzile":"ジメレオン","Drowzee":"スリープ","Druddigon":"クリムガン","Dubwool":"バイウールー","Ducklett":"コアルヒー","Dudunsparce":"ノココッチ","Dugtrio":"ダグトリオ","Dunsparce":"ノコッチ","Duosion":"ダブラン","Duraludon":"ジュラルドン","Durant":"アイアント","Dusclops":"サマヨール","Dusknoir":"ヨノワール","Duskull":"ヨマワル","Dustox":"ドクケイル","Dwebble":"イシズマイ","Eelektrik":"シビビール","Eelektross":"シビルドン","Eevee":"イーブイ","Eiscue":"コオリッポ","Ekans":"アーボ","Eldegoss":"ワタシラガ","Electabuzz":"エレブー","Electivire":"エレキブル","Electrike":"ラクライ","Electrode":"マルマイン","Elekid":"エレキッド","Elgyem":"リグレー","Emboar":"エンブオー","Emolga":"エモンガ","Empoleon":"エンペルト","Enamorus":"ラブトロス","Entei":"エンテイ","Escavalier":"シュバルゴ","Espathra":"クエスパトラ","Espeon":"エーフィ","Espurr":"ニャスパー","Eternatus":"ムゲンダイナ","Excadrill":"ドリュウズ","Exeggcute":"タマタマ","Exeggutor":"ナッシー","Exploud":"バクオング","Falinks":"タイレーツ","Farfetch'd":"カモネギ","Farfetch’d":"カモネギ","Farigiraf":"リキキリン","Fearow":"オニドリル","Feebas":"ヒンバス","Fennekin":"フォッコ","Feraligatr":"オーダイル","Ferroseed":"テッシード","Ferrothorn":"ナットレイ","Fezandipiti":"キチキギス","Fidough":"パピモッチ","Finizen":"ナミイルカ","Finneon":"ケイコウオ","Flaaffy":"モココ","Flabébé":"フラベベ","Flamigo":"カラミンゴ","Flapple":"アップリュー","Flareon":"ブースター","Fletchinder":"ヒノヤコマ","Fletchling":"ヤヤコマ","Flittle":"ヒラヒナ","Floatzel":"フローゼル","Floette":"フラエッテ","Floragato":"ニャローテ","Florges":"フラージェス","Flutter Mane":"ハバタクカミ","Flygon":"フライゴン","Fomantis":"カリキリ","Foongus":"タマゲタケ","Forretress":"フォレトス","Fraxure":"オノンド","Frigibax":"セビエ","Frillish":"プルリル","Froakie":"ケロマツ","Frogadier":"ゲコガシラ","Froslass":"ユキメノコ","Frosmoth":"モスノウ","Fuecoco":"ホゲータ","Furfrou":"トリミアン","Furret":"オオタチ","Gabite":"ガバイト","Gallade":"エルレイド","Galvantula":"デンチュラ","Garbodor":"ダストダス","Garchomp":"ガブリアス","Gardevoir":"サーナイト","Garganacl":"キョジオーン","Gastly":"ゴース","Gastrodon":"トリトドン","Genesect":"ゲノセクト","Gengar":"ゲンガー","Geodude":"イシツブテ","Gholdengo":"サーフゴー","Gible":"フカマル","Gigalith":"ギガイアス","Gimmighoul":"コレクレー","Girafarig":"キリンリキ","Giratina":"ギラティナ","Glaceon":"グレイシア","Glalie":"オニゴーリ","Glameow":"ニャルマー","Glastrier":"ブリザポス","Gligar":"グライガー","Glimmet":"キラーメ","Glimmora":"キラフロル","Gliscor":"グライオン","Gloom":"クサイハナ","Gogoat":"ゴーゴート","Golbat":"ゴルバット","Goldeen":"トサキント","Golduck":"ゴルダック","Golem":"ゴローニャ","Golett":"ゴビット","Golisopod":"グソクムシャ","Golurk":"ゴルーグ","Goodra":"ヌメルゴン","Goomy":"ヌメラ","Gorebyss":"サクラビス","Gossifleur":"ヒメンカ","Gothita":"ゴチム","Gothitelle":"ゴチルゼル","Gothorita":"ゴチミル","Gouging Fire":"ウガツホムラ","Gourgeist":"パンプジン","Grafaiai":"タギングル","Granbull":"グランブル","Grapploct":"オトスパス","Graveler":"ゴローン","Great Tusk":"イダイナキバ","Greavard":"ボチ","Greedent":"ヨクバリス","Greninja":"ゲッコウガ","Grimer":"ベトベター","Grimmsnarl":"オーロンゲ","Grookey":"サルノリ","Grotle":"ハヤシガメ","Groudon":"グラードン","Grovyle":"ジュプトル","Growlithe":"ガーディ","Grubbin":"アゴジムシ","Grumpig":"ブーピッグ","Gulpin":"ゴクリン","Gumshoos":"デカグース","Gurdurr":"ドテッコツ","Guzzlord":"アクジキング","Gyarados":"ギャラドス","Hakamo-o":"ジャランゴ","Happiny":"ピンプク","Hariyama":"ハリテヤマ","Hatenna":"ミブリム","Hatterene":"ブリムオン","Hattrem":"テブリム","Haunter":"ゴースト","Hawlucha":"ルチャブル","Haxorus":"オノノクス","Heatmor":"クイタラン","Heatran":"ヒードラン","Heliolisk":"エレザード","Helioptile":"エリキテル","Heracross":"ヘラクロス","Herdier":"ハーデリア","Hippopotas":"ヒポポタス","Hippowdon":"カバルドン","Hitmonchan":"エビワラー","Hitmonlee":"サワムラー","Hitmontop":"カポエラー","Ho-Oh":"ホウオウ","Honchkrow":"ドンカラス","Honedge":"ヒトツキ","Hoopa":"フーパ","Hoothoot":"ホーホー","Hoppip":"ハネッコ","Horsea":"タッツー","Houndoom":"ヘルガー","Houndour":"デルビル","Houndstone":"ハカドッグ","Huntail":"ハンテール","Hydrapple":"カミツオロチ","Hydreigon":"サザンドラ","Hypno":"スリーパー","Igglybuff":"ププリン","Illumise":"イルミーゼ","Impidimp":"ベロバー","Incineroar":"ガオガエン","Indeedee":"イエッサン","Infernape":"ゴウカザル","Inkay":"マーイーカ","Inteleon":"インテレオン","Iron Boulder":"テツノイワオ","Iron Bundle":"テツノツツミ","Iron Crown":"テツノカシラ","Iron Hands":"テツノカイナ","Iron Jugulis":"テツノコウベ","Iron Leaves":"テツノイサハ","Iron Moth":"テツノドクガ","Iron Thorns":"テツノイバラ","Iron Treads":"テツノワダチ","Iron Valiant":"テツノブジン","Ivysaur":"フシギソウ","Jangmo-o":"ジャラコ","Jellicent":"ブルンゲル","Jigglypuff":"プリン","Jirachi":"ジラーチ","Jolteon":"サンダース","Joltik":"バチュル","Jumpluff":"ワタッコ","Jynx":"ルージュラ","Kabuto":"カブト","Kabutops":"カブトプス","Kadabra":"ユンゲラー","Kakuna":"コクーン","Kangaskhan":"ガルーラ","Karrablast":"カブルモ","Kartana":"カミツルギ","Kecleon":"カクレオン","Keldeo":"ケルディオ","Kilowattrel":"タイカイデン","Kingambit":"ドドゲザン","Kingdra":"キングドラ","Kingler":"キングラー","Kirlia":"キルリア","Klang":"ギギアル","Klawf":"ガケガニ","Kleavor":"バサギリ","Klefki":"クレッフィ","Klink":"ギアル","Klinklang":"ギギギアル","Koffing":"ドガース","Komala":"ネッコアラ","Kommo-o":"ジャラランガ","Koraidon":"コライドン","Krabby":"クラブ","Kricketot":"コロボーシ","Kricketune":"コロトック","Krokorok":"ワルビル","Krookodile":"ワルビアル","Kubfu":"ダクマ","Kyogre":"カイオーガ","Kyurem":"キュレム","Lairon":"コドラ","Lampent":"ランプラー","Landorus":"ランドロス","Lanturn":"ランターン","Lapras":"ラプラス","Larvesta":"メラルバ","Larvitar":"ヨーギラス","Latias":"ラティアス","Latios":"ラティオス","Leafeon":"リーフィア","Leavanny":"ハハコモリ","Lechonk":"グルトン","Ledian":"レディアン","Ledyba":"レディバ","Lickilicky":"ベロベルト","Lickitung":"ベロリンガ","Liepard":"レパルダス","Lileep":"リリーラ","Lilligant":"ドレディア","Lillipup":"ヨーテリー","Linoone":"マッスグマ","Litleo":"シシコ","Litten":"ニャビー","Litwick":"ヒトモシ","Lokix":"エクスレッグ","Lombre":"ハスブレロ","Lopunny":"ミミロップ","Lotad":"ハスボー","Loudred":"ドゴーム","Lucario":"ルカリオ","Ludicolo":"ルンパッパ","Lugia":"ルギア","Lumineon":"ネオラント","Lunala":"ルナアーラ","Lunatone":"ルナトーン","Lurantis":"ラランテス","Luvdisc":"ラブカス","Luxio":"ルクシオ","Luxray":"レントラー","Lycanroc":"ルガルガン","Mabosstiff":"マフィティフ","Machamp":"カイリキー","Machoke":"ゴーリキー","Machop":"ワンリキー","Magby":"ブビィ","Magcargo":"マグカルゴ","Magearna":"マギアナ","Magikarp":"コイキング","Magmar":"ブーバー","Magmortar":"ブーバーン","Magnemite":"コイル","Magneton":"レアコイル","Magnezone":"ジバコイル","Makuhita":"マクノシタ","Malamar":"カラマネロ","Mamoswine":"マンムー","Manaphy":"マナフィ","Mandibuzz":"バルジーナ","Manectric":"ライボルト","Mankey":"マンキー","Mantine":"マンタイン","Mantyke":"タマンタ","Maractus":"マラカッチ","Mareanie":"ヒドイデ","Mareep":"メリープ","Marill":"マリル","Marowak":"ガラガラ","Marshadow":"マーシャドー","Marshtomp":"ヌマクロー","Maschiff":"オラチフ","Masquerain":"アメモース","Maushold":"イッカネズミ","Mawile":"クチート","Medicham":"チャーレム","Meditite":"アサナン","Meganium":"メガニウム","Melmetal":"メルメタル","Meloetta":"メロエッタ","Meltan":"メルタン","Meowscarada":"マスカーニャ","Meowstic":"ニャオニクス","Meowth":"ニャース","Mesprit":"エムリット","Metagross":"メタグロス","Metang":"メタング","Metapod":"トランセル","Mew":"ミュウ","Mewtwo":"ミュウツー","Mienfoo":"コジョフー","Mienshao":"コジョンド","Mightyena":"グラエナ","Milcery":"マホミル","Milotic":"ミロカロス","Miltank":"ミルタンク","Mime Jr.":"マネネ","Mimikyu":"ミミッキュ","Minccino":"チラーミィ","Minior":"メテノ","Minun":"マイナン","Miraidon":"ミライドン","Misdreavus":"ムウマ","Mismagius":"ムウマージ","Moltres":"ファイヤー","Monferno":"モウカザル","Morelull":"ネマシュ","Morgrem":"ギモー","Morpeko":"モルペコ","Mothim":"ガーメイル","Mr. Mime":"バリヤード","Mr. Rime":"バリコオル","Mudbray":"ドロバンコ","Mudkip":"ミズゴロウ","Mudsdale":"バンバドロ","Muk":"ベトベトン","Munchlax":"ゴンベ","Munkidori":"マシマシラ","Munna":"ムンナ","Murkrow":"ヤミカラス","Musharna":"ムシャーナ","Nacli":"コジオ","Naclstack":"ジオヅム","Naganadel":"アーゴヨン","Natu":"ネイティ","Necrozma":"ネクロズマ","Nickit":"クスネ","Nidoking":"ニドキング","Nidoqueen":"ニドクイン","Nidoran (Female)":"ニドラン♀","Nidoran (Male)":"ニドラン♂","Nidoran♀":"ニドラン♀","Nidoran♂":"ニドラン♂","Nidorina":"ニドリーナ","Nidorino":"ニドリーノ","Nihilego":"ウツロイド","Nincada":"ツチニン","Ninetales":"キュウコン","Ninjask":"テッカニン","Noctowl":"ヨルノズク","Noibat":"オンバット","Noivern":"オンバーン","Nosepass":"ノズパス","Numel":"ドンメル","Nuzleaf":"コノハナ","Nymble":"マメバッタ","Obstagoon":"タチフサグマ","Octillery":"オクタン","Oddish":"ナゾノクサ","Ogerpon":"オーガポン","Oinkologne":"パフュートン","Okidogi":"イイネイヌ","Omanyte":"オムナイト","Omastar":"オムスター","Onix":"イワーク","Oranguru":"ヤレユータン","Orbeetle":"イオルブ","Oricorio":"オドリドリ","Orthworm":"ミミズズ","Oshawott":"ミジュマル","Overqwil":"ハリーマン","Pachirisu":"パチリス","Palafin":"イルカマン","Palkia":"パルキア","Palossand":"シロデスナ","Palpitoad":"ガマガル","Pancham":"ヤンチャム","Pangoro":"ゴロンダ","Panpour":"ヒヤップ","Pansage":"ヤナップ","Pansear":"バオップ","Paras":"パラス","Parasect":"パラセクト","Passimian":"ナゲツケサル","Patrat":"ミネズミ","Pawmi":"パモ","Pawmo":"パモット","Pawmot":"パーモット","Pawniard":"コマタナ","Pecharunt":"モモワロウ","Pelipper":"ペリッパー","Perrserker":"ニャイキング","Persian":"ペルシアン","Petilil":"チュリネ","Phanpy":"ゴマゾウ","Phantump":"ボクレー","Pheromosa":"フェローチェ","Phione":"フィオネ","Pichu":"ピチュー","Pidgeot":"ピジョット","Pidgeotto":"ピジョン","Pidgey":"ポッポ","Pidove":"マメパト","Pignite":"チャオブー","Pikachu":"ピカチュウ","Pikipek":"ツツケラ","Piloswine":"イノムー","Pincurchin":"バチンウニ","Pineco":"クヌギダマ","Pinsir":"カイロス","Piplup":"ポッチャマ","Plusle":"プラスル","Poipole":"ベベノム","Politoed":"ニョロトノ","Poliwag":"ニョロモ","Poliwhirl":"ニョロゾ","Poliwrath":"ニョロボン","Poltchageist":"チャデス","Polteageist":"ポットデス","Ponyta":"ポニータ","Poochyena":"ポチエナ","Popplio":"アシマリ","Porygon":"ポリゴン","Porygon-Z":"ポリゴンＺ","Porygon2":"ポリゴン２","Primarina":"アシレーヌ","Primeape":"オコリザル","Prinplup":"ポッタイシ","Probopass":"ダイノーズ","Psyduck":"コダック","Pumpkaboo":"バケッチャ","Pupitar":"サナギラス","Purrloin":"チョロネコ","Purugly":"ブニャット","Pyroar":"カエンジシ","Pyukumuku":"ナマコブシ","Quagsire":"ヌオー","Quaquaval":"ウェーニバル","Quaxly":"クワッス","Quaxwell":"ウェルカモ","Quilava":"マグマラシ","Quilladin":"ハリボーグ","Qwilfish":"ハリーセン","Raboot":"ラビフット","Rabsca":"ベラカス","Raging Bolt":"タケルライコ","Raichu":"ライチュウ","Raikou":"ライコウ","Ralts":"ラルトス","Rampardos":"ラムパルド","Rapidash":"ギャロップ","Raticate":"ラッタ","Rattata":"コラッタ","Rayquaza":"レックウザ","Regice":"レジアイス","Regidrago":"レジドラゴ","Regieleki":"レジエレキ","Regigigas":"レジギガス","Regirock":"レジロック","Registeel":"レジスチル","Relicanth":"ジーランス","Rellor":"シガロコ","Remoraid":"テッポウオ","Reshiram":"レシラム","Reuniclus":"ランクルス","Revavroom":"ブロロローム","Rhydon":"サイドン","Rhyhorn":"サイホーン","Rhyperior":"ドサイドン","Ribombee":"アブリボン","Rillaboom":"ゴリランダー","Riolu":"リオル","Roaring Moon":"トドロクツキ","Rockruff":"イワンコ","Roggenrola":"ダンゴロ","Rolycoly":"タンドン","Rookidee":"ココガラ","Roselia":"ロゼリア","Roserade":"ロズレイド","Rotom":"ロトム","Rowlet":"モクロー","Rufflet":"ワシボン","Runerigus":"デスバーン","Sableye":"ヤミラミ","Salamence":"ボーマンダ","Salandit":"ヤトウモリ","Salazzle":"エンニュート","Samurott":"ダイケンキ","Sandaconda":"サダイジャ","Sandile":"メグロコ","Sandshrew":"サンド","Sandslash":"サンドパン","Sandy Shocks":"スナノケガワ","Sandygast":"スナバァ","Sawk":"ダゲキ","Sawsbuck":"メブキジカ","Scatterbug":"コフキムシ","Sceptile":"ジュカイン","Scizor":"ハッサム","Scolipede":"ペンドラー","Scorbunny":"ヒバニー","Scovillain":"スコヴィラン","Scrafty":"ズルズキン","Scraggy":"ズルッグ","Scream Tail":"サケブシッポ","Scyther":"ストライク","Seadra":"シードラ","Seaking":"アズマオウ","Sealeo":"トドグラー","Seedot":"タネボー","Seel":"パウワウ","Seismitoad":"ガマゲロゲ","Sentret":"オタチ","Serperior":"ジャローダ","Servine":"ジャノビー","Seviper":"ハブネーク","Sewaddle":"クルミル","Sharpedo":"サメハダー","Shaymin":"シェイミ","Shedinja":"ヌケニン","Shelgon":"コモルー","Shellder":"シェルダー","Shellos":"カラナクシ","Shelmet":"チョボマキ","Shieldon":"タテトプス","Shiftry":"ダーテング","Shiinotic":"マシェード","Shinx":"コリンク","Shroodle":"シルシュルー","Shroomish":"キノココ","Shuckle":"ツボツボ","Shuppet":"カゲボウズ","Sigilyph":"シンボラー","Silcoon":"カラサリス","Silicobra":"スナヘビ","Silvally":"シルヴァディ","Simipour":"ヒヤッキー","Simisage":"ヤナッキー","Simisear":"バオッキー","Sinistcha":"ヤバソチャ","Sinistea":"ヤバチャ","Sirfetch'd":"ネギガナイト","Sirfetch’d":"ネギガナイト","Sizzlipede":"ヤクデ","Skarmory":"エアームド","Skeledirge":"ラウドボーン","Skiddo":"メェークル","Skiploom":"ポポッコ","Skitty":"エネコ","Skorupi":"スコルピ","Skrelp":"クズモー","Skuntank":"スカタンク","Skwovet":"ホシガリス","Slaking":"ケッキング","Slakoth":"ナマケロ","Sliggoo":"ヌメイル","Slither Wing":"チヲハウハネ","Slowbro":"ヤドラン","Slowking":"ヤドキング","Slowpoke":"ヤドン","Slugma":"マグマッグ","Slurpuff":"ペロリーム","Smeargle":"ドーブル","Smoliv":"ミニーブ","Smoochum":"ムチュール","Sneasel":"ニューラ","Sneasler":"オオニューラ","Snivy":"ツタージャ","Snom":"ユキハミ","Snorlax":"カビゴン","Snorunt":"ユキワラシ","Snover":"ユキカブリ","Snubbull":"ブルー","Sobble":"メッソン","Solgaleo":"ソルガレオ","Solosis":"ユニラン","Solrock":"ソルロック","Spearow":"オニスズメ","Spectrier":"レイスポス","Spewpa":"コフーライ","Spheal":"タマザラシ","Spidops":"ワナイダー","Spinarak":"イトマル","Spinda":"パッチール","Spiritomb":"ミカルゲ","Spoink":"バネブー","Sprigatito":"ニャオハ","Spritzee":"シュシュプ","Squawkabilly":"イキリンコ","Squirtle":"ゼニガメ","Stakataka":"ツンデツンデ","Stantler":"オドシシ","Staraptor":"ムクホーク","Staravia":"ムクバード","Starly":"ムックル","Starmie":"スターミー","Staryu":"ヒトデマン","Steelix":"ハガネール","Steenee":"アママイコ","Stonjourner":"イシヘンジン","Stoutland":"ムーランド","Stufful":"ヌイコグマ","Stunfisk":"マッギョ","Stunky":"スカンプー","Sudowoodo":"ウソッキー","Suicune":"スイクン","Sunflora":"キマワリ","Sunkern":"ヒマナッツ","Surskit":"アメタマ","Swablu":"チルット","Swadloon":"クルマユ","Swalot":"マルノーム","Swampert":"ラグラージ","Swanna":"スワンナ","Swellow":"オオスバメ","Swinub":"ウリムー","Swirlix":"ペロッパフ","Swoobat":"ココロモリ","Sylveon":"ニンフィア","Tadbulb":"ズピカ","Taillow":"スバメ","Talonflame":"ファイアロー","Tandemaus":"ワッカネズミ","Tangela":"モンジャラ","Tangrowth":"モジャンボ","Tapu Bulu":"カプ・ブルル","Tapu Fini":"カプ・レヒレ","Tapu Koko":"カプ・コケコ","Tapu Lele":"カプ・テテフ","Tarountula":"タマンチュラ","Tatsugiri":"シャリタツ","Tauros":"ケンタロス","Teddiursa":"ヒメグマ","Tentacool":"メノクラゲ","Tentacruel":"ドククラゲ","Tepig":"ポカブ","Terapagos":"テラパゴス","Terrakion":"テラキオン","Thievul":"フォクスライ","Throh":"ナゲキ","Thundurus":"ボルトロス","Thwackey":"バチンキー","Timburr":"ドッコラー","Ting-Lu":"ディンルー","Tinkatink":"カヌチャン","Tinkaton":"デカヌチャン","Tinkatuff":"ナカヌチャン","Tirtouga":"プロトーガ","Toedscool":"ノノクラゲ","Toedscruel":"リククラゲ","Togedemaru":"トゲデマル","Togekiss":"トゲキッス","Togepi":"トゲピー","Togetic":"トゲチック","Torchic":"アチャモ","Torkoal":"コータス","Tornadus":"トルネロス","Torracat":"ニャヒート","Torterra":"ドダイトス","Totodile":"ワニノコ","Toucannon":"ドデカバシ","Toxapex":"ドヒドイデ","Toxel":"エレズン","Toxicroak":"ドクロッグ","Toxtricity":"ストリンダー","Tranquill":"ハトーボー","Trapinch":"ナックラー","Treecko":"キモリ","Trevenant":"オーロット","Tropius":"トロピウス","Trubbish":"ヤブクロン","Trumbeak":"ケララッパ","Tsareena":"アマージョ","Turtonator":"バクガメス","Turtwig":"ナエトル","Tympole":"オタマロ","Tynamo":"シビシラス","Type: Null":"タイプ：ヌル","Typhlosion":"バクフーン","Tyranitar":"バンギラス","Tyrantrum":"ガチゴラス","Tyrogue":"バルキー","Tyrunt":"チゴラス","Umbreon":"ブラッキー","Unfezant":"ケンホロウ","Unown":"アンノーン","Ursaluna":"ガチグマ","Ursaring":"リングマ","Urshifu":"ウーラオス","Uxie":"ユクシー","Vanillish":"バニリッチ","Vanillite":"バニプッチ","Vanilluxe":"バイバニラ","Vaporeon":"シャワーズ","Varoom":"ブロロン","Veluza":"ミガルーサ","Venipede":"フシデ","Venomoth":"モルフォン","Venonat":"コンパン","Venusaur":"フシギバナ","Vespiquen":"ビークイン","Vibrava":"ビブラーバ","Victini":"ビクティニ","Victreebel":"ウツボット","Vigoroth":"ヤルキモノ","Vikavolt":"クワガノン","Vileplume":"ラフレシア","Virizion":"ビリジオン","Vivillon":"ビビヨン","Volbeat":"バルビート","Volcanion":"ボルケニオン","Volcarona":"ウルガモス","Voltorb":"ビリリダマ","Vullaby":"バルチャイ","Vulpix":"ロコン","Wailmer":"ホエルコ","Wailord":"ホエルオー","Walking Wake":"ウネルミナモ","Walrein":"トドゼルガ","Wartortle":"カメール","Watchog":"ミルホッグ","Wattrel":"カイデン","Weavile":"マニューラ","Weedle":"ビードル","Weepinbell":"ウツドン","Weezing":"マタドガス","Whimsicott":"エルフーン","Whirlipede":"ホイーガ","Whiscash":"ナマズン","Whismur":"ゴニョニョ","Wigglytuff":"プクリン","Wiglett":"ウミディグダ","Wimpod":"コソクムシ","Wingull":"キャモメ","Wishiwashi":"ヨワシ","Wo-Chien":"チオンジェン","Wobbuffet":"ソーナンス","Woobat":"コロモリ","Wooloo":"ウールー","Wooper":"ウパー","Wormadam":"ミノマダム","Wugtrio":"ウミトリオ","Wurmple":"ケムッソ","Wynaut":"ソーナノ","Wyrdeer":"アヤシシ","Xatu":"ネイティオ","Xerneas":"ゼルネアス","Xurkitree":"デンジュモク","Yamask":"デスマス","Yamper":"ワンパチ","Yanma":"ヤンヤンマ","Yanmega":"メガヤンマ","Yungoos":"ヤングース","Yveltal":"イベルタル","Zacian":"ザシアン","Zamazenta":"ザマゼンタ","Zangoose":"ザングース","Zapdos":"サンダー","Zarude":"ザルード","Zebstrika":"ゼブライカ","Zekrom":"ゼクロム","Zeraora":"ゼラオラ","Zigzagoon":"ジグザグマ","Zoroark":"ゾロアーク","Zorua":"ゾロア","Zubat":"ズバット","Zweilous":"ジヘッド","Zygarde":"ジガルデ"}/*NAMES-END*/;
+</script>
+<script>
+"use strict";
+// ===== 設定 =====
+const SOURCES = [
+  "https://raw.githubusercontent.com/bigfoott/ScrapedDuck/data/events.json",
+  "https://cdn.jsdelivr.net/gh/bigfoott/ScrapedDuck@data/events.json",
+];
+const CACHE_KEY = "pogo-events-cache-v1";
+const REFETCH_MS = 30 * 60 * 1000;      // 30分ごとに再取得
+const TICK_MS = 30 * 1000;              // 30秒ごとに残り時間を更新
+const DAY_MS = 24 * 60 * 60 * 1000;
+const SHORT_MAX_MS = 2 * DAY_MS;        // 2日以内 → 「時間限定イベント」扱い
+const LONG_MIN_MS = 14 * DAY_MS;        // 14日超 → 「長期」扱い
+const STRIP_DAYS = 8;                   // 日付タブの日数
+const UPCOMING_DAYS = 7;
+
+// ===== イベント種別 =====
+const TYPES = {
+  "community-day":        ["コミュニティ・デイ", "cd"],
+  "raid-battles":         ["レイドバトル", "raid"],
+  "raid-hour":            ["レイドアワー", "raid"],
+  "raid-day":             ["レイド・デイ", "raid"],
+  "raid-weekend":         ["レイドウィークエンド", "raid"],
+  "elite-raids":          ["エリートレイド", "raid"],
+  "max-battles":          ["マックスバトル", "max"],
+  "max-mondays":          ["マックスマンデー", "max"],
+  "pokemon-spotlight-hour":["スポットライトアワー", "spot"],
+  "bonus-hour":           ["ボーナスアワー", "spot"],
+  "event":                ["イベント", "event"],
+  "live-event":           ["ライブイベント", "tour"],
+  "pokemon-go-tour":      ["GO Tour", "tour"],
+  "pokemon-go-fest":      ["GO Fest", "tour"],
+  "wild-area":            ["GO Wild Area", "tour"],
+  "safari-zone":          ["サファリゾーン", "tour"],
+  "city-safari":          ["シティサファリ", "tour"],
+  "go-battle-league":     ["GOバトルリーグ", "gbl"],
+  "season":               ["シーズン", "bg"],
+  "go-pass":              ["GOパス", "bg"],
+  "research":             ["リサーチ", "bg"],
+  "timed-research":       ["期間限定リサーチ", "event"],
+  "special-research":     ["スペシャルリサーチ", "event"],
+  "ticketed-event":       ["有料イベント", "event"],
+  "research-day":         ["リサーチデイ", "event"],
+  "research-breakthrough":["リサーチブレイクスルー", "bg"],
+  "pokestop-showcase":    ["ポケストップ・ショーケース", "event"],
+  "team-go-rocket":       ["GOロケット団", "event"],
+  "go-rocket-takeover":   ["GOロケット団", "event"],
+  "global-challenge":     ["グローバルチャレンジ", "event"],
+  "update":               ["アップデート", "bg"],
+  "location-specific":    ["地域限定", "event"],
+  "potential-ultra-unlock":["ウルトラアンロック", "event"],
+};
+const BG_TYPES = new Set(["season", "go-pass", "go-battle-league", "research", "research-breakthrough", "update"]);
+function typeInfo(ev){
+  const t = TYPES[ev.type];
+  if (t) return {label: t[0], cat: t[1]};
+  return {label: ev.heading || ev.type || "イベント", cat: "event"};
+}
+
+// ===== 翻訳 =====
+const MONTHS = {January:1,February:2,March:3,April:4,May:5,June:6,July:7,August:8,September:9,October:10,November:11,December:12};
+const MONTH_RE = "(" + Object.keys(MONTHS).join("|") + ")";
+const METEORS = {
+  "Leonids":"しし座流星群","Geminids":"ふたご座流星群","Perseids":"ペルセウス座流星群","Quadrantids":"しぶんぎ座流星群",
+  "Lyrids":"4月こと座流星群","Orionids":"オリオン座流星群","Draconids":"10月りゅう座流星群","Taurids":"おうし座流星群",
+  "Eta Aquariids":"みずがめ座η流星群","Southern Delta Aquariids":"みずがめ座δ南流星群","Ursids":"こぐま座流星群",
+};
+const CITIES = {"Global":"グローバル","Los Angeles":"ロサンゼルス","Kaohsiung":"高雄","New Taipei City":"新北","Taipei":"台北","Osaka":"大阪","Tokyo":"東京","Yokohama":"横浜","Sapporo":"札幌","Fukuoka":"福岡","Sendai":"仙台","Seoul":"ソウル","Paris":"パリ","London":"ロンドン","Madrid":"マドリード","Jersey City":"ジャージーシティ","New York City":"ニューヨーク"};
+const PREFIXES = {
+  "Gigantamax":"キョダイマックス","Dynamax":"ダイマックス","Eternamax":"ムゲンダイマックス","Mega":"メガ",
+  "Shadow":"シャドウ","Primal":"ゲンシ","Alolan":"アローラ","Galarian":"ガラル","Hisuian":"ヒスイ","Paldean":"パルデア",
+  "Shiny":"色違い",
+};
+const FORM_WORDS = {
+  "Normal":"ノーマル","Attack":"アタック","Defense":"ディフェンス","Speed":"スピード","Incarnate":"けしん","Therian":"れいじゅう",
+  "Origin":"オリジン","Altered":"アナザー","Forme":"フォルム","Formes":"フォルム","Form":"フォルム","Forms":"フォルム",
+  "Male":"オス","Female":"メス","Land":"ランド","Sky":"スカイ","Aria":"ボイス","Pirouette":"ステップ",
+  "Hero":"ナイーブ","Crowned":"けんのおう","Sword":"けん","Shield":"たて","Ordinary":"いつも","Resolute":"かくご",
+  "Dawn Wings":"あかつきのつばさ","Dusk Mane":"たそがれのたてがみ","Ultra":"ウルトラ",
+  "Black":"ブラック","White":"ホワイト","Kyurem":"キュレム",
+};
+const LEAGUES = [
+  [/\bGreat League\b/g,"スーパーリーグ"],[/\bUltra League\b/g,"ハイパーリーグ"],[/\bMaster League\b/g,"マスターリーグ"],
+  [/\bLittle Cup\b/g,"リトルカップ"],[/\bLittle League\b/g,"リトルリーグ"],
+];
+
+function escRe(s){return s.replace(/[.*+?^${}()|[\]\\]/g,"\\$&");}
+let MON_RE = null;
+function buildMonRe(){
+  const names = Object.keys(POKE_JA).sort((a,b)=>b.length-a.length).map(escRe);
+  if (!names.length) return null;
+  const pre = Object.keys(PREFIXES).join("|");
+  // (先頭 or 英字以外)(接頭辞 )?(ポケモン名)( X/Y)?(英字以外 or 末尾)
+  return new RegExp("(^|[^A-Za-z])(?:(" + pre + ") )?(" + names.join("|") + ")(?: ([XY]))?(?=[^A-Za-z]|$)", "g");
+}
+/** 英語の文字列中のポケモン名・フォルム・接続語を日本語化 */
+function jaMons(s){
+  if (!s) return s;
+  if (MON_RE === null) MON_RE = buildMonRe() || /$^/;
+  let out = s.replace(MON_RE, (m, lead, pre, name, xy) => {
+    let ja = POKE_JA[name] || name;
+    if (pre) ja = PREFIXES[pre] + ja;
+    if (xy) ja += xy;
+    return lead + ja;
+  });
+  // (Normal, Defense, Attack, and Speed Formes) → （ノーマル・ディフェンス・アタック・スピードフォルム）
+  out = out.replace(/\(([^()]*)\)/g, (m, inner) => {
+    let t = inner;
+    const keys = Object.keys(FORM_WORDS).sort((a,b)=>b.length-a.length);
+    let changed = false;
+    for (const k of keys){
+      const re = new RegExp("\\b" + escRe(k) + "\\b", "g");
+      if (re.test(t)){ t = t.replace(re, FORM_WORDS[k]); changed = true; }
+    }
+    if (!changed) return m;
+    t = t.replace(/,? and /g, "・").replace(/, /g, "・").replace(/\s+(?=フォルム)/g, "").replace(/(\S)\s+(?=\S)/g, "$1");
+    return "\u0000（" + t + "）";
+  });
+  out = out.replace(/\s*\u0000/g, ""); // 「名前 （フォルム）」の空白を詰める
+  // 日本語化された名前の間の and / , を「・」に
+  out = out.replace(/([぀-ヿ一-鿿）XY2]),? and (?=[぀-ヿ一-鿿])/g, "$1・")
+           .replace(/([぀-ヿ一-鿿）]), (?=[぀-ヿ一-鿿])/g, "$1・");
+  return out;
+}
+const NAME_RULES = [
+  [/^(.+?) Raid Hour$/, (a)=>`${jaMons(a)} レイドアワー`],
+  [/^(.+?) Spotlight Hour$/, (a)=>`${jaMons(a)} スポットライトアワー`],
+  [/^(.+?) in (\d)-star Raid Battles$/, (a,n)=>`★${n}レイド：${jaMons(a)}`],
+  [/^(.+?) in Mega Raids$/, (a)=>`メガレイド：${jaMons(a)}`],
+  [/^(.+?) in Super Mega Raids$/, (a)=>`スーパーメガレイド：${jaMons(a)}`],
+  [/^(.+?) in Shadow Raids$/, (a)=>`シャドウレイド：${jaMons(a)}`],
+  [/^(.+?) in Elite Raids$/, (a)=>`エリートレイド：${jaMons(a)}`],
+  [/^(.+?) in Max Battles$/, (a)=>`マックスバトル：${jaMons(a)}`],
+  [/^(.+?) during Max Monday$/, (a)=>`マックスマンデー：${jaMons(a)}`],
+  [/^Max Monday$/, ()=>"マックスマンデー"],
+  [new RegExp("^" + MONTH_RE + " Community Day Classic$"), (m)=>`${MONTHS[m]}月のコミュニティ・デイ クラシック`],
+  [new RegExp("^" + MONTH_RE + " Community Day$"), (m)=>`${MONTHS[m]}月のコミュニティ・デイ`],
+  [/^(.+?) Community Day Classic$/, (a)=>`コミュニティ・デイ クラシック：${jaMons(a)}`],
+  [/^(.+?) Community Day$/, (a)=>`コミュニティ・デイ：${jaMons(a)}`],
+  [/^Super Mega Raid Day$/, ()=>"スーパーメガレイド・デイ"],
+  [/^(.+?) Super Mega Raid Day$/, (a)=>`スーパーメガレイド・デイ：${jaMons(a)}`],
+  [/^Raid Day$/, ()=>"レイド・デイ"],
+  [/^(.+?) Raid Day$/, (a)=>`レイド・デイ：${jaMons(a)}`],
+  [/^Max Battle Day$/, ()=>"マックスバトル・デイ"],
+  [/^(.+?) Max Battle Day$/, (a)=>`マックスバトル・デイ：${jaMons(a)}`],
+  [/^Hatch Day$/, ()=>"ハッチデイ"],
+  [/^(.+?) Hatch Day$/, (a)=>`ハッチデイ：${jaMons(a)}`],
+  [/^Research Day$/, ()=>"リサーチデイ"],
+  [/^(.+?) Research Day$/, (a)=>`リサーチデイ：${jaMons(a)}`],
+  [new RegExp("^GO Pass: " + MONTH_RE + "$"), (m)=>`GOパス：${MONTHS[m]}月`],
+  [/^Minior Showers: (.+?)(?: (\d{4}))?$/, (a,y)=>`メテノシャワー：${METEORS[a] || a}${y ? " " + y : ""}`],
+  [/^Pokémon GO Wild Area (\d{4}): (.+)$/, (y,l)=>`GO Wild Area ${y}：${l === "Global" ? "グローバル" : l}`],
+  [/^Pokémon GO Tour: (.+?) - (.+?) (\d{4})$/, (a,c,y)=>`Pokémon GO Tour：${a}（${CITIES[c] || c}） ${y}`],
+  [/^(.+?) Timed Research$/, (a)=>`期間限定リサーチ：${jaMons(a)}`],
+  [/^(.+?) Special Research$/, (a)=>`スペシャルリサーチ：${jaMons(a)}`],
+  [/^(.+?) Returns$/, (a)=>`${jaMons(a)} 再登場`],
+];
+function translateName(ev){
+  let s = ev.name.replace(/^\s*\[(?:Canceled|Cancelled)\]\s*/i, "").trim();
+  if (ev.type === "go-battle-league"){
+    s = s.replace(/\s*\|\s*[^|]*$/, ""); // 末尾の「| シーズン名」を除去
+    for (const [re, ja] of LEAGUES) s = s.replace(re, ja);
+    s = s.replace(/,? and /g, "、").replace(/, /g, "、");
+    return s;
+  }
+  for (const [re, fn] of NAME_RULES){
+    const m = s.match(re);
+    if (m) return fn(...m.slice(1));
+  }
+  return jaMons(s);
+}
+
+const BONUS_RULES = [
+  [/^Increased Spawns\*?$/i, ()=>"野生ポケモンの出現数アップ"],
+  [/^(\S+) Egg Hatch Distance\*?$/i, (a)=>`タマゴの孵化に必要な距離 ${a}`],
+  [/^(\d+)-hour Incense\*?$/i, (a)=>`おこうの効果時間 ${a}時間`],
+  [/^(\d+)-hour Lures?(?: Modules?)?\*?$/i, (a)=>`ルアーモジュールの効果時間 ${a}時間`],
+  [/^(\d+(?:\.\d+)?)[x×] Catch Candy\*?$/i, (a)=>`捕まえたときのアメ ${a}倍`],
+  [/^(\d+(?:\.\d+)?)[x×] Catch Stardust\*?$/i, (a)=>`捕まえたときのほしのすな ${a}倍`],
+  [/^(\d+(?:\.\d+)?)[x×] Catch XP\*?$/i, (a)=>`捕まえたときのXP ${a}倍`],
+  [/^(\d+(?:\.\d+)?)[x×] Transfer Candy\*?$/i, (a)=>`博士に送ったときのアメ ${a}倍`],
+  [/^(\d+(?:\.\d+)?)[x×] Evolution XP\*?$/i, (a)=>`進化させたときのXP ${a}倍`],
+  [/^(\d+(?:\.\d+)?)[x×] Hatch Candy\*?$/i, (a)=>`タマゴ孵化時のアメ ${a}倍`],
+  [/^(\d+(?:\.\d+)?)[x×] Hatch Stardust\*?$/i, (a)=>`タマゴ孵化時のほしのすな ${a}倍`],
+  [/^(\d+(?:\.\d+)?)[x×] Hatch XP\*?$/i, (a)=>`タマゴ孵化時のXP ${a}倍`],
+  [/^(\d+(?:\.\d+)?)[x×] Raid XP\*?$/i, (a)=>`レイドバトルのXP ${a}倍`],
+  [/^(\d+(?:\.\d+)?)[x×] Raid Stardust\*?$/i, (a)=>`レイドバトルのほしのすな ${a}倍`],
+  [/^(\d+(?:\.\d+)?)[x×] Chance for Trainers level 31 and up to receive Candy XL from catching Pokémon\*?$/i,
+    (a)=>`TL31以上：捕まえたときにアメXLをもらえる確率 ${a}倍`],
+  [/^One additional Special Trade.*$/i, ()=>"スペシャル交換が1日1回追加（最大2回）"],
+  [/^Trades made will require 50% less Stardust\*?$/i, ()=>"交換に必要なほしのすなが50%減"],
+  [/^Take a snapshot.*$/i, ()=>"GOスナップショットでサプライズ"],
+];
+function translateBonus(text){
+  const t = String(text || "").trim();
+  const star = /\*$/.test(t) ? "※" : "";
+  for (const [re, fn] of BONUS_RULES){
+    const m = t.match(re);
+    if (m) return fn(...m.slice(1)) + star;
+  }
+  return jaMons(t);
+}
+
+// ===== 時刻 =====
+/** "Z" 付きは UTC、無しは「現地時間」として端末のタイムゾーンで解釈 */
+function parseTime(s){
+  if (!s) return null;
+  if (/Z$|[+-]\d{2}:?\d{2}$/.test(s)) { const d = new Date(s); return isNaN(d) ? null : d; }
+  const m = String(s).match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?/);
+  if (!m) return null;
+  return new Date(+m[1], +m[2]-1, +m[3], +m[4], +m[5], +(m[6]||0));
+}
+const WD = ["日","月","火","水","木","金","土"];
+const pad = (n)=>String(n).padStart(2,"0");
+const fmtT = (d)=>`${d.getHours()}:${pad(d.getMinutes())}`;
+const fmtD = (d)=>`${d.getMonth()+1}/${d.getDate()}(${WD[d.getDay()]})`;
+function startOfDay(d){ return new Date(d.getFullYear(), d.getMonth(), d.getDate()); }
+function addDays(d, n){ return new Date(d.getFullYear(), d.getMonth(), d.getDate()+n); }
+function sameDay(a,b){ return a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate(); }
+function fmtRange(s, e){
+  if (!s && !e) return "日時不明";
+  if (s && e){
+    // 23:59 / 23:59:59 終了は「その日いっぱい」
+    if (sameDay(s, e)) return `${fmtD(s)} ${fmtT(s)}〜${fmtT(e)}`;
+    return `${fmtD(s)} ${fmtT(s)} 〜 ${fmtD(e)} ${fmtT(e)}`;
+  }
+  return s ? `${fmtD(s)} ${fmtT(s)} 〜` : `〜 ${fmtD(e)} ${fmtT(e)}`;
+}
+function fmtDur(ms){
+  const min = Math.max(0, Math.round(ms / 60000));
+  if (min < 60) return `${min}分`;
+  const h = Math.floor(min / 60), m = min % 60;
+  if (h < 24) return m ? `${h}時間${m}分` : `${h}時間`;
+  const d = Math.floor(h / 24), hh = h % 24;
+  return hh ? `${d}日${hh}時間` : `${d}日`;
+}
+
+// ===== データ =====
+let EVENTS = [];
+let fetchedAt = null;
+let selDay = startOfDay(new Date());
+let lastRenderDay = startOfDay(new Date());
+
+function normalize(raw){
+  if (!Array.isArray(raw)) throw new Error("データ形式が想定と違います");
+  return raw.filter(e => e && e.name).map(e => {
+    const start = parseTime(e.start), end = parseTime(e.end);
+    const ev = {
+      id: e.eventID || e.name, name: String(e.name), type: e.eventType || "", heading: e.heading || "",
+      link: safeUrl(e.link), image: safeUrl(e.image), start, end, extra: e.extraData || {},
+      canceled: /^\s*\[(?:Canceled|Cancelled)\]/i.test(e.name),
+    };
+    ev.dur = (start && end) ? end - start : null;
+    ev.ja = translateName(ev);
+    ev.info = typeInfo(ev);
+    // レイド・マックスバトルは長期でも「今のボス」なので長期扱いにしない
+    ev.isBg = BG_TYPES.has(ev.type) || (ev.dur !== null && ev.dur > LONG_MIN_MS && ev.info.cat !== "raid" && ev.info.cat !== "max");
+    ev.isShort = !ev.isBg && ev.dur !== null && ev.dur <= SHORT_MAX_MS;
+    return ev;
+  });
+}
+function safeUrl(u){
+  try { const x = new URL(u); return x.protocol === "https:" ? x.href : null; } catch { return null; }
+}
+function loadCache(){
+  try {
+    const c = JSON.parse(localStorage.getItem(CACHE_KEY) || "null");
+    if (c && Array.isArray(c.data)) return c;
+  } catch {}
+  return null;
+}
+function saveCache(data){
+  try { localStorage.setItem(CACHE_KEY, JSON.stringify({fetchedAt: Date.now(), data})); } catch {}
+}
+async function fetchEvents(){
+  let lastErr;
+  for (const url of SOURCES){
+    try {
+      const ctl = new AbortController();
+      const timer = setTimeout(()=>ctl.abort(), 12000);
+      const res = await fetch(url, {cache: "no-cache", signal: ctl.signal});
+      clearTimeout(timer);
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      const data = await res.json();
+      normalize(data); // 形式チェック
+      return data;
+    } catch (e){ lastErr = e; }
+  }
+  throw lastErr || new Error("取得失敗");
+}
+let loading = false;
+async function refresh(){
+  if (loading) return;
+  loading = true;
+  const btn = document.getElementById("reload");
+  btn.disabled = true; btn.textContent = "更新中…";
+  try {
+    const data = await fetchEvents();
+    saveCache(data);
+    EVENTS = normalize(data); fetchedAt = new Date();
+    setNotice("");
+  } catch (e){
+    if (EVENTS.length) setNotice(`最新データを取得できませんでした（${esc(e.message || e)}）。前回取得したデータを表示しています。`, false);
+    else setNotice(`イベント情報を取得できませんでした（${esc(e.message || e)}）。通信環境を確認して「更新」を押してください。`, true);
+  } finally {
+    loading = false; btn.disabled = false; btn.textContent = "↻ 更新";
+    render();
+  }
+}
+function setNotice(html, isErr){
+  document.getElementById("notice").innerHTML = html ? `<div class="notice${isErr ? " err" : ""}">${html}</div>` : "";
+}
+
+// ===== 描画 =====
+function esc(s){ return String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+function overlaps(ev, from, to){ return ev.start && ev.end && ev.start < to && ev.end > from; }
+function stateOf(ev, now){
+  if (ev.canceled) return "cancel";
+  if (!ev.start || !ev.end) return "unknown";
+  if (now < ev.start) return "soon";
+  if (now >= ev.end) return "over";
+  return "live";
+}
+
+function monChips(list){
+  if (!Array.isArray(list) || !list.length) return "";
+  const seen = new Set();
+  const chips = list.filter(p => p && p.name && !seen.has(p.name) && seen.add(p.name)).map(p => {
+    const img = safeUrl(p.image);
+    const shiny = p.canBeShiny ? `<span class="sh" title="色違いあり">✨</span>` : "";
+    return `<span class="mon${img ? "" : " noimg"}">${img ? `<img src="${esc(img)}" alt="" loading="lazy" onerror="this.remove();this.parentNode&&this.parentNode.classList.add('noimg')">` : ""}${esc(jaMons(p.name))}${shiny}</span>`;
+  });
+  return `<div class="mons">${chips.join("")}</div>`;
+}
+
+function cardHtml(ev, now, opts = {}){
+  const st = stateOf(ev, now);
+  const dayStart = opts.dayStart, dayEnd = dayStart ? addDays(dayStart, 1) : null;
+  const tags = [`<span class="badge">${esc(ev.info.label)}</span>`];
+  let cd = "";
+  if (st === "cancel") tags.push(`<span class="status cancel">中止</span>`);
+  else if (opts.isToday){
+    if (st === "live"){ tags.push(`<span class="status live">● 開催中</span>`); cd = `<span class="cd live">終了まであと${fmtDur(ev.end - now)}</span>`; }
+    else if (st === "soon"){ tags.push(`<span class="status soon">開催前</span>`); cd = `<span class="cd soon">開始まであと${fmtDur(ev.start - now)}</span>`; }
+    else if (st === "over") tags.push(`<span class="status over">終了</span>`);
+  }
+  if (!ev.isShort && dayStart && ev.end && ev.end > dayStart && ev.end <= dayEnd && st !== "over" && st !== "cancel")
+    tags.push(`<span class="flag last">${opts.isToday ? "今日まで" : "この日まで"}</span>`);
+  if (!ev.isShort && dayStart && ev.start && ev.start >= dayStart && ev.start < dayEnd)
+    tags.push(`<span class="flag">${opts.isToday ? "今日から" : "この日から"}</span>`);
+
+  const x = ev.extra || {};
+  let mons = "";
+  if (x.raidbattles && x.raidbattles.bosses) mons += monChips(x.raidbattles.bosses);
+  if (x.communityday && x.communityday.spawns) mons += monChips(x.communityday.spawns);
+  if (x.spotlight) mons += monChips(x.spotlight.list && x.spotlight.list.length ? x.spotlight.list : [x.spotlight]);
+
+  let bonuses = [];
+  if (x.communityday && Array.isArray(x.communityday.bonuses)) bonuses = x.communityday.bonuses.map(b => b && b.text).filter(Boolean);
+  if (x.spotlight && x.spotlight.bonus) bonuses.push(x.spotlight.bonus);
+  const bonusHtml = bonuses.length ? `<ul class="bonuses">${bonuses.map(b => `<li>${esc(translateBonus(b))}</li>`).join("")}</ul>` : "";
+  const discl = x.communityday && Array.isArray(x.communityday.bonusDisclaimers) && x.communityday.bonusDisclaimers.length
+    ? `<details class="small"><summary>注意事項（原文・英語）</summary>${x.communityday.bonusDisclaimers.map(d => `<div>${esc(d)}</div>`).join("")}</details>` : "";
+  const codes = Array.isArray(x.promocodes) && x.promocodes.length
+    ? `<div class="links">コード：${x.promocodes.map(c => `<span class="code">${esc(c)}</span> <button class="btn copy" type="button" data-copy="${esc(c)}">コピー</button>`).join(" ")}</div>` : "";
+
+  const orig = ev.name !== ev.ja ? `<p class="orig">${esc(ev.name)}</p>` : "";
+  const thumb = ev.image ? `<img class="thumb" src="${esc(ev.image)}" alt="" loading="lazy" onerror="this.remove()">` : "";
+  const cls = ["card", "cat-" + ev.info.cat];
+  if (opts.isToday && st === "live" && ev.isShort) cls.push("live");
+  if (opts.isToday && st === "over") cls.push("over");
+  if (st === "cancel") cls.push("canceled");
+  return `<article class="${cls.join(" ")}">
+    <div class="card-head"><div class="card-main">
+      <div class="tags">${tags.join("")}</div>
+      <h3 class="title">${esc(ev.ja)}</h3>${orig}
+    </div>${thumb}</div>
+    <p class="when">🕒 ${esc(fmtRange(ev.start, ev.end))}${cd ? "<br>" + cd : ""}</p>
+    ${mons}${bonusHtml}${discl}${codes}
+    ${ev.link ? `<div class="links"><a href="${esc(ev.link)}" target="_blank" rel="noopener">詳細を見る（LeekDuck・英語）↗</a></div>` : ""}
+  </article>`;
+}
+
+function sortByStateThen(now, key){
+  const rank = {live:0, soon:1, unknown:2, cancel:3, over:4};
+  return (a, b) => (rank[stateOf(a, now)] - rank[stateOf(b, now)]) || key(a, b);
+}
+
+function renderDays(now){
+  const today = startOfDay(now);
+  const html = [];
+  for (let i = 0; i < STRIP_DAYS; i++){
+    const d = addDays(today, i), dEnd = addDays(d, 1);
+    const n = EVENTS.filter(ev => ev.isShort && !ev.canceled && overlaps(ev, d, dEnd)).length;
+    const cls = ["day"]; if (d.getDay() === 0) cls.push("sun"); if (d.getDay() === 6) cls.push("sat");
+    if (sameDay(d, selDay)) cls.push("sel");
+    const dw = i === 0 ? "今日" : i === 1 ? "明日" : WD[d.getDay()];
+    html.push(`<button class="${cls.join(" ")}" type="button" data-day="${i}" aria-pressed="${sameDay(d, selDay)}">
+      <div class="dw">${dw}</div><div class="dd">${d.getDate()}</div>
+      <div class="dots">${"<i></i>".repeat(Math.min(n, 4))}</div></button>`);
+  }
+  document.getElementById("days").innerHTML = html.join("");
+}
+
+function render(){
+  const now = new Date();
+  const today = startOfDay(now);
+  // 日付が変わったら「今日」に追従
+  if (!sameDay(today, lastRenderDay)){ if (sameDay(selDay, lastRenderDay) || selDay < today) selDay = today; lastRenderDay = today; }
+  document.getElementById("todayLabel").textContent = `${now.getMonth()+1}月${now.getDate()}日(${WD[now.getDay()]})`;
+  document.getElementById("clock").textContent = `${now.getHours()}:${pad(now.getMinutes())} 現在`;
+  document.getElementById("lastUpdated").textContent = fetchedAt ? `データ取得：${fmtD(fetchedAt)} ${fmtT(fetchedAt)}` : "";
+  renderDays(now);
+
+  const main = document.getElementById("main");
+  if (!EVENTS.length){ document.getElementById("summary").innerHTML = ""; if (!loading) main.innerHTML = `<div class="empty">表示できるイベントがありません</div>`; return; }
+
+  const isToday = sameDay(selDay, today);
+  const dayStart = selDay, dayEnd = addDays(selDay, 1);
+  const dayEvents = EVENTS.filter(ev => overlaps(ev, dayStart, dayEnd));
+  const short = dayEvents.filter(ev => ev.isShort).sort(isToday ? sortByStateThen(now, (a,b)=>a.start-b.start) : (a,b)=>a.start-b.start);
+  const mid = dayEvents.filter(ev => !ev.isShort && !ev.isBg)
+    .sort(isToday ? sortByStateThen(now, (a,b)=>a.end-b.end) : (a,b)=>a.end-b.end);
+  const bg = dayEvents.filter(ev => ev.isBg).sort((a,b)=>a.end-b.end);
+
+  // サマリー
+  const sum = [];
+  if (isToday){
+    const liveN = dayEvents.filter(ev => stateOf(ev, now) === "live" && !ev.isBg).length;
+    const laterN = dayEvents.filter(ev => stateOf(ev, now) === "soon").length;
+    const endN = dayEvents.filter(ev => !ev.isBg && stateOf(ev, now) === "live" && ev.end <= dayEnd).length;
+    sum.push(`<span class="pill live">いま開催中 <b>${liveN}</b>件</span>`);
+    sum.push(`<span class="pill">今日このあと開始 <b>${laterN}</b>件</span>`);
+    if (endN) sum.push(`<span class="pill">今日で終わる <b>${endN}</b>件</span>`);
+  } else {
+    sum.push(`<span class="pill">${fmtD(selDay)} の時間限定 <b>${short.filter(e=>!e.canceled).length}</b>件</span>`);
+    sum.push(`<span class="pill">開催中のイベント・レイド <b>${mid.length}</b>件</span>`);
+  }
+  document.getElementById("summary").innerHTML = sum.join("");
+
+  const o = {isToday, dayStart};
+  let html = "";
+  html += `<section class="block"><h2>⏰ ${isToday ? "今日" : fmtD(selDay)}の時間限定イベント <span class="count">${short.length}件</span></h2>`;
+  if (short.length) html += `<div class="cards">${short.map(ev => cardHtml(ev, now, o)).join("")}</div>`;
+  else {
+    const next = EVENTS.filter(ev => ev.isShort && !ev.canceled && ev.start >= dayEnd).sort((a,b)=>a.start-b.start)[0];
+    const nextTxt = next ? `<br>次は <b>${esc(fmtD(next.start))} ${esc(fmtT(next.start))}〜</b> ${esc(next.ja)}` : "";
+    html += `<div class="empty">${isToday ? "今日" : "この日"}は時間限定のイベントはありません${nextTxt}</div>`;
+  }
+  html += `</section>`;
+
+  html += `<section class="block"><h2>🎉 ${isToday ? "開催中" : "この日開催中"}のイベント・レイド <span class="count">${mid.length}件</span></h2>`;
+  html += mid.length ? `<div class="cards">${mid.map(ev => cardHtml(ev, now, o)).join("")}</div>` : `<div class="empty">ありません</div>`;
+  html += `</section>`;
+
+  if (bg.length){
+    html += `<section class="block"><details class="fold"><summary>📌 長期開催中（シーズン・GOパス・バトルリーグなど） <span class="count">${bg.length}件</span></summary>
+      <div class="cards">${bg.map(ev => cardHtml(ev, now, o)).join("")}</div></details></section>`;
+  }
+
+  // これからの時間限定イベント（選択日の翌日から7日）
+  const upFrom = dayEnd, upTo = addDays(dayEnd, UPCOMING_DAYS);
+  const upcoming = EVENTS.filter(ev => ev.isShort && ev.start >= upFrom && ev.start < upTo).sort((a,b)=>a.start-b.start);
+  html += `<section class="block"><h2>🔜 このあと${UPCOMING_DAYS}日間の時間限定イベント <span class="count">${upcoming.length}件</span></h2>`;
+  if (upcoming.length){
+    let lastKey = "", rows = "";
+    for (const ev of upcoming){
+      const key = fmtD(ev.start);
+      if (key !== lastKey){ rows += `<div class="dhead">${key}</div>`; lastKey = key; }
+      const diff = Math.round((startOfDay(ev.start) - today) / DAY_MS);
+      rows += `<div class="row${ev.canceled ? " canceled" : ""} cat-${ev.info.cat}" data-day="${diff}" role="button" tabindex="0">
+        <span class="t">${fmtT(ev.start)}〜${sameDay(ev.start, ev.end) ? fmtT(ev.end) : fmtD(ev.end)}</span>
+        <span class="n"><span class="badge">${esc(ev.info.label)}</span>${esc(ev.ja)}${ev.canceled ? "（中止）" : ""}</span></div>`;
+    }
+    html += `<div class="list">${rows}</div>`;
+  } else html += `<div class="empty">予定はまだ発表されていません</div>`;
+  html += `</section>`;
+
+  const unknown = EVENTS.filter(ev => !ev.start || !ev.end);
+  if (isToday && unknown.length){
+    html += `<section class="block"><details class="fold"><summary>❔ 日時が取得できなかったイベント <span class="count">${unknown.length}件</span></summary>
+      <p class="orig" style="margin-top:8px">データ元に日時が入っていないもの（終了済み・告知のみの場合もあります）。</p>
+      <div class="cards">${unknown.map(ev => cardHtml(ev, now, o)).join("")}</div></details></section>`;
+  }
+  // 折りたたみの開閉状態を保持
+  const openState = [...main.querySelectorAll("details.fold")].map(d => d.open);
+  main.innerHTML = html;
+  [...main.querySelectorAll("details.fold")].forEach((d, i) => { if (openState[i]) d.open = true; });
+}
+
+// ===== イベント =====
+document.getElementById("reload").addEventListener("click", refresh);
+document.getElementById("days").addEventListener("click", (e) => {
+  const b = e.target.closest("[data-day]"); if (!b) return;
+  selDay = addDays(startOfDay(new Date()), +b.dataset.day); render();
+  window.scrollTo({top: 0, behavior: "smooth"});
+});
+document.getElementById("main").addEventListener("click", async (e) => {
+  const c = e.target.closest("[data-copy]");
+  if (c){ try { await navigator.clipboard.writeText(c.dataset.copy); c.textContent = "コピーしました"; } catch { c.textContent = "コピー不可"; } setTimeout(()=>c.textContent="コピー", 1500); return; }
+  const r = e.target.closest(".row[data-day]");
+  if (r){ const n = +r.dataset.day; if (n >= 0 && n < STRIP_DAYS){ selDay = addDays(startOfDay(new Date()), n); render(); window.scrollTo({top: 0, behavior: "smooth"}); } }
+});
+document.getElementById("main").addEventListener("keydown", (e) => {
+  if ((e.key === "Enter" || e.key === " ") && e.target.matches(".row[data-day]")){ e.preventDefault(); e.target.click(); }
+});
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState !== "visible") return;
+  render();
+  if (!fetchedAt || Date.now() - fetchedAt > REFETCH_MS) refresh();
+});
+setInterval(render, TICK_MS);
+setInterval(() => { if (document.visibilityState === "visible") refresh(); }, REFETCH_MS);
+
+// 起動：キャッシュがあれば即表示 → 最新を取得
+const cached = loadCache();
+if (cached){ try { EVENTS = normalize(cached.data); fetchedAt = new Date(cached.fetchedAt); } catch {} }
+render();
+refresh();
+</script>
+</body>
+</html>
