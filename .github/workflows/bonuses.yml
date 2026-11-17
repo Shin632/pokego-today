@@ -1,0 +1,47 @@
+name: イベントのボーナス情報を集める
+
+on:
+  schedule:
+    - cron: "23 */3 * * *"   # 3時間ごと（UTC）
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: bonuses
+  cancel-in-progress: false
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: 依存パッケージ
+        run: pip install --quiet beautifulsoup4
+
+      - name: 前回のデータを取得
+        run: |
+          curl -fsSL "https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/data/bonuses.json" -o prev.json || echo '{}' > prev.json
+
+      - name: ボーナス情報を収集
+        run: |
+          mkdir -p out
+          python3 tools/scrape_bonuses.py prev.json out/bonuses.json
+
+      - name: data ブランチに保存
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cd out
+          git init -q -b data
+          git add bonuses.json
+          git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+            commit -q -m "ボーナス情報を更新"
+          git push -q -f "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" data
