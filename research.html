@@ -25,7 +25,8 @@ body{
   padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
 }
 .wrap{max-width:760px;margin:0 auto;padding:12px 14px 40px}
-.nav{display:flex;gap:8px;margin:2px 0 6px}
+.nav{display:flex;gap:8px;margin:2px 0 6px;overflow-x:auto;scrollbar-width:none}
+.nav a{flex:0 0 auto}
 .nav a{font-size:13px;color:var(--accent);text-decoration:none;border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:5px 12px}
 .nav a.cur{background:var(--accent);border-color:var(--accent);color:#fff}
 header.top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;padding:6px 2px 8px}
@@ -100,7 +101,7 @@ footer a{color:var(--sub)}
 </head>
 <body>
 <div class="wrap">
-  <nav class="nav"><a href="index.html">📅 今日のイベント</a><a href="research.html" class="cur">📋 フィールドリサーチ</a></nav>
+  <nav class="nav"><a href="index.html">📅 イベント</a><a href="research.html" class="cur">📋 リサーチ</a><a href="shop.html">🛒 ボックス判定</a></nav>
   <header class="top">
     <div>
       <h1>フィールドリサーチ一覧</h1>
