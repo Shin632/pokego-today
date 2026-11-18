@@ -64,6 +64,27 @@ section.cat.event .task{border-left:5px solid var(--event)}
 .rw.hit{outline:2px solid var(--accent);outline-offset:-1px}
 .sh{font-size:11px}
 .empty{color:var(--sub);font-size:14px;background:var(--panel);border:1px dashed var(--line);border-radius:var(--radius);padding:14px;text-align:center}
+.meta{font-size:12px;color:var(--sub);margin-top:3px}
+.meta b{color:var(--text);font-weight:700}
+.task.good{border:2px solid #f5b83d;background:linear-gradient(135deg,#fffaf0,var(--panel) 60%)}
+.task.great{border-color:#ea8a00;box-shadow:0 0 0 2px rgba(234,138,0,.18)}
+@media (prefers-color-scheme: dark){.task.good{background:linear-gradient(135deg,#2c2414,var(--panel) 60%)}}
+section.cat.event .task.good{border-left:5px solid var(--event)}
+.good-b{display:inline-block;font-size:11px;font-weight:700;color:#7a4a00;background:#ffe3a3;border-radius:6px;padding:1px 7px;margin-bottom:3px}
+@media (prefers-color-scheme: dark){.good-b{background:#5a3f0b;color:#ffd27a}}
+.gbox{background:linear-gradient(135deg,#fff8e6,#fff1f5);border:2px solid #f5b83d;border-radius:var(--radius);padding:4px 12px 8px}
+@media (prefers-color-scheme: dark){.gbox{background:linear-gradient(135deg,#2f2614,#2c1a22);border-color:#a7731c}}
+.grow{display:flex;gap:8px;align-items:flex-start;padding:8px 0;border-bottom:1px dashed rgba(245,184,61,.55);color:inherit;text-decoration:none}
+.grow:last-of-type{border-bottom:none}
+.gmark{flex:0 0 auto;width:42px;font-size:15px;white-space:nowrap}
+.gtext{flex:1;min-width:0;font-size:14.5px;line-height:1.4}
+.gsub{display:block;font-size:12px;color:var(--sub)}
+.gtag{font-size:12px;color:var(--sub)}
+.evbadge.sm{font-size:10px;padding:1px 5px;vertical-align:1px}
+.how{font-size:12px;color:var(--sub);margin-top:4px}
+.how summary{cursor:pointer}
+.how p{margin:4px 0}
+html{scroll-padding-top:120px}
 footer{margin-top:28px;font-size:12px;color:var(--sub);line-height:1.7}
 footer a{color:var(--sub)}
 </style>
@@ -197,9 +218,95 @@ function rewardJa(r){
   return jaMons(n);
 }
 
+// ===== 「割に合う」判定（手間と見返りの目安。データ元に無い情報なので、このアプリ独自の目安） =====
+const COMMON_TYPES = new Set(["Normal","Water","Grass","Flying","Bug","Poison","Ground","Rock"]);
+const num = (w) => /^an?$/i.test(w) ? 1 : +w;
+/** 手間 1（すぐ終わる）〜5（かなり大変）と、その理由 */
+const EFFORT_RULES = [
+  [/^Take (?:a|\d+) snapshots?/i, () => [1, "写真を撮るだけ"]],
+  [/^Spin (\d+|an?) PokéStops?(?: or Gyms?)?$/i, (n) => [num(n) <= 3 ? 1 : num(n) <= 5 ? 1.5 : 2.5, "ポケストップを回すだけ"]],
+  [/^Evolve (\d+|an?) Pokémon$/i, (n) => [num(n) <= 1 ? 1.5 : 2.5, "進化させるだけ（アメを使う）"]],
+  [/^Power up Pokémon (\d+) times$/i, (n) => [num(n) <= 3 ? 1.5 : num(n) <= 5 ? 2 : num(n) <= 8 ? 2.5 : 3, "強化するだけ（ほしのすなを使う）"]],
+  [/^Use (\d+|an?) Berr(?:y|ies)/i, (n) => [num(n) <= 5 ? 1.5 : 2.5, "きのみを使いながら捕まえる"]],
+  [/^Send (\d+|an?) Gifts?/i, (n) => [num(n) <= 3 ? 2 : 3, "ギフトを送る（フレンドとギフトが必要）"]],
+  [/^Catch (\d+) different species/i, (n) => [num(n) <= 7 ? 2 : 3, "いろいろな種類を捕まえる"]],
+  [/^Catch (\d+|an?) Pokémon with Weather Boost$/i, (n) => [num(n) <= 5 ? 2 : 3, "天候ブーストのポケモンを捕まえる"]],
+  [/^Catch (\d+|an?) (\w+)-type Pokémon$/i, (n, t) => {
+    const k = num(n), rare = !COMMON_TYPES.has(t);
+    return [Math.min(5, (k <= 1 ? 1.5 : k <= 5 ? 2 : 2.5) + (rare ? 1.5 : 0)), rare ? `出にくい${TYPES_JA[t] || t}タイプを探す` : "よく出るタイプを捕まえる"];
+  }],
+  [/^Catch (\d+|an?) Pokémon$/i, (n) => { const k = num(n); return [k <= 10 ? 2 : k <= 25 ? 3 : 4, ""]; }],
+  [/^Catch a Ditto$/i, () => [4, "メタモンは見分けられず運しだい"]],
+  [/^Make (\d+|an?) Excellent (?:Curveball )?Throws?( in a row)?$/i, (n, r) => [Math.min(5, 2.5 + num(n) * 0.5 + (r ? 1 : 0)), "エクセレントは難しい"]],
+  [/^Make (\d+|an?) Great Curveball Throws?( in a row)?$/i, (n, r) => [Math.min(5, 2 + num(n) * 0.3 + (r ? 1 : 0)), "グレート＋カーブ"]],
+  [/^Make (\d+|an?) Great Throws?( in a row)?$/i, (n, r) => [Math.min(5, 1.5 + num(n) * 0.2 + (r ? 0.8 : 0)), "グレートスロー"]],
+  [/^Make (\d+|an?) Nice (?:Curveball )?Throws?( in a row)?$/i, (n, r) => [Math.min(5, 1.2 + num(n) * 0.12 + (r ? 0.5 : 0)), "ナイスは比較的かんたん"]],
+  [/^Make (\d+|an?) Curveball Throws?( in a row)?$/i, (n, r) => [Math.min(5, 1.5 + num(n) * 0.1 + (r ? 0.5 : 0)), "カーブボール"]],
+  [/^Defeat (\d+|an?) Team GO Rocket Grunts?$/i, (n) => [num(n) <= 1 ? 2.5 : 3.5, "したっぱとバトル"]],
+  [/^Battle in (\d+|an?) raids?$/i, (n) => [num(n) <= 1 ? 4 : 5, "レイドパスが必要"]],
+  [/^Win (\d+|an?) raids?$/i, (n) => [num(n) <= 1 ? 4 : 5, "レイドパスが必要"]],
+  [/^Win an? \w+-star raid or higher$/i, () => [4.5, "レイドパスと★3以上の勝利が必要"]],
+  [/^Win (\d+|an?) Max Battles?$/i, (n) => [num(n) <= 1 ? 3.5 : 4.5, "マックス粒子が必要"]],
+  [/^Unlock (\d+|an?) Max Moves?$/i, () => [3, "アメとほしのすなを使う"]],
+  [/^Earn (\d+) Stardust$/i, (n) => [num(n) >= 10000 ? 4 : 3, "たくさん集める必要がある"]],
+  [/^Earn (\d+) XP$/i, (n) => [num(n) >= 10000 ? 3.5 : 2.5, "たくさん集める必要がある"]],
+  [/^Earn (\d+|an?) Cand(?:y|ies) walking/i, (n) => [num(n) <= 1 ? 2.5 : num(n) <= 2 ? 3 : 4, "相棒と歩く必要がある"]],
+  [/^Explore (\d+(?:\.\d+)?) km$/i, (n) => [+n <= 1 ? 2.5 : +n <= 2 ? 3.5 : 5, `${n}km歩く必要がある`]],
+  [/^Hatch (\d+|an?) Eggs?$/i, (n) => [num(n) <= 1 ? 3.5 : num(n) <= 2 ? 4.5 : 5, "タマゴをかえすには歩く必要がある"]],
+  [/^Trade (\d+|an?) Pokémon$/i, () => [4.5, "交換相手が近くに必要"]],
+  [/^Purify/i, () => [3, "ほしのすなとアメを使う"]],
+  [/^Mega Evolve/i, () => [2.5, "メガエナジーを使う"]],
+];
+function taskEffort(text){
+  for (const [re, fn] of EFFORT_RULES){ const m = String(text).match(re); if (m){ const [lv, why] = fn(...m.slice(1)); return {lv, why, known: true}; } }
+  return {lv: 3, why: "", known: false};
+}
+// 出会えると人気・貴重なポケモン（このアプリの判断。ドラゴン系の進化前、化石、ラプラスなど）
+const PRIZE_MONS = new Set(["Dratini","Larvitar","Bagon","Beldum","Gible","Axew","Deino","Goomy","Jangmo-o","Frigibax","Dreepy",
+  "Lapras","Snorlax","Aerodactyl","Omanyte","Kabuto","Lileep","Anorith","Cranidos","Shieldon","Tirtouga","Archen","Tyrunt","Amaura",
+  "Spinda","Ditto","Riolu","Feebas","Scyther","Chansey","Togepi","Ralts","Mawile"]);
+const interp = (x, pts) => { if (x <= pts[0][0]) return pts[0][1]; for (let i = 1; i < pts.length; i++){ const [x1, y1] = pts[i], [x0, y0] = pts[i-1]; if (x <= x1) return y0 + (y1 - y0) * (x - x0) / (x1 - x0); } return pts[pts.length-1][1]; };
+/** 報酬1つの価値 0〜10（目安） */
+function rewardValue(r){
+  const n = r.name || "", q = +r.qty || 1;
+  if (r.type === "encounter") return PRIZE_MONS.has(n.replace(/^(Alolan|Galarian|Hisuian|Paldean) /, "")) ? 5 : 2;
+  if (/^Rare Candy XL$/.test(n)) return 10;
+  if (/^Rare Candy$/.test(n)) return Math.min(10, 5 + q * 1.3);
+  if (n === "Stardust") return interp(q, [[0,0],[200,1],[500,2],[1000,3.5],[1500,4.5],[2000,5],[5000,7]]);
+  if (/Mega Energy$/.test(n)) return Math.min(7, 2 + q / 10);
+  if (/ Candy XL$/.test(n)) return Math.min(8, 3 + q);
+  if (/ Candy$/.test(n)) return Math.min(7, 1 + q / 5);
+  if (/^Golden Razz Berry$|^Silver Pinap Berry$/.test(n)) return Math.min(5, 1.5 + q * 0.6);
+  if (/^Ultra Ball$/.test(n)) return Math.min(4, q * 0.3);
+  if (/^Great Ball$/.test(n)) return Math.min(3, q * 0.2);
+  if (/^Poké Ball$/.test(n)) return Math.min(2, q * 0.1);
+  if (/Berry$/.test(n)) return Math.min(2, q * 0.25);
+  if (/^Elite (Fast|Charged) TM$/.test(n)) return 9;
+  if (/TM$/.test(n)) return 3;
+  if (/^(Sinnoh|Unova) Stone$|^Sun Stone$|^King's Rock$|^Metal Coat$|^Dragon Scale$|^Up-Grade$/.test(n)) return 4;
+  if (/^Poffin$|^Lucky Egg$|^Star Piece$/.test(n)) return 3;
+  if (/^Max Particles$/.test(n)) return Math.min(5, q / 100);
+  if (/Potion$|Revive$/.test(n)) return 0.5;
+  return 1.5;
+}
+/** タスクの評価：見返りは「出る可能性のある報酬の平均」（出る確率は不明なので同じとみなす） */
+function scoreTask(t){
+  const eff = taskEffort(t.text);
+  const vals = t.rewards.map(r => ({r, v: rewardValue(r)}));
+  const avg = vals.length ? vals.reduce((a, b) => a + b.v, 0) / vals.length : 0;
+  const best = vals.slice().sort((a, b) => b.v - a.v).slice(0, 2).filter(x => x.v >= 3).map(x => x.r);
+  const ratio = avg / eff.lv;
+  const ok = eff.known && vals.length > 0 && avg >= 2.5;
+  return {effort: eff, value: avg, ratio, best, good: ok && ratio >= GOOD_RATIO, great: ok && ratio >= GREAT_RATIO};
+}
+const GOOD_RATIO = 1.2, GREAT_RATIO = 2;
+const effortLabel = (lv) => lv <= 1.5 ? "かんたん" : lv <= 2.5 ? "少し" : lv <= 3.5 ? "ふつう" : lv <= 4.5 ? "大変" : "かなり大変";
+const valueLabel = (v) => v >= 6 ? "大" : v >= 3.5 ? "中〜大" : v >= 2.5 ? "中" : v >= 1.5 ? "小" : "少ない";
+
 // ===== 絞り込み =====
 const FILTERS = [
   ["all", "すべて", () => true],
+  ["good", "👍 割に合う", null],
   ["pokemon", "ポケモン", (r) => r.type === "encounter"],
   ["rare", "ふしぎなアメ", (r) => /^Rare Candy/.test(r.name)],
   ["dust", "ほしのすな", (r) => r.name === "Stardust"],
@@ -236,10 +343,12 @@ function prepare(cats){
     for (const t of c.tasks){
       const tr = translateTask(t.text); t.ja = tr.ja; t.ok = tr.ok;
       for (const r of t.rewards) r.ja = rewardJa(r);
+      t.score = scoreTask(t);
       t.hay = (t.ja + " " + t.text + " " + t.rewards.map(r => r.ja + " " + r.name).join(" ")).toLowerCase();
     }
   }
   // イベントのタスクを先頭に
+  let i = 0; for (const c of cats) for (const t of c.tasks) t.anchor = "task-" + (i++);
   return cats.sort((a, b) => (b.info.event - a.info.event));
 }
 async function getJson(url){
@@ -283,6 +392,25 @@ function rewardHtml(r, hit){
   }
   return `<span class="${cls.join(" ")}">${img}<span>${esc(r.ja)}${r.qty ? ` <span class="q">×${esc(Number(r.qty).toLocaleString())}</span>` : ""}</span></span>`;
 }
+function goodSummary(){
+  const list = [];
+  for (const c of CATS_DATA) for (const t of c.tasks) if (t.score.good) list.push({c, t});
+  list.sort((a, b) => b.t.score.ratio - a.t.score.ratio);
+  const rows = list.map(({c, t}) => {
+    const best = t.score.best.map(r => r.ja + (r.qty ? `×${Number(r.qty).toLocaleString()}` : "")).join("・");
+    return `<a class="grow" href="#${t.anchor}"><span class="gmark">${t.score.great ? "👍👍" : "👍"}</span>
+      <span class="gtext"><b>${esc(t.ja)}</b>${c.info.event ? ` <span class="evbadge sm">イベント</span>` : c.name === "Sponsored Tasks" ? ` <span class="gtag">（スポンサー）</span>` : ""}
+      <span class="gsub">手間：${effortLabel(t.score.effort.lv)}${best ? ` ／ ${esc(best)} などが出る` : ""}</span></span></a>`;
+  }).join("");
+  return `<section class="cat goodsum"><h2>👍 割に合うタスク <span class="count">${list.length}件</span></h2>
+    <div class="gbox">${rows || `<div class="gsub">今は目立って割に合うタスクはありません</div>`}
+    <details class="how"><summary>判定のしかた</summary>
+      <p>データ元には「手間」も「報酬の価値」も無いため、このアプリ独自の目安で点数を付けています。</p>
+      <p>・<b>手間</b>：タスクの内容から5段階（例：写真を撮る・ポケストップ3回＝かんたん、レイド＝レイドパスが必要なので大変、タマゴ・km＝歩くので大変）。</p>
+      <p>・<b>見返り</b>：報酬の中身から点数化（例：ふしぎなアメ・ほしのすな2,000以上・メガエナジー・伝説のポケモンのアメは高め、ボールやきのみは低め。ポケモンは、ドラゴン系の進化前・化石・ラプラスなど人気のものを高めにしています）。どの報酬がどれくらいの確率で出るかは公開されていないので、並んでいる報酬が<b>同じ確率で出ると仮定して平均</b>しています。</p>
+      <p>・見返りが手間の1.2倍以上を「割に合う」、2倍以上を「とても割に合う」としています。あくまで目安です。</p>
+    </details></div></section>`;
+}
 function render(){
   const f = FILTERS.find(x => x[0] === filter) || FILTERS[0];
   document.getElementById("chips").innerHTML = FILTERS.map(([k, label]) =>
@@ -292,18 +420,23 @@ function render(){
   if (!CATS_DATA){ if (!loading) main.innerHTML = `<div class="empty">表示できるデータがありません</div>`; return; }
   const q = query.trim().toLowerCase();
   let html = "", total = 0;
+  if (filter === "all" && !q) html += goodSummary();
   for (const c of CATS_DATA){
-    const tasks = c.tasks.filter(t => (!q || t.hay.includes(q)) && (filter === "all" || t.rewards.some(f[2])));
+    const tasks = c.tasks.filter(t => (!q || t.hay.includes(q)) &&
+      (filter === "all" || (filter === "good" ? t.score.good : t.rewards.some(f[2]))));
     if (!tasks.length) continue;
     total += tasks.length;
     const title = c.info.event ? `<span class="evbadge">イベント</span>${esc(c.info.ja)}` : `${c.info.icon} ${esc(c.info.ja)}`;
     html += `<section class="cat${c.info.event ? " event" : ""}"><h2>${title} <span class="count">${tasks.length}件</span></h2><div class="tasks">`;
     for (const t of tasks){
-      const hitOf = (r) => (filter !== "all" && f[2](r)) || (q && (r.ja + " " + r.name).toLowerCase().includes(q));
+      const hitOf = (r) => (f[2] && filter !== "all" && f[2](r)) || (q && (r.ja + " " + r.name).toLowerCase().includes(q));
       // 絞り込みに当たる報酬を前に
       const rs = [...t.rewards].sort((a, b) => hitOf(b) - hitOf(a));
-      html += `<article class="task"><div class="tt">${esc(t.ja)}</div>${t.ja !== t.text ? `<div class="te">${esc(t.text)}</div>` : ""}
-        <div class="rewards">${rs.map(r => rewardHtml(r, hitOf(r))).join("") || `<span class="te">報酬の情報なし</span>`}</div></article>`;
+      const sc = t.score;
+      const badge = sc.great ? `<span class="good-b">👍👍 とても割に合う</span>` : sc.good ? `<span class="good-b">👍 割に合う</span>` : "";
+      const meta = sc.effort.known ? `<div class="meta">手間：<b>${effortLabel(sc.effort.lv)}</b>${sc.effort.why ? `（${esc(sc.effort.why)}）` : ""} ・ 見返り：<b>${valueLabel(sc.value)}</b></div>` : "";
+      html += `<article class="task${sc.great ? " good great" : sc.good ? " good" : ""}" id="${t.anchor}">${badge}<div class="tt">${esc(t.ja)}</div>${t.ja !== t.text ? `<div class="te">${esc(t.text)}</div>` : ""}
+        ${meta}<div class="rewards">${rs.map(r => rewardHtml(r, hitOf(r))).join("") || `<span class="te">報酬の情報なし</span>`}</div></article>`;
     }
     html += `</div></section>`;
   }
