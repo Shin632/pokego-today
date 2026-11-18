@@ -17,7 +17,7 @@
 - レイド：タイプ相性なし（等倍）の相手に対する評価。タイプ別は、技1・技2ともにそのタイプのものだけで評価。
 - ジム防衛：ジムに置けるポケモン（伝説・幻・ウルトラビースト・メガ・シャドウを除く）について、
   「強い攻撃役（各ポケモンに対して相性の良い上位5匹）で倒すのにかかる時間」で評価する（ジムの防衛側はHPが2倍）。
-- 育成難易度（1〜5）：伝説・幻・メガ・シャドウ・★技（すごいわざマシン）・進化に必要なアメの数・進化アイテム・地域限定から点数化。
+- 育成難易度（1〜5）：伝説・幻・メガ・合体・シャドウ・★技（すごいわざマシン）・進化に必要なアメの数・進化アイテム・地域限定から点数化。
 - ジム攻撃：ジム防衛ランキングの上位6匹を「よく置かれる相手」とみなし、それらに対する評価の平均（上位ほど重み大）。
 """
 import csv
@@ -33,7 +33,7 @@ GAME_MASTER = "https://raw.githubusercontent.com/PokeMiners/game_masters/master/
 MOVES_CSV = "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/moves.csv"
 MOVE_NAMES_CSV = "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/move_names.csv"
 FRESH_HOURS = 24
-SCHEMA = 2               # 出力の形式を変えたら上げる（前回分を使い回さず計算し直す）
+SCHEMA = 3               # 出力の形式を変えたら上げる（前回分を使い回さず計算し直す）
 TOP_N = 10
 KEEP = {"raid": 250, "type": 60, "gym": 200, "defense": 30}   # 画面で絞り込んでも10件出せるよう多めに持つ
 ATTACKER_POOL = 150      # ジム防衛の評価に使う攻撃役の候補（レイド上位＋タイプ別上位）
@@ -142,6 +142,17 @@ def total_candy(dex, evo, depth=0):
     return c + cost, items + ([item] if item else [])
 
 
+# 合体して姿が変わるポケモン（合体相手の伝説と、合体用のエネルギーが別に必要）
+FUSIONS = {
+    "kyurem_black": "合体：ゼクロムと合体エネルギーが必要",
+    "kyurem_white": "合体：レシラムと合体エネルギーが必要",
+    "necrozma_dusk_mane": "合体：ソルガレオと合体エネルギーが必要",
+    "necrozma_dawn_wings": "合体：ルナアーラと合体エネルギーが必要",
+    "calyrex_ice_rider": "合体：ブリザポスが必要",
+    "calyrex_shadow_rider": "合体：レイスポスが必要",
+}
+
+
 def difficulty(p, b, evo):
     """育成の大変さ（1〜5）と理由。目安としての点数づけ。"""
     tags = set(p.get("tags", []))
@@ -152,6 +163,8 @@ def difficulty(p, b, evo):
         pts += 2; reasons.append("伝説：レイドなどでしか手に入らず、アメも集めにくい")
     if "mega" in tags:
         pts += 1; reasons.append("メガシンカにメガエナジーが必要")
+    if p["speciesId"].replace("_shadow", "") in FUSIONS:
+        pts += 1.5; reasons.append(FUSIONS[p["speciesId"].replace("_shadow", "")])
     if "shadow" in tags:
         pts += 1; reasons.append("シャドウ：GOロケット団などから入手。やつあたりを消すにはイベントが必要")
     if b.get("fastElite") or b.get("chargedElite"):
