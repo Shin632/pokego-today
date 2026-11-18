@@ -72,6 +72,15 @@ section.cat.event .task{border-left:5px solid var(--event)}
 section.cat.event .task.good{border-left:5px solid var(--event)}
 .good-b{display:inline-block;font-size:11px;font-weight:700;color:#7a4a00;background:#ffe3a3;border-radius:6px;padding:1px 7px;margin-bottom:3px}
 @media (prefers-color-scheme: dark){.good-b{background:#5a3f0b;color:#ffd27a}}
+.gfold>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:6px;font-size:16px;font-weight:700;
+  background:var(--panel);border:2px solid #f5b83d;border-radius:var(--radius);padding:10px 12px;-webkit-user-select:none;user-select:none}
+.gfold>summary::-webkit-details-marker{display:none}
+.gfold[open]>summary{border-bottom-left-radius:0;border-bottom-right-radius:0;border-bottom-style:dashed}
+.garrow{display:inline-block;font-size:12px;color:#c27a00;transition:transform .15s}
+.gfold[open] .garrow{transform:rotate(90deg)}
+.ghint{margin-left:auto;font-size:12px;font-weight:500;color:var(--sub)}
+.gfold[open]>.gbox{border-top:none;border-top-left-radius:0;border-top-right-radius:0}
+@media (prefers-color-scheme: dark){.gfold>summary{border-color:#a7731c}}
 .gbox{background:linear-gradient(135deg,#fff8e6,#fff1f5);border:2px solid #f5b83d;border-radius:var(--radius);padding:4px 12px 8px}
 @media (prefers-color-scheme: dark){.gbox{background:linear-gradient(135deg,#2f2614,#2c1a22);border-color:#a7731c}}
 .grow{display:flex;gap:8px;align-items:flex-start;padding:8px 0;border-bottom:1px dashed rgba(245,184,61,.55);color:inherit;text-decoration:none}
@@ -392,6 +401,7 @@ function rewardHtml(r, hit){
   }
   return `<span class="${cls.join(" ")}">${img}<span>${esc(r.ja)}${r.qty ? ` <span class="q">×${esc(Number(r.qty).toLocaleString())}</span>` : ""}</span></span>`;
 }
+let goodOpen = false;   // 「割に合うタスク」欄は最初はたたんでおく
 function goodSummary(){
   const list = [];
   for (const c of CATS_DATA) for (const t of c.tasks) if (t.score.good) list.push({c, t});
@@ -402,14 +412,15 @@ function goodSummary(){
       <span class="gtext"><b>${esc(t.ja)}</b>${c.info.event ? ` <span class="evbadge sm">イベント</span>` : c.name === "Sponsored Tasks" ? ` <span class="gtag">（スポンサー）</span>` : ""}
       <span class="gsub">手間：${effortLabel(t.score.effort.lv)}${best ? ` ／ ${esc(best)} などが出る` : ""}</span></span></a>`;
   }).join("");
-  return `<section class="cat goodsum"><h2>👍 割に合うタスク <span class="count">${list.length}件</span></h2>
+  return `<section class="cat goodsum"><details class="gfold"${goodOpen ? " open" : ""}>
+    <summary><span class="garrow" aria-hidden="true">▶</span>👍 割に合うタスク <span class="count">${list.length}件</span><span class="ghint">${goodOpen ? "タップでたたむ" : "タップで表示"}</span></summary>
     <div class="gbox">${rows || `<div class="gsub">今は目立って割に合うタスクはありません</div>`}
     <details class="how"><summary>判定のしかた</summary>
       <p>データ元には「手間」も「報酬の価値」も無いため、このアプリ独自の目安で点数を付けています。</p>
       <p>・<b>手間</b>：タスクの内容から5段階（例：写真を撮る・ポケストップ3回＝かんたん、レイド＝レイドパスが必要なので大変、タマゴ・km＝歩くので大変）。</p>
       <p>・<b>見返り</b>：報酬の中身から点数化（例：ふしぎなアメ・ほしのすな2,000以上・メガエナジー・伝説のポケモンのアメは高め、ボールやきのみは低め。ポケモンは、ドラゴン系の進化前・化石・ラプラスなど人気のものを高めにしています）。どの報酬がどれくらいの確率で出るかは公開されていないので、並んでいる報酬が<b>同じ確率で出ると仮定して平均</b>しています。</p>
       <p>・見返りが手間の1.2倍以上を「割に合う」、2倍以上を「とても割に合う」としています。あくまで目安です。</p>
-    </details></div></section>`;
+    </details></div></details></section>`;
 }
 function render(){
   const f = FILTERS.find(x => x[0] === filter) || FILTERS[0];
@@ -441,6 +452,11 @@ function render(){
     html += `</div></section>`;
   }
   main.innerHTML = total ? html : `<div class="empty">条件に合うタスクはありません</div>`;
+  const gf = main.querySelector("details.gfold");
+  if (gf) gf.addEventListener("toggle", () => {
+    goodOpen = gf.open;
+    const h = gf.querySelector(".ghint"); if (h) h.textContent = goodOpen ? "タップでたたむ" : "タップで表示";
+  });
 }
 
 document.getElementById("reload").addEventListener("click", refresh);
