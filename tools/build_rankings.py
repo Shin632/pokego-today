@@ -17,7 +17,7 @@
 - レイド：タイプ相性なし（等倍）の相手に対する評価。タイプ別は、技1・技2ともにそのタイプのものだけで評価。
 - ジム防衛：ジムに置けるポケモン（伝説・幻・ウルトラビースト・メガ・シャドウを除く）について、
   「強い攻撃役（各ポケモンに対して相性の良い上位5匹）で倒すのにかかる時間」で評価する（ジムの防衛側はHPが2倍）。
-- 育成難易度（1〜5）：伝説・幻・メガ・合体・シャドウ・★技（すごいわざマシン）・進化に必要なアメの数・進化アイテム・地域限定から点数化。
+- 育成難易度（1〜5）：伝説・幻・メガ・合体・シャドウ・★技・相棒でアメ1個の距離（すごいわざマシン）・進化に必要なアメの数・進化アイテム・地域限定から点数化。
 - ジム攻撃：ジム防衛ランキングの上位6匹を「よく置かれる相手」とみなし、それらに対する評価の平均（上位ほど重み大）。
 """
 import csv
@@ -33,7 +33,7 @@ GAME_MASTER = "https://raw.githubusercontent.com/PokeMiners/game_masters/master/
 MOVES_CSV = "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/moves.csv"
 MOVE_NAMES_CSV = "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/move_names.csv"
 FRESH_HOURS = 24
-SCHEMA = 3               # 出力の形式を変えたら上げる（前回分を使い回さず計算し直す）
+SCHEMA = 4               # 出力の形式を変えたら上げる（前回分を使い回さず計算し直す）
 TOP_N = 10
 KEEP = {"raid": 250, "type": 60, "gym": 200, "defense": 30}   # 画面で絞り込んでも10件出せるよう多めに持つ
 ATTACKER_POOL = 150      # ジム防衛の評価に使う攻撃役の候補（レイド上位＋タイプ別上位）
@@ -180,6 +180,12 @@ def difficulty(p, b, evo):
         reasons.append(f"進化にアメ{candy}個")
     for it in items:
         pts += 0.5; reasons.append(f"進化に{ITEM_JA.get(it, 'どうぐ')}が必要")
+    # 相棒で歩いてアメ1個もらう距離（伝説・幻は「アメも集めにくい」で数え済みなので点は足さない）
+    km = p.get("buddyDistance")
+    if km and km >= 5:
+        if not ({"legendary", "mythical", "ultrabeast"} & tags):
+            pts += 1 if km >= 20 else 0.5
+        reasons.append(f"相棒でアメ1個に{km}km")
     if "regional" in tags:
         pts += 1; reasons.append("地域限定")
     level = 1 if pts <= 0 else 2 if pts <= 1 else 3 if pts <= 2 else 4 if pts <= 3.5 else 5
