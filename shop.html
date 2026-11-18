@@ -38,8 +38,10 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:-1px}
 .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700}
 .btn.small{font-size:12px;padding:4px 10px}
 .btn.danger{color:var(--gD)}
-.quick{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 4px}
+.lbl{font-size:12px;color:var(--sub);margin:10px 0 4px}
+.quick{display:flex;flex-wrap:wrap;gap:6px}
 .quick .btn{font-size:12.5px;padding:5px 10px}
+.quick .btn.tpl{border-style:dashed}
 .items{display:grid;gap:6px;margin-top:10px}
 .it{display:grid;grid-template-columns:1fr 84px 34px;gap:6px;align-items:center}
 .it select{width:100%;min-width:0}
@@ -53,11 +55,18 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:-1px}
 .result.g-S-b{border-color:var(--gS)} .result.g-A-b{border-color:var(--gA)} .result.g-B-b{border-color:var(--gB)} .result.g-D-b{border-color:var(--gD)}
 .rmain{font-size:16px;font-weight:700;line-height:1.4}
 .rsub{font-size:13px;color:var(--sub);margin-top:2px}
+.rpass{font-size:13px;margin-top:4px}
+.rpass b{font-size:15px}
+.upg{display:inline-block;font-size:12px;font-weight:700;color:#fff;background:#d97706;border-radius:6px;padding:1px 7px;margin-bottom:3px}
 .warn{font-size:12px;color:#b45309;margin-top:4px}
 table.bd{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px}
+table.bd th{font-size:11px;color:var(--sub);font-weight:500;text-align:right;padding:2px}
+table.bd th:first-child{text-align:left}
 table.bd td{padding:4px 2px;border-bottom:1px dashed var(--line)}
 table.bd td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
 table.bd tr.zero td{color:var(--muted)}
+.lv{font-size:11px;border-radius:5px;padding:0 5px;border:1px solid currentColor;white-space:nowrap}
+.lv-top{color:#d97706} .lv-high{color:#16a34a} .lv-mid{color:#2563eb} .lv-low{color:var(--muted)} .lv-none{color:var(--muted)}
 section{margin-top:18px}
 section>h2{font-size:16px;margin:0 0 8px}
 .saved{display:grid;gap:8px}
@@ -68,10 +77,12 @@ section>h2{font-size:16px;margin:0 0 8px}
 .empty{color:var(--sub);font-size:14px;background:var(--panel);border:1px dashed var(--line);border-radius:var(--radius);padding:14px;text-align:center}
 details.box{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:10px 12px}
 details.box>summary{cursor:pointer;font-weight:700}
-.ptable{display:grid;gap:6px;margin-top:10px}
-.pr{display:grid;grid-template-columns:1fr 96px;gap:8px;align-items:center;font-size:14px}
+.ptable{display:grid;gap:8px;margin-top:10px}
+.pr{display:grid;grid-template-columns:1fr 80px 92px;gap:6px;align-items:center;font-size:14px}
 .pr .src{display:block;font-size:11px;color:var(--sub)}
-.pr input{width:100%;text-align:right}
+.pr input{width:100%;text-align:right;padding:6px 8px}
+.pr select{width:100%;padding:6px 4px;font-size:14px}
+.phead{display:grid;grid-template-columns:1fr 80px 92px;gap:6px;font-size:11px;color:var(--sub)}
 .crit{font-size:13px;line-height:1.7;margin:8px 0 0;padding-left:1.2em}
 footer{margin-top:28px;font-size:12px;color:var(--sub);line-height:1.7}
 footer a{color:var(--sub)}
@@ -81,17 +92,20 @@ footer a{color:var(--sub)}
 <div class="wrap">
   <nav class="nav"><a href="index.html">📅 イベント</a><a href="research.html">📋 リサーチ</a><a href="shop.html" class="cur">🛒 ボックス判定</a></nav>
   <h1>ショップのボックス判定</h1>
-  <p class="lead">ショップで見たボックスの値段と中身を入れると、単品で買った場合と比べてお得かを S〜D で判定します。</p>
+  <p class="lead">ボックスの値段と中身を入れると、<b>実用性の重視度</b>（レイドパス＞スーパーふかそうち＞その他はおまけ、拡張は最優先）で S〜D を判定します。</p>
 
   <div class="panel" id="form">
     <div class="row2">
-      <div><label class="f" for="bname">ボックスの名前（任意）</label><input id="bname" type="text" placeholder="例：日替わりボックス" style="width:100%"></div>
-      <div><label class="f" for="bprice">値段（ポケコイン）</label><input id="bprice" type="number" inputmode="numeric" min="0" placeholder="例：480" style="width:100%"></div>
+      <div><label class="f" for="bname">ボックスの名前（任意）</label><input id="bname" type="text" placeholder="例：レイドボックス" style="width:100%"></div>
+      <div><label class="f" for="bprice">値段（ポケコイン）</label><input id="bprice" type="number" inputmode="numeric" min="0" placeholder="例：275" style="width:100%"></div>
     </div>
+    <div class="lbl">よく見るボックスから入れる（中身と値段が入ります。値段は日によって違うので確認してください）</div>
+    <div class="quick" id="tpls"></div>
+    <div class="lbl">アイテムを足す</div>
     <div class="quick" id="quick"></div>
     <div class="items" id="items"></div>
     <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
-      <button class="btn small" id="addRow" type="button">＋ アイテムを追加</button>
+      <button class="btn small" id="addRow" type="button">＋ ほかのアイテム</button>
       <button class="btn small danger" id="clearForm" type="button">入力を消す</button>
     </div>
     <div id="result"></div>
@@ -109,22 +123,21 @@ footer a{color:var(--sub)}
     <details class="box">
       <summary>判定の基準</summary>
       <ul class="crit">
-        <li>ボックスの中身を、ショップで<b>単品（いちばん少ない個数のパック）で買った場合の合計コイン</b>と比べます。</li>
-        <li><b>S</b>：合計の3倍以上お得（ボックスが合計の1/3以下）、または無料〜1コイン</li>
-        <li><b>A</b>：2倍以上（半額以下）</li>
-        <li><b>B</b>：1.5倍以上</li>
-        <li><b>C</b>：1.1倍以上（少しだけお得）</li>
-        <li><b>D</b>：1.1倍未満（ほぼ同じか、単品のほうが安い）</li>
-        <li>ショップで単品販売していないアイテム（ハイパーボール、ふしぎなアメなど）は、初期設定では <b>0コイン</b> として数えます。下の「単品価格の設定」で、自分なりの値段を入れると計算に入ります。</li>
-        <li>「自分が使わないアイテム」は考えていません。使わない物が多いボックスは、判定より実際の価値が低くなります。</li>
+        <li>中身それぞれに「ショップの単品価格 × 重視度」を掛けて合計した<b>実用価値</b>を、ボックスの値段で割った倍率で判定します。</li>
+        <li>重視度の初期値：<b>最優先 ×1.2</b>（バッグ・ポケモンボックスのアップグレード）、<b>最重要 ×1.0</b>（レイドパス、リモートレイドパス）、<b>重要 ×0.8</b>（スーパーふかそうち）、<b>おまけ ×0.2</b>（その他）、<b>不要 ×0</b>（ステッカー）。下の設定で変えられます。</li>
+        <li><b>S</b>：2.0倍以上（または無料〜1コインで価値のある物入り） ／ <b>A</b>：1.6倍以上 ／ <b>B</b>：1.3倍以上 ／ <b>C</b>：1.0倍以上 ／ <b>D</b>：1.0倍未満</li>
+        <li>「単品合計」はゲームの「◯%OFF」と同じ計算（重視度なし）です。参考として並べて出します。</li>
+        <li>レイドパスが入っているボックスは、ほかの中身の実用価値を差し引いた<b>レイドパス1枚あたりの実質価格</b>も出します（ショップ単品は100コイン、3枚パックなら1枚約83コイン）。</li>
+        <li>バッグ・ポケモンボックスのアップグレードが入っていたら「拡張入り」の印を付けます。</li>
       </ul>
     </details>
   </section>
 
   <section>
     <details class="box" id="prices">
-      <summary>単品価格の設定（ショップで値段を確認して直せます）</summary>
-      <p class="hint">初期値は、このアプリの作者が以前のショップ価格をもとに入れた<b>目安</b>で、今の値段と違う可能性があります。ショップで見た値段に直すと、この端末に保存されます。</p>
+      <summary>単品価格と重視度の設定</summary>
+      <p class="hint">単品価格の初期値は、2026年11月19日にいただいたショップのスクリーンショットの値段です。値段が変わったら直してください（この端末に保存されます）。</p>
+      <div class="phead"><span>アイテム</span><span style="text-align:right">1個の価格</span><span>重視度</span></div>
       <div class="ptable" id="ptable"></div>
       <div style="margin-top:10px"><button class="btn small" id="resetPrices" type="button">初期値に戻す</button></div>
     </details>
@@ -132,7 +145,7 @@ footer a{color:var(--sub)}
 
   <footer>
     <div>※ 非公式のファンツールです。ショップのボックスは日替わりで、人によって並ぶボックスが違う場合があるため、自動では取り込まず手入力にしています。</div>
-    <div>※ 入力したボックスと価格の設定は、この端末のブラウザにだけ保存されます。</div>
+    <div>※ 入力したボックスと設定は、この端末のブラウザにだけ保存されます。</div>
   </footer>
 </div>
 
@@ -140,73 +153,117 @@ footer a{color:var(--sub)}
 <script src="common.js"></script>
 <script>
 "use strict";
-// ===== アイテムと単品価格（初期値は目安。pack は「何個でいくら」の元の売り方） =====
+// ===== 重視度 =====
+const LEVELS = {
+  top:  {label: "最優先", w: 1.2},
+  high: {label: "最重要", w: 1.0},
+  mid:  {label: "重要",   w: 0.8},
+  low:  {label: "おまけ", w: 0.2},
+  none: {label: "不要",   w: 0},
+};
+// ===== アイテム：[id, 名前, 1個の価格（初期値）, 価格の出どころ, 重視度（初期値）] =====
+// 価格は 2026/11/19 のショップ画面（ユーザー提供のスクリーンショット）から。
 const ITEMS = [
-  // [id, 表示名, 初期の1個あたり価格, 元の売り方の説明]
-  ["incense", "おこう", 80, "1個 80コイン"],
-  ["lucky_egg", "しあわせタマゴ", 80, "1個 80コイン"],
-  ["star_piece", "ほしのかけら", 100, "1個 100コイン"],
-  ["lure", "ルアーモジュール", 100, "1個 100コイン"],
-  ["special_lure", "特殊ルアー（ハーブ・アイス等）", 200, "1個 200コイン"],
-  ["incubator", "ふかそうち", 150, "1個 150コイン"],
-  ["super_incubator", "スーパーふかそうち", 200, "1個 200コイン"],
-  ["raid_pass", "レイドパス", 100, "1枚 100コイン"],
-  ["remote_raid", "リモートレイドパス", 195, "1枚 195コイン"],
-  ["poke_ball", "モンスターボール", 5, "20個 100コイン"],
-  ["max_potion", "まんたんのくすり", 20, "10個 200コイン"],
-  ["max_revive", "げんきのかたまり", 30, "6個 180コイン"],
-  ["great_ball", "スーパーボール", 0, "単品販売なし"],
-  ["ultra_ball", "ハイパーボール", 0, "単品販売なし"],
-  ["golden_razz", "金のズリのみ", 0, "単品販売なし"],
-  ["silver_pinap", "銀のパイルのみ", 0, "単品販売なし"],
-  ["rare_candy", "ふしぎなアメ", 0, "単品販売なし"],
-  ["rare_candy_xl", "ふしぎなアメXL", 0, "単品販売なし"],
-  ["poffin", "ポフィン", 0, "単品販売なし"],
-  ["max_particles", "マックス粒子（1個あたり）", 0, "単品販売なし"],
-  ["fast_tm", "わざマシン ノーマル", 0, "単品販売なし"],
-  ["charged_tm", "わざマシン スペシャル", 0, "単品販売なし"],
-  ["elite_tm", "すごいわざマシン", 0, "単品販売なし"],
-  ["hyper_potion", "すごいキズぐすり", 0, "単品販売なし"],
-  ["revive", "げんきのかけら", 0, "単品販売なし"],
-  ["other", "その他（設定で値段を入れる）", 0, "自分で設定"],
+  ["raid_pass", "レイドパス（プレミアムバトルパス）", 100, "1枚 100（3枚 250）", "high"],
+  ["remote_raid", "リモートレイドパス", 195, "1枚 195（3枚 525）", "high"],
+  ["bag_upgrade", "バッグアップグレード", 200, "200", "top"],
+  ["storage_upgrade", "ポケモンボックスアップグレード", 200, "200", "top"],
+  ["super_incubator", "スーパーふかそうち", 200, "1個 200", "mid"],
+  ["incubator", "ふかそうち", 150, "1個 150", "low"],
+  ["lucky_egg", "しあわせタマゴ", 80, "1個 80（8個 500）", "low"],
+  ["star_piece", "ほしのかけら", 100, "1個 100（8個 640）", "low"],
+  ["incense", "おこう", 40, "1個 40（8個 250）", "low"],
+  ["lure", "ルアーモジュール", 100, "1個 100（8個 680）", "low"],
+  ["special_lure", "特殊ルアー（アイス・ハーブ・マグネット・レイニー）", 180, "1個 180", "low"],
+  ["poffin", "ポフィン", 100, "1個 100", "low"],
+  ["max_particles", "マックス粒子パック（800MP）", 150, "1個 150（3個 425）", "low"],
+  ["max_mushroom", "ダイキノコ", 400, "1個 400（3個 1000）", "low"],
+  ["rocket_radar", "ロケットレーダー", 200, "1個 200", "low"],
+  ["link_charge", "リンクチャージ（200）", 100, "200で100（600で250）", "low"],
+  ["postcard", "ポストカードのページ", 100, "100", "low"],
+  ["poke_ball", "モンスターボール", 5, "20個 100", "low"],
+  ["max_potion", "まんたんのくすり", 20, "10個 200", "low"],
+  ["max_revive", "げんきのかたまり", 30, "6個 180", "low"],
+  ["super_potion", "いいキズぐすり", 10, "単品販売なし。ボックスの元値から推定", "low"],
+  ["hyper_potion", "すごいキズぐすり", 20, "単品販売なし。ボックスの元値から推定", "low"],
+  ["great_ball", "スーパーボール", 0, "単品販売なし", "low"],
+  ["ultra_ball", "ハイパーボール", 0, "単品販売なし", "low"],
+  ["golden_razz", "金のズリのみ", 0, "単品販売なし", "low"],
+  ["silver_pinap", "銀のパイルのみ", 0, "単品販売なし", "low"],
+  ["rare_candy", "ふしぎなアメ", 0, "単品販売なし", "low"],
+  ["rare_candy_xl", "ふしぎなアメXL", 0, "単品販売なし", "low"],
+  ["fast_tm", "わざマシン ノーマル", 0, "単品販売なし", "low"],
+  ["charged_tm", "わざマシン スペシャル", 0, "単品販売なし", "low"],
+  ["elite_tm", "すごいわざマシン", 0, "単品販売なし", "low"],
+  ["revive", "げんきのかけら", 0, "単品販売なし", "low"],
+  ["sticker", "ステッカー", 0, "価値なしとして扱う", "none"],
+  ["other", "その他（設定で値段を入れる）", 0, "自分で設定", "low"],
 ];
-const QUICK = ["incense", "lucky_egg", "star_piece", "incubator", "super_incubator", "raid_pass", "remote_raid", "ultra_ball", "rare_candy"];
-const PRICE_KEY = "pogo-shop-prices-v1", SAVED_KEY = "pogo-shop-saved-v1", DRAFT_KEY = "pogo-shop-draft-v1";
+const PASS_IDS = new Set(["raid_pass", "remote_raid"]);
+const UPGRADE_IDS = new Set(["bag_upgrade", "storage_upgrade"]);
+const QUICK = ["raid_pass", "remote_raid", "super_incubator", "bag_upgrade", "storage_upgrade", "incubator", "lucky_egg", "star_piece", "incense", "poffin"];
+// よく見るボックス（2026/11/19 のショップ画面より。値段は日によって変わる）
+const TEMPLATES = [
+  {name: "レイドボックス", price: 275, rows: [["super_incubator", 1], ["raid_pass", 3]]},
+  {name: "ハイパーレイドボックス", price: 385, rows: [["raid_pass", 6], ["super_potion", 10], ["hyper_potion", 10]]},
+  {name: "ブーストボックス", price: 85, rows: [["lucky_egg", 1], ["star_piece", 1], ["poffin", 1]]},
+  {name: "ステッカーボックス", price: 72, rows: [["sticker", 24]]},
+];
+const PRICE_KEY = "pogo-shop-prices-v2", LEVEL_KEY = "pogo-shop-levels-v2", SAVED_KEY = "pogo-shop-saved-v1", DRAFT_KEY = "pogo-shop-draft-v1";
 const itemById = Object.fromEntries(ITEMS.map(i => [i[0], i]));
 const load = (k, d) => { try { const v = JSON.parse(localStorage.getItem(k) || "null"); return v ?? d; } catch { return d; } };
 const store = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} };
-let prices = Object.assign(Object.fromEntries(ITEMS.map(i => [i[0], i[2]])), load(PRICE_KEY, {}));
+const defPrices = () => Object.fromEntries(ITEMS.map(i => [i[0], i[2]]));
+const defLevels = () => Object.fromEntries(ITEMS.map(i => [i[0], i[4]]));
+let prices = Object.assign(defPrices(), load(PRICE_KEY, {}));
+let levels = Object.assign(defLevels(), load(LEVEL_KEY, {}));
 let saved = load(SAVED_KEY, []);
-let draft = load(DRAFT_KEY, {name: "", price: "", rows: [{id: "incense", qty: ""}]});
+const blankDraft = () => ({name: "", price: "", rows: [{id: "raid_pass", qty: ""}]});
+let draft = load(DRAFT_KEY, blankDraft());
+if (!Array.isArray(draft.rows) || !draft.rows.length) draft = blankDraft();
+draft.rows = draft.rows.filter(r => itemById[r.id]);
+if (!draft.rows.length) draft.rows.push({id: "raid_pass", qty: ""});
 
 // ===== 判定 =====
-const GRADES = [["S", 3], ["A", 2], ["B", 1.5], ["C", 1.1], ["D", 0]];
+const GRADES = [["S", 2.0], ["A", 1.6], ["B", 1.3], ["C", 1.0], ["D", -Infinity]];
+const itemName = (id) => itemById[id] ? itemById[id][1] : id;
 function evaluate(box){
   const price = Number(box.price);
-  const rows = (box.rows || []).filter(r => r.id && Number(r.qty) > 0).map(r => {
-    const unit = Number(prices[r.id]) || 0;
-    return {id: r.id, name: itemById[r.id] ? itemById[r.id][1] : r.id, qty: Number(r.qty), unit, sub: unit * Number(r.qty)};
+  const rows = (box.rows || []).filter(r => itemById[r.id] && Number(r.qty) > 0).map(r => {
+    const unit = Number(prices[r.id]) || 0, lv = levels[r.id] || "low", w = LEVELS[lv].w, qty = Number(r.qty);
+    return {id: r.id, name: itemName(r.id), qty, unit, lv, w, sub: unit * qty, val: unit * qty * w};
   });
   const total = rows.reduce((a, b) => a + b.sub, 0);
-  const zero = rows.filter(r => r.unit === 0);
-  if (!rows.length || box.price === "" || isNaN(price) || price < 0) return {ok: false, rows, total, zero};
+  const value = rows.reduce((a, b) => a + b.val, 0);
+  const zero = rows.filter(r => r.unit === 0 && r.lv !== "none");
+  const passes = rows.filter(r => PASS_IDS.has(r.id)).reduce((a, b) => a + b.qty, 0);
+  const otherVal = rows.filter(r => !PASS_IDS.has(r.id)).reduce((a, b) => a + b.val, 0);
+  const upgrades = rows.filter(r => UPGRADE_IDS.has(r.id));
+  if (!rows.length || box.price === "" || box.price == null || isNaN(price) || price < 0) return {ok: false, rows, total, value, zero};
   let grade, ratio = null;
-  if (price <= 1) grade = total > 0 || rows.length ? "S" : "D";
-  else { ratio = total / price; grade = GRADES.find(([, th]) => ratio >= th)[0]; }
-  return {ok: true, rows, total, zero, price, ratio, grade};
+  if (price <= 1) grade = value > 0 ? "S" : "C";
+  else { ratio = value / price; grade = GRADES.find(([, th]) => ratio >= th)[0]; }
+  const passCost = passes ? Math.max(0, price - otherVal) / passes : null;
+  return {ok: true, rows, total, value, zero, price, ratio, grade, passes, passCost, upgrades};
 }
 function resultHtml(ev){
   if (!ev.ok) return `<div class="result"><div class="grade">？</div><div><div class="rmain">値段と中身を入れると判定します</div><div class="rsub">アイテムの個数を1以上にしてください</div></div></div>`;
-  const off = ev.total > 0 && ev.price < ev.total ? Math.round((1 - ev.price / ev.total) * 100) : 0;
-  const main = ev.price <= 1 ? `${ev.price === 0 ? "無料" : "1コイン"}のボックスです`
-    : ev.total === 0 ? "単品価格がわかるアイテムが入っていません"
-    : ev.ratio >= 1 ? `単品で買うより <b>${ev.ratio.toFixed(2)}倍</b> お得（${off}%OFF）` : `単品で買うほうが安い（${ev.ratio.toFixed(2)}倍）`;
+  const off = ev.total > 0 && ev.price < ev.total ? Math.floor((1 - ev.price / ev.total) * 100) : 0;  // ゲームの表示は切り捨て
+  let main;
+  if (ev.price <= 1) main = `${ev.price === 0 ? "無料" : "1コイン"}のボックスです`;
+  else if (ev.value === 0) main = "あなたの重視度では価値のある物が入っていません";
+  else main = `実用価値 ${Math.round(ev.value).toLocaleString()}コイン分 → 値段の <b>${ev.ratio.toFixed(2)}倍</b>`;
+  const upg = ev.upgrades.length ? `<div><span class="upg">★ 拡張入り</span></div>` : "";
+  const pass = ev.passes ? `<div class="rpass">🎟 レイドパス1枚あたり 実質 <b>約${Math.round(ev.passCost)}コイン</b>（単品100、3枚パックなら約83）</div>` : "";
   const zeroNote = ev.zero.length ? `<div class="warn">※ ${ev.zero.map(r => esc(r.name)).join("、")} は単品価格が0のため計算に入っていません（設定で値段を入れられます）</div>` : "";
-  const table = `<table class="bd">${ev.rows.map(r => `<tr class="${r.unit === 0 ? "zero" : ""}"><td>${esc(r.name)} ×${r.qty}</td><td class="n">${r.unit}コイン×${r.qty}</td><td class="n">${r.sub.toLocaleString()}</td></tr>`).join("")}
-    <tr><td><b>単品で買った場合の合計</b></td><td></td><td class="n"><b>${ev.total.toLocaleString()}</b></td></tr>
-    <tr><td><b>ボックスの値段</b></td><td></td><td class="n"><b>${ev.price.toLocaleString()}</b></td></tr></table>`;
+  const table = `<table class="bd"><tr><th>中身</th><th>単品</th><th>重視度</th><th>実用価値</th></tr>
+    ${ev.rows.map(r => `<tr class="${r.val === 0 ? "zero" : ""}"><td>${esc(r.name)} ×${r.qty}</td><td class="n">${r.sub.toLocaleString()}</td>
+      <td class="n"><span class="lv lv-${r.lv}">${LEVELS[r.lv].label}×${LEVELS[r.lv].w}</span></td><td class="n">${Math.round(r.val).toLocaleString()}</td></tr>`).join("")}
+    <tr><td><b>合計</b></td><td class="n"><b>${ev.total.toLocaleString()}</b></td><td></td><td class="n"><b>${Math.round(ev.value).toLocaleString()}</b></td></tr>
+    <tr><td><b>ボックスの値段</b></td><td class="n"><b>${ev.price.toLocaleString()}</b></td><td></td><td></td></tr></table>`;
   return `<div class="result g-${ev.grade}-b"><div class="grade g-${ev.grade}">${ev.grade}</div>
-    <div><div class="rmain">${main}</div><div class="rsub">単品合計 ${ev.total.toLocaleString()}コイン → ボックス ${ev.price.toLocaleString()}コイン</div>${zeroNote}</div></div>${table}`;
+    <div>${upg}<div class="rmain">${main}</div>
+    <div class="rsub">単品合計 ${ev.total.toLocaleString()} → ${ev.price.toLocaleString()}コイン${ev.total > 0 ? `（ゲーム表示の割引：${off}%OFF）` : ""}</div>${pass}${zeroNote}</div></div>${table}`;
 }
 
 // ===== 入力フォーム =====
@@ -214,7 +271,8 @@ const optionsHtml = (sel) => ITEMS.map(([id, name]) => `<option value="${id}"${i
 function renderForm(){
   document.getElementById("bname").value = draft.name || "";
   document.getElementById("bprice").value = draft.price ?? "";
-  document.getElementById("quick").innerHTML = QUICK.map(id => `<button class="btn" type="button" data-q="${id}">＋${esc(itemById[id][1])}</button>`).join("");
+  document.getElementById("tpls").innerHTML = TEMPLATES.map((t, i) => `<button class="btn tpl" type="button" data-t="${i}">${esc(t.name)}</button>`).join("");
+  document.getElementById("quick").innerHTML = QUICK.map(id => `<button class="btn" type="button" data-q="${id}">＋${esc(itemName(id).replace(/（.*）/, ""))}</button>`).join("");
   document.getElementById("items").innerHTML = draft.rows.map((r, i) => `<div class="it" data-i="${i}">
       <select aria-label="アイテム">${optionsHtml(r.id)}</select>
       <input type="number" inputmode="numeric" min="0" placeholder="個数" value="${esc(r.qty)}" aria-label="個数">
@@ -227,18 +285,17 @@ function renderResult(){
 }
 document.getElementById("bname").addEventListener("input", e => { draft.name = e.target.value; store(DRAFT_KEY, draft); });
 document.getElementById("bprice").addEventListener("input", e => { draft.price = e.target.value; renderResult(); });
-document.getElementById("items").addEventListener("input", e => {
+const onRow = (e) => {
   const row = e.target.closest(".it"); if (!row) return; const i = +row.dataset.i;
-  if (e.target.tagName === "SELECT") draft.rows[i].id = e.target.value; else draft.rows[i].qty = e.target.value;
+  if (e.target.tagName === "SELECT") draft.rows[i].id = e.target.value; else if (e.target.tagName === "INPUT") draft.rows[i].qty = e.target.value;
   renderResult();
-});
-document.getElementById("items").addEventListener("change", e => {
-  const row = e.target.closest(".it"); if (row && e.target.tagName === "SELECT"){ draft.rows[+row.dataset.i].id = e.target.value; renderResult(); }
-});
+};
+document.getElementById("items").addEventListener("input", onRow);
+document.getElementById("items").addEventListener("change", onRow);
 document.getElementById("items").addEventListener("click", e => {
   if (!e.target.classList.contains("x")) return;
   draft.rows.splice(+e.target.closest(".it").dataset.i, 1);
-  if (!draft.rows.length) draft.rows.push({id: "incense", qty: ""});
+  if (!draft.rows.length) draft.rows.push({id: "raid_pass", qty: ""});
   renderForm();
 });
 document.getElementById("quick").addEventListener("click", e => {
@@ -251,15 +308,21 @@ document.getElementById("quick").addEventListener("click", e => {
   }
   renderForm();
 });
-document.getElementById("addRow").addEventListener("click", () => { draft.rows.push({id: "incense", qty: ""}); renderForm(); });
-document.getElementById("clearForm").addEventListener("click", () => { draft = {name: "", price: "", rows: [{id: "incense", qty: ""}]}; renderForm(); });
+document.getElementById("tpls").addEventListener("click", e => {
+  const b = e.target.closest("[data-t]"); if (!b) return;
+  const t = TEMPLATES[+b.dataset.t];
+  draft = {name: t.name, price: String(t.price), rows: t.rows.map(([id, qty]) => ({id, qty: String(qty)}))};
+  renderForm();
+});
+document.getElementById("addRow").addEventListener("click", () => { draft.rows.push({id: "raid_pass", qty: ""}); renderForm(); });
+document.getElementById("clearForm").addEventListener("click", () => { draft = blankDraft(); renderForm(); });
 document.getElementById("save").addEventListener("click", () => {
   const ev = evaluate(draft);
   if (!ev.ok){ document.getElementById("result").scrollIntoView({behavior: "smooth", block: "center"}); return; }
   saved.unshift({name: draft.name || "ボックス", price: Number(draft.price), rows: draft.rows.filter(r => Number(r.qty) > 0).map(r => ({id: r.id, qty: Number(r.qty)})), at: Date.now()});
   saved = saved.slice(0, 30);
   store(SAVED_KEY, saved);
-  draft = {name: "", price: "", rows: [{id: "incense", qty: ""}]};
+  draft = blankDraft();
   renderForm(); renderSaved();
   document.getElementById("saved").scrollIntoView({behavior: "smooth", block: "start"});
 });
@@ -270,10 +333,11 @@ function renderSaved(){
   if (!saved.length){ el.innerHTML = `<div class="empty">まだありません。上で判定して「保存」すると、ここに並びます。</div>`; return; }
   el.innerHTML = saved.map((b, i) => {
     const ev = evaluate(b), d = new Date(b.at);
-    const items = b.rows.map(r => `${itemById[r.id] ? itemById[r.id][1] : r.id}×${r.qty}`).join("、");
-    const ratio = ev.ok && ev.ratio ? ` ・ ${ev.ratio.toFixed(2)}倍` : "";
+    const items = b.rows.map(r => `${itemName(r.id)}×${r.qty}`).join("、");
+    const ratio = ev.ok && ev.ratio != null ? ` ・ ${ev.ratio.toFixed(2)}倍` : "";
+    const pass = ev.ok && ev.passes ? ` ・ パス1枚 約${Math.round(ev.passCost)}` : "";
     return `<div class="sv"><div class="grade g-${ev.grade || "C"}">${ev.grade || "？"}</div>
-      <div><div class="t">${esc(b.name)}（${b.price.toLocaleString()}コイン${ratio}）</div><div class="d">${esc(items)}</div><div class="d">${fmtD(d)} ${fmtT(d)} に保存</div></div>
+      <div><div class="t">${ev.ok && ev.upgrades.length ? `<span class="upg">★ 拡張入り</span> ` : ""}${esc(b.name)}（${b.price.toLocaleString()}コイン${ratio}${pass}）</div><div class="d">${esc(items)}</div><div class="d">${fmtD(d)} ${fmtT(d)} に保存</div></div>
       <div style="display:flex;flex-direction:column;gap:4px"><button class="btn small" type="button" data-edit="${i}">直す</button><button class="btn small danger" type="button" data-del="${i}">消す</button></div></div>`;
   }).join("") + `<div style="text-align:right"><button class="btn small danger" type="button" id="delAll">すべて消す</button></div>`;
 }
@@ -283,24 +347,32 @@ document.getElementById("saved").addEventListener("click", e => {
   if (del){ saved.splice(+del.dataset.del, 1); store(SAVED_KEY, saved); renderSaved(); return; }
   if (edit){
     const b = saved.splice(+edit.dataset.edit, 1)[0]; store(SAVED_KEY, saved);
-    draft = {name: b.name, price: String(b.price), rows: b.rows.map(r => ({id: r.id, qty: String(r.qty)}))};
+    draft = {name: b.name, price: String(b.price), rows: b.rows.filter(r => itemById[r.id]).map(r => ({id: r.id, qty: String(r.qty)}))};
+    if (!draft.rows.length) draft.rows.push({id: "raid_pass", qty: ""});
     renderForm(); renderSaved(); document.getElementById("form").scrollIntoView({behavior: "smooth", block: "start"});
   }
 });
 
-// ===== 単品価格の設定 =====
+// ===== 単品価格・重視度の設定 =====
 function renderPrices(){
-  document.getElementById("ptable").innerHTML = ITEMS.map(([id, name, def, src]) => `<div class="pr"><div>${esc(name)}<span class="src">初期値：${def}コイン（${esc(src)}）</span></div>
-    <input type="number" inputmode="numeric" min="0" step="1" data-p="${id}" value="${esc(prices[id])}" aria-label="${esc(name)}の1個あたりの価格"></div>`).join("");
+  const lvOpts = (sel) => Object.entries(LEVELS).map(([k, v]) => `<option value="${k}"${k === sel ? " selected" : ""}>${v.label}×${v.w}</option>`).join("");
+  document.getElementById("ptable").innerHTML = ITEMS.map(([id, name, def, src]) => `<div class="pr"><div>${esc(name)}<span class="src">初期値 ${def}（${esc(src)}）</span></div>
+    <input type="number" inputmode="numeric" min="0" step="1" data-p="${id}" value="${esc(prices[id])}" aria-label="${esc(name)}の1個の価格">
+    <select data-l="${id}" aria-label="${esc(name)}の重視度">${lvOpts(levels[id])}</select></div>`).join("");
 }
-document.getElementById("ptable").addEventListener("input", e => {
-  const id = e.target.dataset.p; if (!id) return;
-  prices[id] = Math.max(0, Number(e.target.value) || 0);
-  const custom = Object.fromEntries(ITEMS.filter(i => prices[i[0]] !== i[2]).map(i => [i[0], prices[i[0]]]));
-  store(PRICE_KEY, custom); renderResult(); renderSaved();
-});
+function saveSettings(){
+  store(PRICE_KEY, Object.fromEntries(ITEMS.filter(i => prices[i[0]] !== i[2]).map(i => [i[0], prices[i[0]]])));
+  store(LEVEL_KEY, Object.fromEntries(ITEMS.filter(i => levels[i[0]] !== i[4]).map(i => [i[0], levels[i[0]]])));
+  renderResult(); renderSaved();
+}
+const onSetting = (e) => {
+  if (e.target.dataset.p){ prices[e.target.dataset.p] = Math.max(0, Number(e.target.value) || 0); saveSettings(); }
+  if (e.target.dataset.l){ levels[e.target.dataset.l] = e.target.value; saveSettings(); }
+};
+document.getElementById("ptable").addEventListener("input", onSetting);
+document.getElementById("ptable").addEventListener("change", onSetting);
 document.getElementById("resetPrices").addEventListener("click", () => {
-  prices = Object.fromEntries(ITEMS.map(i => [i[0], i[2]])); store(PRICE_KEY, {}); renderPrices(); renderResult(); renderSaved();
+  prices = defPrices(); levels = defLevels(); saveSettings(); renderPrices();
 });
 
 renderForm(); renderSaved(); renderPrices();
