@@ -43,12 +43,18 @@ def to_int(text):
 def parse_reward(r):
     rtype = r.get("data-reward-type") or ""
     label_el = r.select_one(".reward-label")
-    span = label_el.select_one("span") if label_el else None
-    name = clean((span or label_el).get_text(" ")) if (span or label_el) else ""
+    name = ""
+    if label_el is not None:
+        # アイテムは「Pinap Berry <span>×3</span>」、ポケモンは「<span>Bulbasaur</span>」の形
+        own = clean("".join(t for t in label_el.find_all(string=True, recursive=False)))
+        span = label_el.select_one("span")
+        name = own or (clean(span.get_text(" ")) if span else clean(label_el.get_text(" ")))
     img_el = r.select_one(".reward-image") or r.select_one("img")
     image = img_el.get("src") if img_el else None
     if image and image.startswith("/"):
         image = "https://leekduck.com" + image
+    if image:
+        image = image.replace(" ", "%20")
     qty = None
     q_el = r.select_one("[class*=quantity]") or r.select_one("[class*=amount]") or r.select_one("[class*=count]")
     if q_el:
