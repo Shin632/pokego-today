@@ -248,7 +248,7 @@ function evaluate(box){
 }
 function resultHtml(ev){
   if (!ev.ok) return `<div class="result"><div class="grade">？</div><div><div class="rmain">値段と中身を入れると判定します</div><div class="rsub">アイテムの個数を1以上にしてください</div></div></div>`;
-  const off = ev.total > 0 && ev.price < ev.total ? Math.floor((1 - ev.price / ev.total) * 100) : 0;  // ゲームの表示は切り捨て
+  const off = ev.total > 0 && ev.price < ev.total ? Math.floor(Math.round((1 - ev.price / ev.total) * 100000) / 1000) : 0;  // ゲームの表示は切り捨て
   let main;
   if (ev.price <= 1) main = `${ev.price === 0 ? "無料" : "1コイン"}のボックスです`;
   else if (ev.value === 0) main = "あなたの重視度では価値のある物が入っていません";
