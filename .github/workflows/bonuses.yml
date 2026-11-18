@@ -1,4 +1,4 @@
-name: イベントのボーナス情報を集める
+name: イベントのボーナス・リサーチ情報を集める
 
 on:
   schedule:
@@ -29,11 +29,17 @@ jobs:
       - name: 前回のデータを取得
         run: |
           curl -fsSL "https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/data/bonuses.json" -o prev.json || echo '{}' > prev.json
+          curl -fsSL "https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/data/research.json" -o prev_research.json || echo '{}' > prev_research.json
 
       - name: ボーナス情報を収集
         run: |
           mkdir -p out
           python3 tools/scrape_bonuses.py prev.json out/bonuses.json
+
+      - name: フィールドリサーチ情報を収集
+        continue-on-error: true
+        run: |
+          python3 tools/scrape_research.py prev_research.json out/research.json
 
       - name: data ブランチに保存
         env:
@@ -42,6 +48,7 @@ jobs:
           cd out
           git init -q -b data
           git add bonuses.json
+          [ -f research.json ] && git add research.json
           git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
             commit -q -m "ボーナス情報を更新"
           git push -q -f "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" data
