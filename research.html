@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1f6feb">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>フィールドリサーチ一覧｜今日のポケGOイベント</title>
+<style>
+:root{
+  --bg:#f4f6fa; --panel:#ffffff; --text:#14171c; --sub:#5b6472; --line:#e3e7ee;
+  --accent:#1f6feb; --muted:#9aa3b1; --event:#d6409f; --radius:14px;
+}
+@media (prefers-color-scheme: dark){
+  :root{ --bg:#0f1115; --panel:#1a1d24; --text:#eceff4; --sub:#a3acba; --line:#2b303a; --muted:#6c7584; }
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg); color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic UI",Meiryo,sans-serif;
+  font-size:15px; line-height:1.5; -webkit-text-size-adjust:100%;
+  padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+.wrap{max-width:760px;margin:0 auto;padding:12px 14px 40px}
+.nav{display:flex;gap:8px;margin:2px 0 6px}
+.nav a{font-size:13px;color:var(--accent);text-decoration:none;border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:5px 12px}
+.nav a.cur{background:var(--accent);border-color:var(--accent);color:#fff}
+header.top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;padding:6px 2px 8px}
+header.top h1{font-size:20px;margin:0}
+header.top .sub{font-size:13px;color:var(--sub);margin-top:2px}
+.btn{appearance:none;border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:999px;padding:7px 12px;font-size:13px;cursor:pointer;white-space:nowrap}
+.btn[disabled]{opacity:.5}
+.notice{background:#fff4d6;color:#6b4b00;border-radius:10px;padding:8px 12px;font-size:13px;margin:8px 0}
+@media (prefers-color-scheme: dark){.notice{background:#3a2f12;color:#f3d999}}
+.notice.err{background:#ffe1e1;color:#8a1c1c}
+@media (prefers-color-scheme: dark){.notice.err{background:#3f1a1a;color:#ffb4b4}}
+
+.tools{position:sticky;top:0;z-index:5;background:var(--bg);padding:6px 0 8px}
+.search{width:100%;font:inherit;font-size:16px;padding:9px 12px;border-radius:12px;border:1px solid var(--line);background:var(--panel);color:var(--text)}
+.chips{display:flex;gap:6px;overflow-x:auto;margin-top:8px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:0 0 auto;font:inherit;font-size:13px;border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:999px;padding:5px 11px;cursor:pointer}
+.chip.sel{background:var(--accent);border-color:var(--accent);color:#fff}
+.count{font-size:12px;color:var(--sub);font-weight:500}
+
+section.cat{margin-top:16px}
+section.cat>h2{font-size:16px;margin:0 0 8px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.evbadge{font-size:11px;font-weight:700;color:#fff;background:var(--event);border-radius:6px;padding:2px 7px}
+.tasks{display:grid;gap:8px}
+.task{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:10px 12px}
+section.cat.event .task{border-left:5px solid var(--event)}
+.tt{font-size:15px;font-weight:700;line-height:1.4}
+.te{font-size:12px;color:var(--sub)}
+.rewards{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.rw{display:flex;align-items:center;gap:4px;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:3px 9px 3px 4px;font-size:13px;line-height:1.25}
+.rw img{width:30px;height:30px;object-fit:contain;flex:0 0 auto}
+.rw.noimg{padding-left:9px}
+.rw .cp{display:block;font-size:10.5px;color:var(--sub)}
+.rw .q{font-weight:700}
+.rw.item{border-style:dashed}
+.rw.hit{outline:2px solid var(--accent);outline-offset:-1px}
+.sh{font-size:11px}
+.empty{color:var(--sub);font-size:14px;background:var(--panel);border:1px dashed var(--line);border-radius:var(--radius);padding:14px;text-align:center}
+footer{margin-top:28px;font-size:12px;color:var(--sub);line-height:1.7}
+footer a{color:var(--sub)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="nav"><a href="index.html">📅 今日のイベント</a><a href="research.html" class="cur">📋 フィールドリサーチ</a></nav>
+  <header class="top">
+    <div>
+      <h1>フィールドリサーチ一覧</h1>
+      <div class="sub">ポケストップで今もらえるタスクと報酬</div>
+    </div>
+    <button class="btn" id="reload" type="button">↻ 更新</button>
+  </header>
+  <div id="notice"></div>
+  <div class="tools">
+    <input class="search" id="q" type="search" placeholder="ポケモン・アイテムで探す（例：ミニリュウ）" autocomplete="off">
+    <div class="chips" id="chips"></div>
+  </div>
+  <main id="main"><div class="empty">読み込み中…</div></main>
+  <footer>
+    <div>※ 非公式のファンツールです。タスクと報酬は有志サイト <a href="https://leekduck.com/research/" target="_blank" rel="noopener">LeekDuck</a> の一覧を自動で集め、名前などを日本語に置き換えています。日本語は公式の表記と違う場合があります。</div>
+    <div>※ 報酬はそのタスクで「もらえる可能性があるもの」の一覧で、1回でもらえるのはそのうち1つです。ポケモンのCPは出会えるときの範囲で、最大値なら個体値100%です。</div>
+    <div id="lastUpdated"></div>
+  </footer>
+</div>
+
+<script src="names-ja.js"></script>
+<script src="common.js"></script>
+<script>
+"use strict";
+const SOURCE = "https://raw.githubusercontent.com/Shin632/pokego-today/data/research.json";
+// 予備：ScrapedDuck（ポケモン報酬のみ）
+const FALLBACK = "https://raw.githubusercontent.com/bigfoott/ScrapedDuck/data/research.json";
+const CACHE_KEY = "pogo-research-cache-v1";
+
+// ===== カテゴリ =====
+const CATS = {
+  "Catching Tasks": ["捕まえる", "🎯"], "Throwing Tasks": ["投げる", "⚾"], "Battling Tasks": ["バトル", "⚔️"],
+  "Exploring Tasks": ["探索", "🧭"], "Training Tasks": ["育てる", "💪"], "Team GO Rocket Tasks": ["GOロケット団", "🚀"],
+  "Buddy & Friendship Tasks": ["相棒・フレンド", "🤝"], "AR Scanning Tasks": ["ARスキャン", "📷"], "Sponsored Tasks": ["スポンサー", "🏪"],
+  "Event Tasks": ["イベント", "🎉"],
+};
+// ScrapedDuck の type → 見出し
+const SD_TYPES = {event:"Event Tasks",catch:"Catching Tasks",throw:"Throwing Tasks",battle:"Battling Tasks",explore:"Exploring Tasks",
+  training:"Training Tasks",rocket:"Team GO Rocket Tasks",buddy:"Buddy & Friendship Tasks",ar:"AR Scanning Tasks",sponsored:"Sponsored Tasks"};
+function catInfo(name){
+  if (CATS[name]) return {ja: CATS[name][0], icon: CATS[name][1], event: name === "Event Tasks"};
+  const m = String(name).match(/^(.+?) Tasks$/);
+  return {ja: m ? jaMons(m[1]) : (name || "その他"), icon: "🎉", event: true};
+}
+
+// ===== タスク文の翻訳 =====
+const TYPES_JA = {Normal:"ノーマル",Fire:"ほのお",Water:"みず",Grass:"くさ",Electric:"でんき",Ice:"こおり",Fighting:"かくとう",Poison:"どく",
+  Ground:"じめん",Flying:"ひこう",Psychic:"エスパー",Bug:"むし",Rock:"いわ",Ghost:"ゴースト",Dragon:"ドラゴン",Dark:"あく",Steel:"はがね",Fairy:"フェアリー"};
+const THROWS = {Nice:"ナイス",Great:"グレート",Excellent:"エクセレント"};
+const STARS = {one:1,two:2,three:3,four:4,five:5,six:6};
+const N = (w) => /^an?$/i.test(w) ? 1 : w;
+const row = (r) => r ? "連続で" : "";
+const TASK_RULES = [
+  [/^Catch (\d+|an?) Pokémon$/i, (n) => `ポケモンを${N(n)}匹捕まえる`],
+  [/^Catch (\d+|an?) (\w+)- or (\w+)-type Pokémon$/i, (n, a, b) => `${TYPES_JA[a] || a}か${TYPES_JA[b] || b}タイプのポケモンを${N(n)}匹捕まえる`],
+  [/^Catch (\d+|an?) (\w+)-type Pokémon$/i, (n, t) => `${TYPES_JA[t] || t}タイプのポケモンを${N(n)}匹捕まえる`],
+  [/^Catch (\d+) different species of Pokémon$/i, (n) => `ちがう種類のポケモンを${n}匹捕まえる`],
+  [/^Catch (\d+|an?) Pokémon with Weather Boost$/i, (n) => `天候ブーストされたポケモンを${N(n)}匹捕まえる`],
+  [/^Catch (\d+|an?) Shadow Pokémon$/i, (n) => `シャドウポケモンを${N(n)}匹捕まえる`],
+  [/^Use (\d+|an?) Berr(?:y|ies) to help catch Pokémon$/i, (n) => `きのみを${N(n)}個使ってポケモンを捕まえる`],
+  [/^Make (\d+|an?) (Nice|Great|Excellent) Curveball Throws?( in a row)?$/i, (n, t, r) => `${THROWS[t]}カーブボールを${N(n)}回${row(r)}投げる`],
+  [/^Make (\d+|an?) (Nice|Great|Excellent) Throws?( in a row)?$/i, (n, t, r) => `${THROWS[t]}スローを${N(n)}回${row(r)}投げる`],
+  [/^Make (\d+|an?) Curveball Throws?( in a row)?$/i, (n, r) => `カーブボールを${N(n)}回${row(r)}投げる`],
+  [/^Battle in (\d+|an?) raids?$/i, (n) => `レイドバトルに${N(n)}回参加する`],
+  [/^Win (\d+|an?) raids?$/i, (n) => `レイドバトルに${N(n)}回勝つ`],
+  [/^Win an? (\w+)-star raid or higher$/i, (s) => `★${STARS[s.toLowerCase()] || s}以上のレイドバトルに勝つ`],
+  [/^Win (\d+|an?) Max Battles?$/i, (n) => `マックスバトルに${N(n)}回勝つ`],
+  [/^Battle in (\d+|an?) Max Battles?$/i, (n) => `マックスバトルに${N(n)}回参加する`],
+  [/^Unlock (\d+|an?) Max Moves?$/i, (n) => `マックスわざを${N(n)}回解放する`],
+  [/^Defeat (\d+|an?) Team GO Rocket Grunts?$/i, (n) => `GOロケット団のしたっぱに${N(n)}回勝つ`],
+  [/^Earn (\d+) Stardust$/i, (n) => `ほしのすなを${n}集める`],
+  [/^Earn (\d+) XP$/i, (n) => `XPを${n}獲得する`],
+  [/^Earn (\d+|an?) Cand(?:y|ies) walking with your buddy$/i, (n) => `相棒と歩いてアメを${N(n)}個見つける`],
+  [/^Explore (\d+(?:\.\d+)?) km$/i, (n) => `${n}km歩く`],
+  [/^Hatch (\d+|an?) Eggs?$/i, (n) => `タマゴを${N(n)}個かえす`],
+  [/^Spin (\d+|an?) PokéStops? or Gyms?$/i, (n) => `ポケストップかジムを${N(n)}回まわす`],
+  [/^Spin (\d+|an?) PokéStops?$/i, (n) => `ポケストップを${N(n)}回まわす`],
+  [/^Take a snapshot of a wild Pokémon$/i, () => "野生のポケモンのGOスナップショットを撮る"],
+  [/^Take (\d+|an?) snapshots? of (.+)$/i, (n, w) => `${jaMons(w)}のGOスナップショットを${N(n)}回撮る`],
+  [/^Evolve (\d+|an?) Pokémon$/i, (n) => `ポケモンを${N(n)}匹進化させる`],
+  [/^Power up Pokémon (\d+) times$/i, (n) => `ポケモンを${n}回強化する`],
+  [/^Send (\d+|an?) Gifts? and add a sticker to each$/i, (n) => `ステッカーを付けてギフトを${N(n)}個送る`],
+  [/^Send (\d+|an?) Gifts? to friends$/i, (n) => `フレンドにギフトを${N(n)}個送る`],
+  [/^Trade (\d+|an?) Pokémon$/i, (n) => `ポケモンを${N(n)}回交換する`],
+  [/^Purify (\d+|an?) Shadow Pokémon$/i, (n) => `シャドウポケモンを${N(n)}匹リトレーンする`],
+  [/^Mega Evolve (\d+|an?) Pokémon$/i, (n) => `ポケモンを${N(n)}回メガシンカさせる`],
+  [/^Transfer (\d+|an?) Pokémon$/i, (n) => `ポケモンを${N(n)}匹博士に送る`],
+  [/^Battle in the GO Battle League (\d+) times$/i, (n) => `GOバトルリーグで${n}回対戦する`],
+  [/^Win (\d+|an?) battles? in the GO Battle League$/i, (n) => `GOバトルリーグで${N(n)}回勝つ`],
+  [/^Use (\d+|an?) supereffective Charged Attacks?.*$/i, (n) => `効果ばつぐんのスペシャルアタックを${N(n)}回使う`],
+  [/^Play with your buddy (\d+) times$/i, (n) => `相棒と${n}回遊ぶ`],
+  [/^Give your buddy (\d+|an?) treats?$/i, (n) => `相棒におやつを${N(n)}回あげる`],
+  [/^Earn (\d+|an?) hearts? with your buddy$/i, (n) => `相棒とハートを${N(n)}個ためる`],
+  [/^Catch (\d+|an?) (.+)$/i, (n, w) => { const j = jaMons(w); return j !== w ? `${j}を${N(n)}匹捕まえる` : null; }],
+];
+function translateTask(t){
+  const s = String(t || "").trim();
+  for (const [re, fn] of TASK_RULES){ const m = s.match(re); if (m){ const r = fn(...m.slice(1)); if (r) return {ja: r, ok: true}; } }
+  return {ja: jaMons(s), ok: false};
+}
+
+// ===== 報酬名の翻訳 =====
+const ITEMS = {
+  "Stardust":"ほしのすな","Poké Ball":"モンスターボール","Great Ball":"スーパーボール","Ultra Ball":"ハイパーボール","Master Ball":"マスターボール",
+  "Razz Berry":"ズリのみ","Nanab Berry":"ナナのみ","Pinap Berry":"パイルのみ","Golden Razz Berry":"金のズリのみ","Silver Pinap Berry":"銀のパイルのみ",
+  "Rare Candy":"ふしぎなアメ","Rare Candy XL":"ふしぎなアメXL","Poffin":"ポフィン",
+  "Potion":"キズぐすり","Super Potion":"いいキズぐすり","Hyper Potion":"すごいキズぐすり","Max Potion":"まんたんのくすり",
+  "Revive":"げんきのかけら","Max Revive":"げんきのかたまり",
+  "Fast TM":"わざマシン ノーマル","Charged TM":"わざマシン スペシャル","Elite Fast TM":"すごいわざマシン ノーマル","Elite Charged TM":"すごいわざマシン スペシャル",
+  "Incense":"おこう","Lure Module":"ルアーモジュール","Lucky Egg":"しあわせタマゴ","Star Piece":"ほしのかけら",
+  "Sun Stone":"たいようのいし","King's Rock":"おうじゃのしるし","Metal Coat":"メタルコート","Dragon Scale":"りゅうのウロコ","Up-Grade":"アップグレード",
+  "Sinnoh Stone":"シンオウのいし","Unova Stone":"イッシュのいし","Max Particles":"マックス粒子","XP":"XP",
+  "Premium Battle Pass":"プレミアムバトルパス","Remote Raid Pass":"リモートレイドパス","Raid Pass":"レイドパス",
+  "Egg Incubator":"ふかそうち","Super Incubator":"スーパーふかそうち","Mysterious Component":"ふしぎなパーツ","Rocket Radar":"ロケットレーダー",
+};
+function rewardJa(r){
+  const n = String(r.name || "");
+  if (r.type === "encounter") return jaMons(n);
+  if (ITEMS[n]) return ITEMS[n];
+  let m;
+  if ((m = n.match(/^(.+) Candy XL$/))) return `${jaMons(m[1])}のアメXL`;
+  if ((m = n.match(/^(.+) Candy$/))) return `${jaMons(m[1])}のアメ`;
+  if ((m = n.match(/^(.+) Mega Energy$/))) return `${jaMons(m[1])}のメガエナジー`;
+  return jaMons(n);
+}
+
+// ===== 絞り込み =====
+const FILTERS = [
+  ["all", "すべて", () => true],
+  ["pokemon", "ポケモン", (r) => r.type === "encounter"],
+  ["rare", "ふしぎなアメ", (r) => /^Rare Candy/.test(r.name)],
+  ["dust", "ほしのすな", (r) => r.name === "Stardust"],
+  ["mega", "メガエナジー", (r) => /Mega Energy$/.test(r.name)],
+  ["candy", "アメ（種類別）", (r) => /. Candy( XL)?$/.test(r.name) && !/^Rare Candy/.test(r.name)],
+  ["ball", "ボール・きのみ", (r) => /Ball$|Berry$/.test(r.name)],
+];
+let filter = "all", query = "";
+
+// ===== データ =====
+let CATS_DATA = null, updatedAt = null, isFallback = false;
+function fromOwn(d){
+  if (!d || !Array.isArray(d.categories)) throw new Error("形式が違います");
+  return d.categories.map(c => ({name: String(c.name || ""), tasks: (c.tasks || []).map(t => ({
+    text: String(t.text || ""), rewards: (t.rewards || []).map(r => ({type: r.type === "encounter" ? "encounter" : (r.type || "item"),
+      name: String(r.name || ""), image: safeUrl(r.image), shiny: !!r.shiny, cpMin: r.cpMin, cpMax: r.cpMax, qty: r.qty}))}))}));
+}
+function fromScrapedDuck(d){
+  if (!Array.isArray(d)) throw new Error("形式が違います");
+  const map = new Map();
+  for (const t of d){
+    const name = SD_TYPES[t.type] || "Event Tasks";
+    if (!map.has(name)) map.set(name, []);
+    map.get(name).push({text: String(t.text || "").replace(/<[^>]+>/g, "").trim(), rewards: (t.rewards || []).map(r => ({
+      type: "encounter", name: String(r.name || ""), image: safeUrl(r.image), shiny: !!r.canBeShiny,
+      cpMin: r.combatPower && r.combatPower.min, cpMax: r.combatPower && r.combatPower.max}))});
+  }
+  const order = ["Event Tasks", ...Object.keys(CATS)];
+  return [...map.entries()].sort((a, b) => order.indexOf(a[0]) - order.indexOf(b[0])).map(([name, tasks]) => ({name, tasks}));
+}
+function prepare(cats){
+  for (const c of cats){
+    c.info = catInfo(c.name);
+    for (const t of c.tasks){
+      const tr = translateTask(t.text); t.ja = tr.ja; t.ok = tr.ok;
+      for (const r of t.rewards) r.ja = rewardJa(r);
+      t.hay = (t.ja + " " + t.text + " " + t.rewards.map(r => r.ja + " " + r.name).join(" ")).toLowerCase();
+    }
+  }
+  // イベントのタスクを先頭に
+  return cats.sort((a, b) => (b.info.event - a.info.event));
+}
+async function getJson(url){
+  const ctl = new AbortController(); const timer = setTimeout(() => ctl.abort(), 12000);
+  try { const res = await fetch(url, {cache: "no-cache", signal: ctl.signal}); if (!res.ok) throw new Error("HTTP " + res.status); return await res.json(); }
+  finally { clearTimeout(timer); }
+}
+let loading = false;
+async function refresh(){
+  if (loading) return; loading = true;
+  const btn = document.getElementById("reload"); btn.disabled = true; btn.textContent = "更新中…";
+  try {
+    try {
+      const d = await getJson(SOURCE);
+      CATS_DATA = prepare(fromOwn(d)); updatedAt = d.updatedAt ? new Date(d.updatedAt) : new Date(); isFallback = false;
+      try { localStorage.setItem(CACHE_KEY, JSON.stringify(d)); } catch {}
+      setNotice("");
+    } catch (e1){
+      const d = await getJson(FALLBACK);
+      CATS_DATA = prepare(fromScrapedDuck(d)); updatedAt = new Date(); isFallback = true;
+      setNotice("詳しいデータを読み込めなかったため、予備のデータ（ポケモン報酬のみ）を表示しています。アイテム報酬は出ません。", false);
+    }
+  } catch (e){
+    if (CATS_DATA) setNotice(`最新データを取得できませんでした（${esc(e.message || e)}）。前回のデータを表示しています。`, false);
+    else setNotice(`データを取得できませんでした（${esc(e.message || e)}）。通信環境を確認して「更新」を押してください。`, true);
+  } finally {
+    loading = false; btn.disabled = false; btn.textContent = "↻ 更新"; render();
+  }
+}
+function setNotice(html, isErr){
+  document.getElementById("notice").innerHTML = html ? `<div class="notice${isErr ? " err" : ""}">${html}</div>` : "";
+}
+
+// ===== 描画 =====
+function rewardHtml(r, hit){
+  const img = r.image ? `<img src="${esc(r.image)}" alt="" loading="lazy" onerror="this.parentNode.classList.add('noimg');this.remove()">` : "";
+  const cls = ["rw", r.type === "encounter" ? "mon" : "item"]; if (!img) cls.push("noimg"); if (hit) cls.push("hit");
+  if (r.type === "encounter"){
+    const cp = r.cpMax ? `<span class="cp">CP ${esc(r.cpMin)}〜${esc(r.cpMax)}</span>` : "";
+    return `<span class="${cls.join(" ")}">${img}<span>${esc(r.ja)}${r.shiny ? `<span class="sh" title="色違いあり">✨</span>` : ""}${cp}</span></span>`;
+  }
+  return `<span class="${cls.join(" ")}">${img}<span>${esc(r.ja)}${r.qty ? ` <span class="q">×${esc(Number(r.qty).toLocaleString())}</span>` : ""}</span></span>`;
+}
+function render(){
+  const f = FILTERS.find(x => x[0] === filter) || FILTERS[0];
+  document.getElementById("chips").innerHTML = FILTERS.map(([k, label]) =>
+    `<button type="button" class="chip${k === filter ? " sel" : ""}" data-f="${k}">${label}</button>`).join("");
+  document.getElementById("lastUpdated").textContent = updatedAt ? `データ更新：${fmtD(updatedAt)} ${fmtT(updatedAt)}${isFallback ? "（予備データ）" : ""}` : "";
+  const main = document.getElementById("main");
+  if (!CATS_DATA){ if (!loading) main.innerHTML = `<div class="empty">表示できるデータがありません</div>`; return; }
+  const q = query.trim().toLowerCase();
+  let html = "", total = 0;
+  for (const c of CATS_DATA){
+    const tasks = c.tasks.filter(t => (!q || t.hay.includes(q)) && (filter === "all" || t.rewards.some(f[2])));
+    if (!tasks.length) continue;
+    total += tasks.length;
+    const title = c.info.event ? `<span class="evbadge">イベント</span>${esc(c.info.ja)}` : `${c.info.icon} ${esc(c.info.ja)}`;
+    html += `<section class="cat${c.info.event ? " event" : ""}"><h2>${title} <span class="count">${tasks.length}件</span></h2><div class="tasks">`;
+    for (const t of tasks){
+      const hitOf = (r) => (filter !== "all" && f[2](r)) || (q && (r.ja + " " + r.name).toLowerCase().includes(q));
+      // 絞り込みに当たる報酬を前に
+      const rs = [...t.rewards].sort((a, b) => hitOf(b) - hitOf(a));
+      html += `<article class="task"><div class="tt">${esc(t.ja)}</div>${t.ja !== t.text ? `<div class="te">${esc(t.text)}</div>` : ""}
+        <div class="rewards">${rs.map(r => rewardHtml(r, hitOf(r))).join("") || `<span class="te">報酬の情報なし</span>`}</div></article>`;
+    }
+    html += `</div></section>`;
+  }
+  main.innerHTML = total ? html : `<div class="empty">条件に合うタスクはありません</div>`;
+}
+
+document.getElementById("reload").addEventListener("click", refresh);
+document.getElementById("chips").addEventListener("click", (e) => {
+  const b = e.target.closest("[data-f]"); if (!b) return; filter = b.dataset.f; render();
+});
+let qTimer = null;
+document.getElementById("q").addEventListener("input", (e) => { clearTimeout(qTimer); qTimer = setTimeout(() => { query = e.target.value; render(); }, 120); });
+
+try { const c = JSON.parse(localStorage.getItem(CACHE_KEY) || "null"); if (c){ CATS_DATA = prepare(fromOwn(c)); updatedAt = c.updatedAt ? new Date(c.updatedAt) : null; } } catch {}
+render();
+refresh();
+</script>
+</body>
+</html>

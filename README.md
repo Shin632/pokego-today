@@ -12,12 +12,16 @@
 - シーズン・GOパス・GOバトルリーグなどの長期のものは折りたたみ
 - 30秒ごとに残り時間を更新、30分ごとにデータを再取得。前回取得したデータは端末に保存されるので、通信できないときも前回分を表示
 
+## ページ
+- `index.html`：今日のイベント（ボーナス、時間限定イベント、レイドなど）
+- `research.html`：フィールドリサーチ一覧（今ポケストップで出るタスクと、もらえるポケモン・アイテム。ポケモン名・アイテム名で検索、「ふしぎなアメ」「ほしのすな」などで絞り込み）
+
 ## データについて
 - イベント情報は有志サイト [LeekDuck](https://leekduck.com/events/) の内容を、[ScrapedDuck](https://github.com/bigfoott/ScrapedDuck)（LeekDuckから自動で取り出したJSON）経由で読み込んでいます。
 - 英語のデータを、ポケモン名辞書（[PokeAPI](https://github.com/PokeAPI/pokeapi) のデータから作成）と置き換えルールで日本語にしています。公式の日本語イベント名とは違う場合や、英語のまま残る部分があります。
 - 時刻は端末のタイムゾーンで表示します。データ上「現地時間」のイベントは端末の地域の時刻、UTC指定のもの（GOバトルリーグなど）は日本時間に直して表示します。
 
-- ボーナス情報は `.github/workflows/bonuses.yml`（GitHub Actions、3時間ごと）が `tools/scrape_bonuses.py` で LeekDuck の各イベントページの「Bonuses」欄を集め、`data` ブランチの `bonuses.json` に保存しています。Actions タブから手動実行もできます。
+- ボーナス情報は `.github/workflows/bonuses.yml`（GitHub Actions、3時間ごと）が `tools/scrape_bonuses.py` で LeekDuck の各イベントページの「Bonuses」欄を集め、`data` ブランチの `bonuses.json` に保存しています。同じワークフローで `tools/scrape_research.py` が LeekDuck のリサーチ一覧を集めて `research.json` に保存します。Actions タブから手動実行もできます。
 
 ## 使い方
 - `index.html` をブラウザで開くだけで動きます（インターネット接続が必要）。
@@ -26,5 +30,5 @@
 ## ポケモン名辞書の更新（新しいポケモンが出たとき）
 ```sh
 curl -sSLo names.csv https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/pokemon_species_names.csv
-python3 tools/build_names.py names.csv index.html
+python3 tools/build_names.py names.csv names-ja.js
 ```

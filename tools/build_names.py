@@ -3,7 +3,7 @@
 
 使い方:
   curl -sSLo names.csv https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/pokemon_species_names.csv
-  python3 tools/build_names.py names.csv index.html
+  python3 tools/build_names.py names.csv names-ja.js
 """
 import csv
 import json
