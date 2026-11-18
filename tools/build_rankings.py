@@ -18,6 +18,8 @@
 - ジム防衛：ジムに置けるポケモン（伝説・幻・ウルトラビースト・メガ・シャドウを除く）について、
   「強い攻撃役（各ポケモンに対して相性の良い上位5匹）で倒すのにかかる時間」で評価する（ジムの防衛側はHPが2倍）。
 - 育成難易度（1〜5）：伝説・幻・メガ・合体・シャドウ・★技・相棒でアメ1個の距離（すごいわざマシン）・進化に必要なアメの数・進化アイテム・地域限定から点数化。
+- 連れ歩き：上のランキング（各TOP10）に出るポケモンについて、相棒の距離・必要なアメ（進化＋レベル20→40）・
+  連れ歩きでもらえるメガエナジーから「1km歩いたときの育成の進み具合 × 役立ち度」で並べる。
 - ジム攻撃：ジム防衛ランキングの上位6匹を「よく置かれる相手」とみなし、それらに対する評価の平均（上位ほど重み大）。
 """
 import csv
@@ -33,7 +35,7 @@ GAME_MASTER = "https://raw.githubusercontent.com/PokeMiners/game_masters/master/
 MOVES_CSV = "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/moves.csv"
 MOVE_NAMES_CSV = "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/move_names.csv"
 FRESH_HOURS = 24
-SCHEMA = 4               # 出力の形式を変えたら上げる（前回分を使い回さず計算し直す）
+SCHEMA = 5               # 出力の形式を変えたら上げる（前回分を使い回さず計算し直す）
 TOP_N = 10
 KEEP = {"raid": 250, "type": 60, "gym": 200, "defense": 30}   # 画面で絞り込んでも10件出せるよう多めに持つ
 ATTACKER_POOL = 150      # ジム防衛の評価に使う攻撃役の候補（レイド上位＋タイプ別上位）
@@ -315,6 +317,113 @@ def entry(p, b, move_ja, move_en):
     }
 
 
+def load_buddy_extra(gm):
+    """図鑑番号ごとの「連れ歩きでもらえるメガエナジー（相棒の距離ごと）」「メガシンカに必要なエナジー（初回・2回目以降）」と、
+    レベル20→40の強化に必要なアメ"""
+    mega = {}
+    upgrade = None
+    for x in gm:
+        d = x.get("data", {})
+        if "pokemonUpgrades" in d:
+            u = d["pokemonUpgrades"]
+            per = u.get("upgradesPerLevel", 2)
+            cost = u.get("candyCost", [])
+            upgrade = sum(cost[19:39]) * per if len(cost) >= 39 else None    # レベル20→40
+        ps = d.get("pokemonSettings")
+        if not ps:
+            continue
+        form = ps.get("form")
+        if form and not str(form).endswith("_NORMAL"):
+            continue
+        try:
+            dex = int(x["templateId"][1:5])
+        except ValueError:
+            continue
+        award = ps.get("buddyWalkedMegaEnergyAward")
+        if award is None and ps.get("buddyWalkedMegaEnergyAwards"):
+            award = max(a.get("megaEnergyAwardAmount", 0) for a in ps["buddyWalkedMegaEnergyAwards"])
+        temps = [b for b in ps.get("evolutionBranch") or [] if b.get("temporaryEvolution")]
+        if award and temps and dex not in mega:
+            mega[dex] = {"award": award,
+                         "initial": min(b.get("temporaryEvolutionEnergyCost") or 0 for b in temps),
+                         "subsequent": min(b.get("temporaryEvolutionEnergyCostSubsequent") or 0 for b in temps)}
+    return mega, upgrade
+
+
+BASE_SUFFIXES = ("_shadow", "_mega_x", "_mega_y", "_mega", "_primal")
+
+
+def base_id(sid):
+    changed = True
+    while changed:
+        changed = False
+        for suf in BASE_SUFFIXES:
+            if sid.endswith(suf):
+                sid, changed = sid[: -len(suf)], True
+    return sid
+
+
+# 連れ歩きの点数づけ（目安）
+LIST_WEIGHT_MAIN, LIST_WEIGHT_TYPE = 1.0, 0.7          # 総合・ジム系のランキング / タイプ別のランキング
+WALK_VALUE = {1: 0.4, 3: 0.8, 5: 1.0, 20: 0.5}          # 相棒の距離ごとの「歩いて集める価値」
+MEGA_BONUS = 1.3
+
+
+def walk_value(km):
+    if km in WALK_VALUE:
+        return WALK_VALUE[km]
+    return 0.4 if km < 3 else 0.8 if km < 5 else 1.0 if km < 20 else 0.5
+
+
+def buddy_ranking(lists, by_id, mega, upgrade, n=40):
+    """連れ歩きランキング。lists は [(表示名, ランキング, 重み)]。
+    点数 = 役立ち度 × 歩いて集める価値（相棒の距離） × 距離の現実性 ×（メガシンカできてメガが上位なら 1.3）
+      役立ち度 = ランキング各TOP10での「1位を100とした評価」/100 × リストの重み の最大値
+      歩いて集める価値 = 1km 0.4（野生に多く、捕まえて集める方が早いことが多い）、3km 0.8、5km 1.0、20km 0.5（遅すぎる）
+      距離の現実性 = 1 /（1 + 全部歩いて集める距離 / 1000km）"""
+    best = {}
+    for label, lst, w in lists:
+        for rank, x in enumerate(lst[:10], 1):
+            b = base_id(x["id"])
+            bp = by_id.get(b)
+            if not bp:
+                continue
+            dex = bp["dex"]
+            u = x["pct"] / 100 * w
+            cur = best.setdefault(dex, {"base": bp, "u": 0, "uses": [], "variant": None, "shadow": False, "megaUsed": False})
+            cur["uses"].append({"list": label, "rank": rank, "name": x["name"], "w": w})
+            if x["mega"]:
+                cur["megaUsed"] = True
+            if u > cur["u"]:
+                cur.update(u=u, variant=x["name"], shadow=x["shadow"])
+    out = []
+    for dex, c in best.items():
+        bp = c["base"]
+        km = bp.get("buddyDistance")
+        if not km or not upgrade:
+            continue
+        evo_candy, _ = total_candy(dex, EVO)
+        need = evo_candy + upgrade * (1.2 if c["shadow"] else 1)
+        km_all = need * km
+        m = mega.get(dex)
+        has_mega = bool(m) and c["megaUsed"]
+        score = c["u"] * walk_value(km) / (1 + km_all / 1000) * (MEGA_BONUS if has_mega else 1)
+        uses = sorted(c["uses"], key=lambda u: (-u["w"], u["rank"]))[:4]
+        item = {
+            "id": bp["speciesId"], "name": bp["speciesName"], "dex": dex, "types": [t for t in bp["types"] if t != "none"],
+            "best": c["variant"], "uses": [{k: u[k] for k in ("list", "rank", "name")} for u in uses],
+            "km": km, "candyNeed": round(need), "evoCandy": evo_candy, "kmAll": round(km_all),
+            "useful": round(c["u"] * 100), "score": round(score * 100, 2), "shadowBuild": c["shadow"],
+        }
+        if m:
+            per_km = m["award"] / km
+            item["mega"] = {"perKm": per_km, "initial": m["initial"], "subsequent": m["subsequent"],
+                            "kmFirst": round(m["initial"] / per_km), "kmNext": round(m["subsequent"] / per_km), "used": c["megaUsed"]}
+        out.append(item)
+    out.sort(key=lambda x: -x["score"])
+    return {"list": out[:n], "upgradeCandy": upgrade}
+
+
 def ranking(items, n):
     items = sorted(items, key=lambda x: -x["score"])
     out, seen = [], set()
@@ -349,6 +458,7 @@ def main(prev_path, out_path):
         gm = json.loads(get(GAME_MASTER))
         pve = load_pve_moves(gm)
         EVO.update(load_evolutions(gm))
+        MEGA, UPGRADE = load_buddy_extra(gm)
         del gm
         try:
             move_ja = load_move_names()
@@ -414,13 +524,24 @@ def main(prev_path, out_path):
             rep["score"] = sum(b["score"] * w for b, w in per) / sum(weights)
             gym.append(entry(p, rep, move_ja, move_en))
 
+        type_ja = {"normal": "ノーマル", "fire": "ほのお", "water": "みず", "electric": "でんき", "grass": "くさ", "ice": "こおり",
+                   "fighting": "かくとう", "poison": "どく", "ground": "じめん", "flying": "ひこう", "psychic": "エスパー", "bug": "むし",
+                   "rock": "いわ", "ghost": "ゴースト", "dragon": "ドラゴン", "dark": "あく", "steel": "はがね", "fairy": "フェアリー"}
+        raid_top = ranking(raid, KEEP["raid"])
+        type_top = {t: ranking(v, KEEP["type"]) for t, v in by_type.items()}
+        gym_top = ranking(gym, KEEP["gym"])
+        all_by_id = {p["speciesId"]: p for p in pokemon}
+        buddy = buddy_ranking([("レイド総合", raid_top, LIST_WEIGHT_MAIN), ("ジム攻撃", gym_top, LIST_WEIGHT_MAIN),
+                               ("ジム防衛", defense_top, LIST_WEIGHT_MAIN)]
+                              + [(f"レイド・{type_ja[t]}", type_top[t], LIST_WEIGHT_TYPE) for t in TYPES], all_by_id, MEGA, UPGRADE)
         data = {
             "schema": SCHEMA,
             "generatedAt": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z"),
             "source": {"pvpoke": pv.get("timestamp"), "note": "PvPoke gamemaster + PokeMiners GAME_MASTER + PokeAPI"},
-            "raid": ranking(raid, KEEP["raid"]),
-            "raidByType": {t: ranking(v, KEEP["type"]) for t, v in by_type.items()},
-            "gymAttack": ranking(gym, KEEP["gym"]),
+            "raid": raid_top,
+            "raidByType": type_top,
+            "gymAttack": gym_top,
+            "buddy": buddy,
             "gymAttackTargets": [d["id"] for d in defense_top[:GYM_TARGETS]],
             "gymDefense": defense_top,
         }

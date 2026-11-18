@@ -30,8 +30,8 @@ h1{font-size:20px;margin:0}
 .notice{background:#fff4d6;color:#6b4b00;border-radius:10px;padding:8px 12px;font-size:13px;margin:8px 0}
 .notice.err{background:#ffe1e1;color:#8a1c1c}
 @media (prefers-color-scheme: dark){.notice{background:#3a2f12;color:#f3d999}.notice.err{background:#3f1a1a;color:#ffb4b4}}
-.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:10px 0 6px}
-.tab{appearance:none;font:inherit;font-size:14px;font-weight:700;border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:12px;padding:9px 4px;cursor:pointer}
+.tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:10px 0 6px}
+.tab{appearance:none;font:inherit;font-size:13px;font-weight:700;border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:12px;padding:9px 4px;cursor:pointer}
 .tab.sel{background:var(--accent);border-color:var(--accent);color:#fff}
 .desc{font-size:13px;color:var(--sub);margin:4px 2px 8px}
 .chips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:2px 0 6px}
@@ -82,6 +82,7 @@ footer a{color:var(--sub)}
     <button class="tab" type="button" data-tab="raid">⚔️ レイド</button>
     <button class="tab" type="button" data-tab="gymAttack">🏟 ジム攻撃</button>
     <button class="tab" type="button" data-tab="gymDefense">🛡 ジム防衛</button>
+    <button class="tab" type="button" data-tab="buddy">🚶 連れ歩き</button>
   </div>
   <p class="desc" id="desc"></p>
   <div class="chips" id="types"></div>
@@ -98,6 +99,7 @@ footer a{color:var(--sub)}
       <li><b>ジム防衛</b>：ジムに置けるポケモン（伝説・幻・ウルトラビースト・メガ・シャドウは置けないので除外）について、<b>相性の良い強い攻撃役5匹で倒すのに何秒かかるか</b>で比べます（ジムの防衛側はHPが2倍）。長くかかるほど上位です。やる気（ハート）の減り方やきのみは考えていません。</li>
       <li>★ の付いた技は、今は普通には覚えられない技（すごいわざマシンやイベントが必要）です。</li>
       <li><b>育成難易度</b>（5段階）：手に入れやすさと育てる手間の目安です。点数の付け方は、幻 +3、伝説・ウルトラビースト +2、メガシンカ（メガエナジーが必要）+1、合体（ブラックキュレム・ネクロズマの合体した姿など。合体相手と合体エネルギーが必要）+1.5、シャドウ（入手がGOロケット団など・やつあたりを消すのにイベントが必要）+1、★技（すごいわざマシン）+1、進化に必要なアメ（100個以上 +0.5、200個以上 +1、400個以上 +1.5）、進化アイテム +0.5、地域限定 +1、相棒で歩いてアメ1個もらう距離（5km +0.5、20km +1。伝説・幻はすでに数えているので足さない）。合計0点＝かんたん、1点まで＝ふつう、2点まで＝やや大変、3.5点まで＝大変、それより上＝とても大変。強化に使うほしのすなは、どのポケモンもほぼ同じなので入れていません（シャドウは1.2倍かかります）。<b>出現率・捕獲率は入っていません</b>（公開されているゲームデータに含まれていないため）。良い個体（個体値）の取りやすさは、ポケモンごとではなく入手方法で決まるので入れていません（レイド・タマゴ・リサーチは個体値の下限が10で、野生より高い個体が出やすい）。</li>
+      <li><b>連れ歩き</b>：上の各TOP10（レイド総合・タイプ別、ジム攻撃、ジム防衛）に出るポケモンを、元のポケモン（シャドウ・メガは同じアメ）ごとにまとめて、<b>役立ち度 × 歩いて集める価値 × 距離の現実性</b>で並べています。役立ち度は「1位を100とした評価」の最大値（タイプ別ランキングは0.7倍）。歩いて集める価値は相棒の距離で、1km＝0.4（野生に多く、捕まえて集める方が早いことが多いため）、3km＝0.8、5km＝1.0、20km＝0.5（1個に20kmは遅すぎるため）。距離の現実性は「必要なアメ（進化＋レベル20→40の強化）× 相棒の距離」が長いほど下げています（1 ÷（1＋距離/1000km））。メガシンカでき、メガがランキングに入っていれば、歩くとメガエナジーももらえるので1.3倍。数字の重みはこのアプリの目安です。</li>
       <li>天候ブースト、フレンドの攻撃ボーナス、メガシンカによる仲間への攻撃ボーナス、回避などは計算に入れていません。あくまで目安です。</li>
     </ul>
   </details>
@@ -123,6 +125,7 @@ const TAB_DESC = {
   raid: "レイドで使う攻撃役。ボスの弱点が分かっているときは、そのタイプのタブを選んでください。",
   gymAttack: "ジムに置かれた防衛役（ハピナスなど）を倒すのに強いポケモン。",
   gymDefense: "ジムに置いて、倒されるまでに時間がかかるポケモン（伝説・メガ・シャドウはジムに置けないので除外）。",
+  buddy: "相棒にして歩くと育成がはかどるポケモン。上の各TOP10に出るポケモンを、アメ・メガエナジー・歩く距離から並べています。",
 };
 // フォルム名（英語の括弧書き → 日本語）
 const FORMS = {
@@ -159,7 +162,7 @@ let DATA = null, tab = "raid", type = "all";
 let show = {mega: true, shadow: true, legendary: true};
 let easyOnly = false;   // 育成難易度1〜3だけを表示
 const DIFF_LABEL = ["", "かんたん", "ふつう", "やや大変", "大変", "とても大変"];
-try { const h = location.hash.slice(1); if (["raid", "gymAttack", "gymDefense"].includes(h)) tab = h; } catch {}
+try { const h = location.hash.slice(1); if (["raid", "gymAttack", "gymDefense", "buddy"].includes(h)) tab = h; } catch {}
 
 function listFor(){
   if (!DATA) return [];
@@ -174,7 +177,8 @@ function render(){
   typesEl.innerHTML = [`<button type="button" class="chip${type === "all" ? " sel" : ""}" data-type="all" style="${type === "all" ? "background:var(--accent)" : ""}">総合</button>`]
     .concat(Object.entries(TYPE_INFO).map(([k, [ja, c]]) => `<button type="button" class="chip${type === k ? " sel" : ""}" data-type="${k}" style="${type === k ? `background:${c}` : `border-color:${c}`}">${ja}</button>`)).join("");
   const tg = document.getElementById("toggles");
-  tg.style.display = tab === "gymDefense" ? "none" : "";
+  tg.style.display = tab === "gymDefense" || tab === "buddy" ? "none" : "";
+  document.querySelector(".dnote").style.display = tab === "buddy" ? "none" : "";
   tg.innerHTML = [["mega", "メガ・ゲンシ"], ["shadow", "シャドウ"], ["legendary", "伝説・幻"]]
     .map(([k, l]) => `<button type="button" class="tg${show[k] ? "" : " off"}" data-show="${k}">${show[k] ? "✓ " : ""}${l}を含める</button>`).join("")
     + `<button type="button" class="tg easy${easyOnly ? " on" : ""}" data-easy="1">${easyOnly ? "✓ " : ""}育てやすいもの（難易度1〜3）だけ</button>`;
@@ -182,6 +186,7 @@ function render(){
 
   const main = document.getElementById("main");
   if (!DATA){ return; }
+  if (tab === "buddy"){ renderBuddy(main); return; }
   let list = listFor().filter(x => tab === "gymDefense" || ((show.mega || !x.mega) && (show.shadow || !x.shadow) && (show.legendary || !(x.legendary || x.mythical || x.ultrabeast))));
   if (easyOnly && tab !== "gymDefense") list = list.filter(x => !x.difficulty || x.difficulty.level <= 3);
   list = list.slice(0, 10);
@@ -204,6 +209,25 @@ function render(){
     const names = DATA.gymAttackTargets.map(id => { const d = (DATA.gymDefense || []).find(y => y.id === id); return d ? nameJa(d.name) : id; });
     main.insertAdjacentHTML("beforeend", `<p class="desc">相手にしたジム防衛役：${esc(names.join("、"))}</p>`);
   }
+}
+function renderBuddy(main){
+  const b = DATA.buddy;
+  if (!b || !Array.isArray(b.list)){ main.innerHTML = `<div class="empty">連れ歩きのデータがまだありません。少し時間をおいて「更新」を押してください。</div>`; return; }
+  const list = b.list.slice(0, 10);
+  const top = list.length ? list[0].score : 1;
+  main.innerHTML = list.map((x, i) => {
+    const types = x.types.map(t => `<span class="tp" style="background:${(TYPE_INFO[t] || ["", "#888"])[1]}">${(TYPE_INFO[t] || [t])[0]}</span>`).join("");
+    const uses = x.uses.map(u => `${esc(u.list)} ${u.rank}位${nameJa(u.name) !== nameJa(x.name) ? `（${esc(nameJa(u.name))}）` : ""}`).join("、");
+    const evo = x.evoCandy ? `進化${x.evoCandy}＋` : "";
+    const candy = `相棒でアメ1個に<b>${x.km}km</b> ・ 必要なアメ 約${x.candyNeed}個（${evo}Lv20→40の強化${x.candyNeed - x.evoCandy}${x.shadowBuild ? "・シャドウは1.2倍" : ""}）→ 全部歩くと<b>約${x.kmAll.toLocaleString()}km</b>`;
+    const mega = x.mega ? `<div class="mv">⚡ メガエナジー 1kmで${x.mega.perKm} ・ 2回目以降のメガシンカ（${x.mega.subsequent}）は<b>約${x.mega.kmNext}km</b>${x.mega.used ? "" : "（メガはランキング外）"}</div>` : "";
+    return `<div class="rk${i < 3 ? " top" + (i + 1) : ""}"><div class="no">${i + 1}</div><div>
+      <div class="nm">${esc(nameJa(x.name))}${types}</div>
+      <div class="mv">使い道：${uses}</div>
+      <div class="mv">🍬 ${candy}</div>${mega}
+      <div class="bar"><i style="width:${Math.max(4, x.score / top * 100)}%"></i></div>
+      <div class="st">役立ち度 ${x.useful} ・ 1位を100とした評価 ${Math.round(x.score / top * 100)}</div></div></div>`;
+  }).join("") + `<p class="desc">※ 連れ歩きでもらえるアメXL、ご機嫌（ハート）でのアメ2倍は計算に入れていません。メガエナジーは、一度メガシンカさせたポケモンを相棒にしたときにもらえる仕組みだと一般に案内されています（この環境では公式の説明を確認できていません）。</p>`;
 }
 function diffHtml(d){
   if (!d) return "";
