@@ -176,7 +176,7 @@ function render(){
   main.innerHTML = list.map((x, i) => {
     const types = x.types.map(t => `<span class="tp" style="background:${(TYPE_INFO[t] || ["", "#888"])[1]}">${(TYPE_INFO[t] || [t])[0]}</span>`).join("");
     const tags = (x.mega ? `<span class="tag mega">メガ</span>` : "") + (x.shadow ? `<span class="tag shadow">シャドウ</span>` : "") +
-      (x.legendary || x.mythical || x.ultrabeast ? `<span class="tag leg">${x.mythical ? "幻" : x.ultrabeast ? "UB" : "伝説"}</span>` : "");
+      (x.legendary || x.mythical || x.ultrabeast ? `<span class="tag leg">${x.mythical ? "幻" : x.ultrabeast && !/^necrozma/.test(x.id) ? "UB" : "伝説"}</span>` : "");
     const mv = (m) => `${esc(m.ja || m.en)}${m.elite ? `<span class="el">★</span>` : ""}`;
     const stat = tab === "gymDefense" ? `強い攻撃役5匹で倒すのに 約${x.seconds}秒（1位を100とした長さ ${Math.round(x.score / top * 100)}）`
       : `DPS ${x.dps.toFixed(1)} ・ TDO ${Math.round(x.tdo)} ・ 1位を100とした評価 ${Math.round(x.score / top * 100)}`;
