@@ -54,6 +54,13 @@ h1{font-size:20px;margin:0}
 .bar{height:6px;border-radius:3px;background:var(--line);margin-top:6px;overflow:hidden}
 .bar i{display:block;height:100%;border-radius:3px;background:var(--accent)}
 .st{font-size:11.5px;color:var(--sub);margin-top:3px}
+.df{margin-top:6px;padding-top:6px;border-top:1px dashed var(--line);font-size:12.5px;line-height:1.5}
+.dl{white-space:nowrap;margin-right:6px}
+.ds{letter-spacing:1px;color:#d97706}
+.df.d1 .ds,.df.d2 .ds{color:#16a34a}
+.df.d4 .ds,.df.d5 .ds{color:#dc2626}
+.dw{color:var(--sub);font-size:11.5px}
+.tg.easy.on{background:#16a34a;border-color:#16a34a;color:#fff}
 .empty{color:var(--sub);font-size:14px;background:var(--panel);border:1px dashed var(--line);border-radius:var(--radius);padding:14px;text-align:center}
 details.box{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:10px 12px;margin-top:16px}
 details.box>summary{cursor:pointer;font-weight:700}
@@ -88,6 +95,7 @@ footer a{color:var(--sub)}
       <li><b>ジム攻撃</b>：下の「ジム防衛」上位6匹（ジムによく置かれる強い防衛役）を相手にした評価値の平均です（上位の相手ほど重視）。表示している技は1位の相手に対する組み合わせです。</li>
       <li><b>ジム防衛</b>：ジムに置けるポケモン（伝説・幻・ウルトラビースト・メガ・シャドウは置けないので除外）について、<b>相性の良い強い攻撃役5匹で倒すのに何秒かかるか</b>で比べます（ジムの防衛側はHPが2倍）。長くかかるほど上位です。やる気（ハート）の減り方やきのみは考えていません。</li>
       <li>★ の付いた技は、今は普通には覚えられない技（すごいわざマシンやイベントが必要）です。</li>
+      <li><b>育成難易度</b>（5段階）：手に入れやすさと育てる手間の目安です。点数の付け方は、幻 +3、伝説・ウルトラビースト +2、メガシンカ（メガエナジーが必要）+1、シャドウ（入手がGOロケット団など・やつあたりを消すのにイベントが必要）+1、★技（すごいわざマシン）+1、進化に必要なアメ（100個以上 +0.5、200個以上 +1、400個以上 +1.5）、進化アイテム +0.5、地域限定 +1。合計0点＝かんたん、1点まで＝ふつう、2点まで＝やや大変、3.5点まで＝大変、それより上＝とても大変。強化に使うほしのすなは、どのポケモンもほぼ同じなので入れていません（シャドウは1.2倍かかります）。</li>
       <li>天候ブースト、フレンドの攻撃ボーナス、メガシンカによる仲間への攻撃ボーナス、回避などは計算に入れていません。あくまで目安です。</li>
     </ul>
   </details>
@@ -147,6 +155,8 @@ function nameJa(en){
 
 let DATA = null, tab = "raid", type = "all";
 let show = {mega: true, shadow: true, legendary: true};
+let easyOnly = false;   // 育成難易度1〜3だけを表示
+const DIFF_LABEL = ["", "かんたん", "ふつう", "やや大変", "大変", "とても大変"];
 try { const h = location.hash.slice(1); if (["raid", "gymAttack", "gymDefense"].includes(h)) tab = h; } catch {}
 
 function listFor(){
@@ -164,12 +174,14 @@ function render(){
   const tg = document.getElementById("toggles");
   tg.style.display = tab === "gymDefense" ? "none" : "";
   tg.innerHTML = [["mega", "メガ・ゲンシ"], ["shadow", "シャドウ"], ["legendary", "伝説・幻"]]
-    .map(([k, l]) => `<button type="button" class="tg${show[k] ? "" : " off"}" data-show="${k}">${show[k] ? "✓ " : ""}${l}を含める</button>`).join("");
+    .map(([k, l]) => `<button type="button" class="tg${show[k] ? "" : " off"}" data-show="${k}">${show[k] ? "✓ " : ""}${l}を含める</button>`).join("")
+    + `<button type="button" class="tg easy${easyOnly ? " on" : ""}" data-easy="1">${easyOnly ? "✓ " : ""}育てやすいもの（難易度1〜3）だけ</button>`;
   document.getElementById("lastUpdated").textContent = DATA && DATA.generatedAt ? `計算した日時：${fmtD(new Date(DATA.generatedAt))} ${fmtT(new Date(DATA.generatedAt))}` : "";
 
   const main = document.getElementById("main");
   if (!DATA){ return; }
   let list = listFor().filter(x => tab === "gymDefense" || ((show.mega || !x.mega) && (show.shadow || !x.shadow) && (show.legendary || !(x.legendary || x.mythical || x.ultrabeast))));
+  if (easyOnly && tab !== "gymDefense") list = list.filter(x => !x.difficulty || x.difficulty.level <= 3);
   list = list.slice(0, 10);
   if (!list.length){ main.innerHTML = `<div class="empty">条件に合うポケモンがいません</div>`; return; }
   const top = list[0].score;
@@ -184,12 +196,18 @@ function render(){
       <div class="nm">${esc(nameJa(x.name))}${types}${tags}</div>
       <div class="mv">技1 <b>${mv(x.fast)}</b> ／ 技2 <b>${mv(x.charged)}</b></div>
       <div class="bar"><i style="width:${Math.max(4, x.score / top * 100)}%"></i></div>
-      <div class="st">${stat}</div></div></div>`;
+      <div class="st">${stat}</div>${diffHtml(x.difficulty)}</div></div>`;
   }).join("");
   if (tab === "gymAttack" && DATA.gymAttackTargets){
     const names = DATA.gymAttackTargets.map(id => { const d = (DATA.gymDefense || []).find(y => y.id === id); return d ? nameJa(d.name) : id; });
     main.insertAdjacentHTML("beforeend", `<p class="desc">相手にしたジム防衛役：${esc(names.join("、"))}</p>`);
   }
+}
+function diffHtml(d){
+  if (!d) return "";
+  const stars = "★".repeat(d.level) + "☆".repeat(5 - d.level);
+  const why = d.reasons && d.reasons.length ? d.reasons.map(esc).join("／") : "特別な条件なし";
+  return `<div class="df d${d.level}"><span class="dl">育成難易度 <span class="ds">${stars}</span> <b>${DIFF_LABEL[d.level]}</b></span><span class="dw">${why}</span></div>`;
 }
 async function refresh(){
   const btn = document.getElementById("reload"); btn.disabled = true; btn.textContent = "更新中…";
@@ -212,7 +230,10 @@ document.querySelector(".tabs").addEventListener("click", e => {
   render();
 });
 document.getElementById("types").addEventListener("click", e => { const b = e.target.closest("[data-type]"); if (b){ type = b.dataset.type; render(); } });
-document.getElementById("toggles").addEventListener("click", e => { const b = e.target.closest("[data-show]"); if (b){ show[b.dataset.show] = !show[b.dataset.show]; render(); } });
+document.getElementById("toggles").addEventListener("click", e => {
+  const b = e.target.closest("[data-show]"); if (b){ show[b.dataset.show] = !show[b.dataset.show]; render(); return; }
+  if (e.target.closest("[data-easy]")){ easyOnly = !easyOnly; render(); }
+});
 document.getElementById("reload").addEventListener("click", refresh);
 try { const c = JSON.parse(localStorage.getItem(CACHE_KEY) || "null"); if (c && Array.isArray(c.raid)) DATA = c; } catch {}
 render();

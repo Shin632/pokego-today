@@ -17,6 +17,7 @@
 - レイド：タイプ相性なし（等倍）の相手に対する評価。タイプ別は、技1・技2ともにそのタイプのものだけで評価。
 - ジム防衛：ジムに置けるポケモン（伝説・幻・ウルトラビースト・メガ・シャドウを除く）について、
   「強い攻撃役（各ポケモンに対して相性の良い上位5匹）で倒すのにかかる時間」で評価する（ジムの防衛側はHPが2倍）。
+- 育成難易度（1〜5）：伝説・幻・メガ・シャドウ・★技（すごいわざマシン）・進化に必要なアメの数・進化アイテム・地域限定から点数化。
 - ジム攻撃：ジム防衛ランキングの上位6匹を「よく置かれる相手」とみなし、それらに対する評価の平均（上位ほど重み大）。
 """
 import csv
@@ -32,6 +33,7 @@ GAME_MASTER = "https://raw.githubusercontent.com/PokeMiners/game_masters/master/
 MOVES_CSV = "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/moves.csv"
 MOVE_NAMES_CSV = "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/move_names.csv"
 FRESH_HOURS = 24
+SCHEMA = 2               # 出力の形式を変えたら上げる（前回分を使い回さず計算し直す）
 TOP_N = 10
 KEEP = {"raid": 250, "type": 60, "gym": 200, "defense": 30}   # 画面で絞り込んでも10件出せるよう多めに持つ
 ATTACKER_POOL = 150      # ジム防衛の評価に使う攻撃役の候補（レイド上位＋タイプ別上位）
@@ -98,6 +100,77 @@ def load_pve_moves(gm):
         moves[mid] = {"type": t, "power": float(ms.get("power") or 0), "dur": (ms.get("durationMs") or 0) / 1000,
                       "energy": int(ms.get("energyDelta") or 0)}
     return moves
+
+
+ITEM_JA = {"ITEM_SUN_STONE": "たいようのいし", "ITEM_KINGS_ROCK": "おうじゃのしるし", "ITEM_METAL_COAT": "メタルコート",
+           "ITEM_GEN4_EVOLUTION_STONE": "シンオウのいし", "ITEM_DRAGON_SCALE": "りゅうのウロコ", "ITEM_UP_GRADE": "アップグレード",
+           "ITEM_GEN5_EVOLUTION_STONE": "イッシュのいし", "ITEM_OTHER_EVOLUTION_STONE_A": "ふしぎなパーツ"}
+
+
+def load_evolutions(gm):
+    """図鑑番号ごとに「進化前の図鑑番号・進化に必要なアメ・必要な道具」を返す"""
+    id2dex, branches = {}, []
+    for x in gm:
+        ps = x.get("data", {}).get("pokemonSettings")
+        if not ps:
+            continue
+        tid = x.get("templateId", "")
+        try:
+            dex = int(tid[1:5])
+        except ValueError:
+            continue
+        id2dex.setdefault(ps["pokemonId"], dex)
+        for b in ps.get("evolutionBranch") or []:
+            if b.get("evolution") and b.get("candyCost"):
+                branches.append((dex, b["evolution"], int(b["candyCost"]), b.get("evolutionItemRequirement")))
+    evo = {}
+    for parent, child, cost, item in branches:
+        cd = id2dex.get(child)
+        if cd is None or cd == parent:
+            continue
+        cur = evo.get(cd)
+        if cur is None or cost < cur[1]:
+            evo[cd] = (parent, cost, item)
+    return evo
+
+
+def total_candy(dex, evo, depth=0):
+    if dex not in evo or depth > 5:
+        return 0, []
+    parent, cost, item = evo[dex]
+    c, items = total_candy(parent, evo, depth + 1)
+    return c + cost, items + ([item] if item else [])
+
+
+def difficulty(p, b, evo):
+    """育成の大変さ（1〜5）と理由。目安としての点数づけ。"""
+    tags = set(p.get("tags", []))
+    pts, reasons = 0.0, []
+    if "mythical" in tags:
+        pts += 3; reasons.append("幻：入手の機会がとても限られる")
+    elif "legendary" in tags or "ultrabeast" in tags:
+        pts += 2; reasons.append("伝説：レイドなどでしか手に入らず、アメも集めにくい")
+    if "mega" in tags:
+        pts += 1; reasons.append("メガシンカにメガエナジーが必要")
+    if "shadow" in tags:
+        pts += 1; reasons.append("シャドウ：GOロケット団などから入手。やつあたりを消すにはイベントが必要")
+    if b.get("fastElite") or b.get("chargedElite"):
+        pts += 1; reasons.append("★の技にすごいわざマシンが必要")
+    candy, items = total_candy(p["dex"], evo)
+    if candy >= 400:
+        pts += 1.5
+    elif candy >= 200:
+        pts += 1
+    elif candy >= 100:
+        pts += 0.5
+    if candy >= 100:
+        reasons.append(f"進化にアメ{candy}個")
+    for it in items:
+        pts += 0.5; reasons.append(f"進化に{ITEM_JA.get(it, 'どうぐ')}が必要")
+    if "regional" in tags:
+        pts += 1; reasons.append("地域限定")
+    level = 1 if pts <= 0 else 2 if pts <= 1 else 3 if pts <= 2 else 4 if pts <= 3.5 else 5
+    return {"level": level, "reasons": reasons}
 
 
 def load_move_names():
@@ -205,6 +278,9 @@ def best_defense(p, pve, attackers):
     return {**mv, "score": seconds, "seconds": seconds, "bulk": hp * de}
 
 
+EVO = {}
+
+
 def entry(p, b, move_ja, move_en):
     tags = p.get("tags", [])
     return {
@@ -213,6 +289,7 @@ def entry(p, b, move_ja, move_en):
         "mythical": "mythical" in tags, "ultrabeast": "ultrabeast" in tags,
         "fast": {"id": b["fast"], "en": move_en.get(b["fast"], b["fast"]), "ja": move_ja.get(b["fast"]), "elite": b["fastElite"]},
         "charged": {"id": b["charged"], "en": move_en.get(b["charged"], b["charged"]), "ja": move_ja.get(b["charged"]), "elite": b["chargedElite"]},
+        "difficulty": difficulty(p, b, EVO),
         "score": round(b["score"], 3), "dps": round(b["dps"], 2),
         **({"tdo": round(b["tdo"], 1)} if "tdo" in b else {}),
         **({"seconds": round(b["seconds"], 1)} if "seconds" in b else {}),
@@ -240,7 +317,7 @@ def main(prev_path, out_path):
         with open(prev_path, encoding="utf-8") as f:
             prev = json.load(f)
         age = dt.datetime.now(dt.timezone.utc) - dt.datetime.fromisoformat(prev["generatedAt"].replace("Z", "+00:00"))
-        if age < dt.timedelta(hours=FRESH_HOURS) and prev.get("raid"):
+        if age < dt.timedelta(hours=FRESH_HOURS) and prev.get("raid") and prev.get("schema") == SCHEMA:
             with open(out_path, "w", encoding="utf-8") as f:
                 json.dump(prev, f, ensure_ascii=False)
             print(f"前回のランキングを再利用（{age} 前に計算）")
@@ -250,7 +327,10 @@ def main(prev_path, out_path):
 
     try:
         pv = json.loads(get(PVPOKE))
-        pve = load_pve_moves(json.loads(get(GAME_MASTER)))
+        gm = json.loads(get(GAME_MASTER))
+        pve = load_pve_moves(gm)
+        EVO.update(load_evolutions(gm))
+        del gm
         try:
             move_ja = load_move_names()
         except Exception as ex:
@@ -316,6 +396,7 @@ def main(prev_path, out_path):
             gym.append(entry(p, rep, move_ja, move_en))
 
         data = {
+            "schema": SCHEMA,
             "generatedAt": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z"),
             "source": {"pvpoke": pv.get("timestamp"), "note": "PvPoke gamemaster + PokeMiners GAME_MASTER + PokeAPI"},
             "raid": ranking(raid, KEEP["raid"]),
