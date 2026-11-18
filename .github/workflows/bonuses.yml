@@ -1,4 +1,4 @@
-name: イベントのボーナス・リサーチ情報を集める
+name: イベントのボーナス・リサーチ情報・育成ランキングを更新
 
 on:
   schedule:
@@ -30,6 +30,7 @@ jobs:
         run: |
           curl -fsSL "https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/data/bonuses.json" -o prev.json || echo '{}' > prev.json
           curl -fsSL "https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/data/research.json" -o prev_research.json || echo '{}' > prev_research.json
+          curl -fsSL "https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/data/rankings.json" -o prev_rankings.json || echo '{}' > prev_rankings.json
 
       - name: ボーナス情報を収集
         run: |
@@ -41,6 +42,11 @@ jobs:
         run: |
           python3 tools/scrape_research.py prev_research.json out/research.json
 
+      - name: 育成ランキングを計算（1日1回。それ以外は前回分を使う）
+        continue-on-error: true
+        run: |
+          python3 tools/build_rankings.py prev_rankings.json out/rankings.json
+
       - name: data ブランチに保存
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -49,6 +55,7 @@ jobs:
           git init -q -b data
           git add bonuses.json
           [ -f research.json ] && git add research.json
+          [ -f rankings.json ] && git add rankings.json
           git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
             commit -q -m "ボーナス情報を更新"
           git push -q -f "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" data
