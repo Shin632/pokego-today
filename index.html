@@ -105,6 +105,9 @@ section.block>h2 .count{font-size:12px;font-weight:500;color:var(--sub)}
 .mon img{width:26px;height:26px;object-fit:contain}
 .mon .sh{font-size:11px}
 .mon.noimg{padding-left:9px}
+.legacy{margin-top:8px;font-size:13.5px;line-height:1.5;background:color-mix(in srgb,#0ea5e9 10%,transparent);border-left:3px solid #0ea5e9;border-radius:6px;padding:6px 9px}
+.legacy .lw{display:block;font-size:12px;color:var(--sub)}
+.paid.legacy-t{background:#0284c7}
 .megasug{margin-top:8px;font-size:13px;line-height:1.5;background:color-mix(in srgb,#8e4ec6 9%,transparent);border-radius:8px;padding:6px 9px}
 .megasug .mhint{display:block;font-size:11px;color:var(--sub)}
 .bonuses{margin:8px 0 0;padding:0;list-style:none;display:grid;gap:3px}
@@ -469,6 +472,7 @@ function applyBonuses(){
       paid: /ticket|deluxe/i.test(b.section) || /^GO Pass Deluxe:/i.test(b.text),
       cond: /milestone/i.test(b.section)}));
     ev.bonusNotes = notes;
+    ev.legacy = parseLegacy(ev, got && Array.isArray(got.moves) ? got.moves.map(m => String(m.text || "")) : []);
   }
 }
 async function fetchBonuses(){
@@ -678,7 +682,7 @@ function cardHtml(ev, now, opts = {}){
       <h3 class="title">${esc(ev.ja)}</h3>${orig}
     </div>${thumb}</div>
     <p class="when">🕒 ${esc(fmtRange(ev.start, ev.end))}${cd ? "<br>" + cd : ""}</p>
-    ${mons}${megaHtml}${bonusHtml}${discl}${codes}
+    ${mons}${legacyCardHtml(ev, now)}${megaHtml}${bonusHtml}${discl}${codes}
     ${ev.link ? `<div class="links"><a href="${esc(ev.link)}" target="_blank" rel="noopener">詳細を見る（LeekDuck・英語）↗</a></div>` : ""}
   </article>`;
 }
@@ -694,6 +698,52 @@ function bonusTag(b){
   return "";
 }
 const BONUS_ORDER = ["stardust","candy","xp","raid","egg","spawn","max","item","trade","gift","other"];
+// ===== レガシー技（イベント限定の技）を覚えられるタイミング =====
+const SLOT_JA = {fast: "技1", charged: "技2"};
+const moveJaName = (en) => (MEGAS && MEGAS.moveJa && MEGAS.moveJa[en]) || en;
+/** イベントページの説明から「いつ・何をすると・どの技を覚えるか」を読み取る */
+function parseLegacy(ev, texts){
+  const out = [];
+  for (const raw of texts){
+    const t = raw.trim().replace(/\.$/, "");
+    let m = t.match(/^Evolve (.+?) during the event(?: or (?:up to|within) (\w+) hours? after(?:wards?|ward| the event ends)?)? to (?:get|obtain|receive) (?:a |an )?(.+?) that knows the (Fast|Charged) Attack (.+)$/i);
+    if (m){
+      const hours = Number(toNum(m[2] || 0)) || 0;
+      out.push({kind: "evolve", from: m[1].replace(/\s*\(.*?\)\s*/g, " ").trim(), to: m[3], slot: m[4].toLowerCase(), move: m[5].trim(), hours,
+                until: ev.end ? new Date(ev.end.getTime() + hours * 3600000) : null});
+      continue;
+    }
+    m = t.match(/^(.+?) (?:caught|encountered|obtained|that you catch|you catch)\b.*?will know the (Fast|Charged) Attack (.+)$/i)
+      || t.match(/^(?:Trainers who catch|Catch(?:ing)?) (.+?)\b.*?will know the (Fast|Charged) Attack (.+)$/i);
+    if (m){ out.push({kind: "catch", mon: m[1].replace(/^(?:any |all )/i, ""), slot: m[2].toLowerCase(), move: m[3].trim(), until: ev.end}); continue; }
+    m = t.match(/Gyms and raids: (\d+) power/i); if (m && out.length){ out[out.length - 1].raidPower = +m[1]; continue; }
+    m = t.match(/Trainer Battles: (\d+) power/i); if (m && out.length){ out[out.length - 1].pvpPower = +m[1]; continue; }
+  }
+  return out;
+}
+function legacyText(l){
+  const mv = `「${esc(moveJaName(l.move))}」（${SLOT_JA[l.slot] || ""}）`;
+  return l.kind === "evolve" ? `${esc(jaMons(l.from))}を進化させると、${mv}を覚えた${esc(jaMons(l.to))}になる`
+    : `${esc(jaMons(l.mon))}を捕まえると、${mv}を覚えている`;
+}
+function legacyWhen(ev, l){
+  if (!ev.start || !l.until) return "";
+  const range = `${fmtD(ev.start)} ${fmtT(ev.start)}〜${sameDay(ev.start, l.until) ? "" : fmtD(l.until) + " "}${fmtT(l.until)}`;
+  return l.kind === "evolve" && l.hours ? `${range}（イベント中と終了後${l.hours}時間）` : `${range}（イベント中）`;
+}
+function legacyPower(l){
+  const p = [];
+  if (l.raidPower) p.push(`レイド・ジムで威力${l.raidPower}`);
+  if (l.pvpPower) p.push(`トレーナーバトルで威力${l.pvpPower}`);
+  return p.join("・");
+}
+function legacyCardHtml(ev, now){
+  const list = (ev.legacy || []).filter(l => !l.until || l.until > now);
+  if (!list.length) return "";
+  return list.map(l => `<div class="legacy">📚 <b>レガシー技</b>：${legacyText(l)}
+    <span class="lw">⏰ ${esc(legacyWhen(ev, l))}${legacyPower(l) ? ` ・ ${esc(legacyPower(l))}` : ""}</span></div>`).join("");
+}
+
 function bonusPanel(dayEvents, now, isToday){
   const rank = {live:0, soon:1, unknown:2, over:3};
   const map = new Map();
@@ -711,9 +761,22 @@ function bonusPanel(dayEvents, now, isToday){
     .sort((a, b) => (a.b.paid - b.b.paid) || (a.b.cond - b.b.cond) || (isToday ? a.best - b.best : 0) ||
       (BONUS_ORDER.indexOf(a.b.cat.key) - BONUS_ORDER.indexOf(b.b.cat.key)));
   const title = isToday ? "今日のおトク（ボーナス）" : `${fmtD(selDay)}のおトク（ボーナス）`;
+  // レガシー技を覚えられるイベント（いちばん上に出す）
+  const legacyRows = [];
+  for (const ev of dayEvents){
+    if (ev.canceled) continue;
+    for (const l of ev.legacy || []){
+      if (isToday && l.until && l.until <= now) continue;
+      const live = ev.start <= now && now < (l.until || ev.end);
+      legacyRows.push(`<div class="brow"><span class="bicon" aria-hidden="true">📚</span><div class="btext">
+        <div class="bj"><span class="paid legacy-t">レガシー技</span>${legacyText(l)}</div>
+        <div class="bsrc"><span class="bsrc1">${isToday ? (live ? `<span class="bst live">今できる</span>` : `<span class="bst soon">${fmtT(ev.start)}から</span>`) : ""}${esc(legacyWhen(ev, l))}</span>
+        <span class="bsrc1">${esc(ev.ja)}${legacyPower(l) ? ` ・ ${esc(legacyPower(l))}` : ""}</span></div></div></div>`);
+    }
+  }
   let body;
-  if (items.length){
-    body = items.map(({b, src}) => {
+  if (items.length || legacyRows.length){
+    body = legacyRows.join("") + items.map(({b, src}) => {
       const srcs = src.map(({ev, st}) => {
         let when;
         if (ev.isShort) when = sameDay(ev.start, ev.end) ? `${fmtT(ev.start)}〜${fmtT(ev.end)}` : `${fmtD(ev.start)} ${fmtT(ev.start)}〜${fmtD(ev.end)} ${fmtT(ev.end)}`;
@@ -731,7 +794,7 @@ function bonusPanel(dayEvents, now, isToday){
   }
   const note = !BONUS ? `<div class="bnote">※ ボーナス情報（コミュニティ・デイ以外）を読み込めていません。</div>`
     : `<div class="bnote">※ 一覧は自動で集めた情報を日本語に置き換えたものです。正確な条件は各イベントの詳細で確認してください。</div>`;
-  return `<section class="block bonus-panel"><h2>🎁 ${title} <span class="count">${items.length}件</span></h2><div class="bbox">${body}${note}</div></section>`;
+  return `<section class="block bonus-panel"><h2>🎁 ${title} <span class="count">${items.length + legacyRows.length}件</span></h2><div class="bbox">${body}${note}</div></section>`;
 }
 
 function renderDays(now){
