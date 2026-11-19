@@ -146,6 +146,13 @@ def total_candy(dex, evo, depth=0):
     return c + cost, items + ([item] if item else [])
 
 
+# 専用の素材で姿を変えるポケモン（ゲームデータの formChange：素材1000個とアメ30個）
+FORM_ITEMS = {
+    "zacian_crowned_sword": "王の姿になるには専用の素材1000個とアメ30個が必要",
+    "zamazenta_crowned_shield": "王の姿になるには専用の素材1000個とアメ30個が必要",
+}
+
+
 # 合体して姿が変わるポケモン（合体相手の伝説と、合体用のエネルギーが別に必要）
 FUSIONS = {
     "kyurem_black": "合体：ゼクロムと合体エネルギーが必要",
@@ -166,9 +173,18 @@ def difficulty(p, b, evo):
     elif "legendary" in tags or "ultrabeast" in tags:
         pts += 2; reasons.append("伝説：レイドなどでしか手に入らず、アメも集めにくい")
     if "mega" in tags:
-        pts += 1; reasons.append("メガシンカにメガエナジーが必要")
+        sid = p["speciesId"]
+        if sid.startswith("rayquaza_mega"):
+            why = "メガシンカにわざ「ガリョウテンセイ」が必要（いんせきで覚える）"
+        elif "primal" in sid:
+            why = "ゲンシカイキにゲンシエナジーが必要"
+        else:
+            why = "メガシンカにメガエナジーが必要"
+        pts += 1; reasons.append(why)
     if p["speciesId"].replace("_shadow", "") in FUSIONS:
         pts += 1.5; reasons.append(FUSIONS[p["speciesId"].replace("_shadow", "")])
+    if p["speciesId"].replace("_shadow", "") in FORM_ITEMS:
+        pts += 1; reasons.append(FORM_ITEMS[p["speciesId"].replace("_shadow", "")])
     if "shadow" in tags:
         pts += 1; reasons.append("シャドウ：GOロケット団などから入手。やつあたりを消すにはイベントが必要")
     if b.get("fastElite") or b.get("chargedElite"):
