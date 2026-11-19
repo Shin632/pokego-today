@@ -969,9 +969,14 @@ def main(prev_path, out_path, prev_megas_path=None, out_megas_path=None, prev_ra
             if mid not in move_ja and "~" + mid.replace("_", "") in move_ja:
                 move_ja[mid] = move_ja["~" + mid.replace("_", "")]
             if mid not in move_ja:
-                for base in ("WEATHER_BALL", "HIDDEN_POWER", "TECHNO_BLAST"):
+                for base in ("WEATHER_BALL", "HIDDEN_POWER", "TECHNO_BLAST", "AURA_WHEEL"):
                     if mid.startswith(base + "_") and base in move_ja:
                         move_ja[mid] = move_ja[base]
+        # それでも無いもの（AEGISLASH_CHARGE_PSYCHO_CUT など）は、英語名が同じ技の日本語名を使う
+        ja_by_en = {move_en[m]: move_ja[m] for m in move_en if m in move_ja}
+        for mid in move_en:
+            if mid not in move_ja and move_en[mid] in ja_by_en:
+                move_ja[mid] = ja_by_en[move_en[mid]]
         pokemon = [p for p in pv["pokemon"] if p.get("released") and "teambuilderexclude" not in p.get("tags", [])
                    and not p["speciesId"].endswith(("_xs", "_xl"))]
 
