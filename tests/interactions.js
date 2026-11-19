@@ -228,6 +228,18 @@ const close = async (p, label) => { check(`${label}: JavaScriptエラーなし`,
     }
     await close(p, pg);
   }
+  // コミュニティ・デイ当日は主役を「捕まえるべき」に（6回目で修正）
+  {
+    const ev = (JSON.parse(fs.readFileSync(path.join(CACHE, 'sd_events.json'), 'utf8')) || [])
+      .find(e => e.eventType === 'community-day' && e.start && new Date(e.start.replace(/\.\d+$/, '') + '+09:00') > new Date());
+    if (ev) {
+      const q = await open(b, 'spawns.html', { time: new Date(new Date(ev.start.replace(/\.\d+$/, '') + '+09:00').getTime() + 30 * 60000) });
+      const t = await q.$eval('main', e => e.innerText);
+      const hitPart = t.split('出現しにくいポケモン')[0];
+      check('spawns: コミュニティ・デイの主役が捕まえるべきに入る', hitPart.includes('コミュニティ・デイの主役'), hitPart.slice(0, 60));
+      await close(q, 'spawns(CD)');
+    }
+  }
 
   await b.close();
   console.log(`合格 ${passes.length} / 失敗 ${fails.length}`);

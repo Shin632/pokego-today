@@ -173,6 +173,7 @@ function timeNoteFor(name, texts){
   return null;
 }
 
+const CD_REASON = "コミュニティ・デイの主役：たくさん出現し、色違いも出やすい";
 // ===== 集計 =====
 function collect(now){
   const evById = {};
@@ -195,6 +196,8 @@ function collect(now){
         const key = monKey(p.name);
         if (!mons.has(key)) mons.set(key, {name: p.name, key, image: safeUrl(p.image), shiny: false, rare: false, sources: [], times: [], rewards: []});
         const m = mons.get(key);
+        // コミュニティ・デイの主役：色違いが出やすく、レガシー技を覚えさせられる日なので捕まえるべき
+        if (e.eventType === "community-day" && !m.rewards.includes(CD_REASON)) m.rewards.push(CD_REASON);
         m.shiny = m.shiny || p.shiny; m.rare = m.rare || rare;
         if (!m.image) m.image = safeUrl(p.image);
         if (!m.sources.some(x => x.id === id)) m.sources.push({id, name: evName, live, short, s, en});
