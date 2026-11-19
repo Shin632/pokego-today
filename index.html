@@ -105,6 +105,8 @@ section.block>h2 .count{font-size:12px;font-weight:500;color:var(--sub)}
 .mon img{width:26px;height:26px;object-fit:contain}
 .mon .sh{font-size:11px}
 .mon.noimg{padding-left:9px}
+.megasug{margin-top:8px;font-size:13px;line-height:1.5;background:color-mix(in srgb,#8e4ec6 9%,transparent);border-radius:8px;padding:6px 9px}
+.megasug .mhint{display:block;font-size:11px;color:var(--sub)}
 .bonuses{margin:8px 0 0;padding:0;list-style:none;display:grid;gap:3px}
 .bonuses li{font-size:13px;display:flex;gap:6px;align-items:flex-start}
 .bonuses li::before{content:"＋";color:var(--cat,var(--accent));font-weight:700}
@@ -192,6 +194,9 @@ const CACHE_KEY = "pogo-events-cache-v1";
 // ボーナス情報（GitHub Actions が LeekDuck の各イベントページから集めて data ブランチに置くJSON）
 const BONUS_URL = "https://raw.githubusercontent.com/Shin632/pokego-today/data/bonuses.json";
 const BONUS_CACHE_KEY = "pogo-bonuses-cache-v1";
+// メガシンカの一覧とポケモン名→タイプの表（tools/build_rankings.py が1日1回作る）
+const MEGAS_URL = "https://raw.githubusercontent.com/Shin632/pokego-today/data/megas.json";
+const MEGAS_CACHE_KEY = "pogo-megas-cache-v1";
 const REFETCH_MS = 30 * 60 * 1000;      // 30分ごとに再取得
 const TICK_MS = 30 * 1000;              // 30秒ごとに残り時間を更新
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -481,6 +486,7 @@ function fmtDur(ms){
 let EVENTS = [];
 let fetchedAt = null;
 let BONUS = null;          // {updatedAt, events:{id:{bonuses:[{text,section}], notes:[]}}}
+let MEGAS = null;          // {levels, megas:[{id,name,types,initial,subsequent,legendary}], types:{英語名:[タイプ]}}
 let selDay = startOfDay(new Date());
 let lastRenderDay = startOfDay(new Date());
 
@@ -566,6 +572,9 @@ async function refresh(){
   const btn = document.getElementById("reload");
   btn.disabled = true; btn.textContent = "更新中…";
   const bonusP = fetchBonuses().then(b => { BONUS = b; try { localStorage.setItem(BONUS_CACHE_KEY, JSON.stringify(b)); } catch {} }, () => {});
+  const megaP = fetch(MEGAS_URL, {cache: "no-cache"}).then(r => r.ok ? r.json() : null).then(m => {
+    if (m && Array.isArray(m.megas) && m.types){ MEGAS = m; MEGA_NAME_RE = null; try { localStorage.setItem(MEGAS_CACHE_KEY, JSON.stringify(m)); } catch {} }
+  }, () => {});
   try {
     const data = await fetchEvents();
     saveCache(data);
@@ -575,7 +584,7 @@ async function refresh(){
     if (EVENTS.length) setNotice(`最新データを取得できませんでした（${esc(e.message || e)}）。前回取得したデータを表示しています。`, false);
     else setNotice(`イベント情報を取得できませんでした（${esc(e.message || e)}）。通信環境を確認して「更新」を押してください。`, true);
   } finally {
-    await bonusP;
+    await Promise.all([bonusP, megaP]);
     applyBonuses();
     loading = false; btn.disabled = false; btn.textContent = "↻ 更新";
     render();
@@ -606,6 +615,81 @@ function monChips(list){
   return `<div class="mons">${chips.join("")}</div>`;
 }
 
+// ===== アメを増やすメガシンカのおすすめ =====
+// メガシンカ中のポケモンと同じタイプのポケモンを捕まえるとアメが増える（ゲームデータの megaEvoLevelSettings より）
+const TYPE_JA_S = {normal:"ノーマル",fire:"ほのお",water:"みず",electric:"でんき",grass:"くさ",ice:"こおり",fighting:"かくとう",poison:"どく",ground:"じめん",
+  flying:"ひこう",psychic:"エスパー",bug:"むし",rock:"いわ",ghost:"ゴースト",dragon:"ドラゴン",dark:"あく",steel:"はがね",fairy:"フェアリー"};
+const SUPER = {normal:[],fire:["grass","ice","bug","steel"],water:["fire","ground","rock"],electric:["water","flying"],grass:["water","ground","rock"],
+  ice:["grass","ground","flying","dragon"],fighting:["normal","ice","rock","dark","steel"],poison:["grass","fairy"],ground:["fire","electric","poison","rock","steel"],
+  flying:["grass","fighting","bug"],psychic:["fighting","poison"],bug:["grass","psychic","dark"],rock:["fire","ice","flying","bug"],ghost:["psychic","ghost"],
+  dragon:["dragon"],dark:["psychic","ghost"],steel:["ice","rock","fairy"],fairy:["fighting","dragon","dark"]};
+// マックスバトルではメガシンカの効果がどう働くか確かめられていないので対象外
+const CATCH_EVENT_TYPES = new Set(["community-day","pokemon-spotlight-hour","raid-hour","raid-day","raid-battles","raid-weekend","event","elite-raids","research-day"]);
+let MEGA_NAME_RE = null;
+function megaNameRe(){
+  if (MEGA_NAME_RE) return MEGA_NAME_RE;
+  const names = Object.keys(MEGAS.types).sort((a, b) => b.length - a.length).map(escRe);
+  MEGA_NAME_RE = new RegExp("(^|[^A-Za-z])(" + names.join("|") + ")(?=[^A-Za-z]|$)", "g");
+  return MEGA_NAME_RE;
+}
+/** イベントで捕まえる（出会う）ポケモンの英語名 */
+function eventTargets(ev){
+  const x = ev.extra || {};
+  let names = [];
+  if (x.communityday && Array.isArray(x.communityday.spawns)) names.push(...x.communityday.spawns.map(p => p.name));
+  if (x.spotlight) names.push(...(x.spotlight.list && x.spotlight.list.length ? x.spotlight.list : [x.spotlight]).map(p => p.name));
+  if (x.raidbattles && Array.isArray(x.raidbattles.bosses)) names.push(...x.raidbattles.bosses.map(p => p.name));
+  if (!names.length){
+    const re = megaNameRe(); re.lastIndex = 0; let m;
+    const title = ev.name.replace(/^\s*\[[^\]]*\]\s*/, "");
+    while ((m = re.exec(title))) names.push(m[2]);
+  }
+  const out = [];
+  for (let n of names){
+    n = String(n || "").replace(/\s*\(.*\)\s*$/, "").replace(/^(Shadow|Mega|Dynamax|Gigantamax|Eternamax|Primal) /, "").trim();
+    if (MEGAS.types[n] && !out.some(o => o.name === n)) out.push({name: n, types: MEGAS.types[n]});
+  }
+  return out;
+}
+function megaSuggest(ev){
+  if (!MEGAS || !CATCH_EVENT_TYPES.has(ev.type) || ev.isBg) return null;
+  const targets = eventTargets(ev);
+  if (!targets.length) return null;
+  const isRaid = /raid/.test(ev.type);
+  const cands = [];
+  for (const m of MEGAS.megas){
+    let hit = 0, both = 0, shared = new Set(), strong = false;
+    for (const t of targets){
+      const s = m.types.filter(ty => t.types.includes(ty));
+      if (s.length){ hit++; s.forEach(ty => shared.add(ty)); if (s.length >= 2) both++; }
+      if (isRaid && m.types.some(ty => t.types.some(tt => (SUPER[ty] || []).includes(tt)))) strong = true;
+    }
+    if (!hit) continue;
+    // 対象のポケモンに多く効くもの → タイプが2つとも同じもの → 攻撃も有利なもの → 伝説でない・メガエナジーが少なくて済むもの
+    const score = hit * 10 + both * 2 + (strong ? 4 : 0) - (m.legendary ? 3 : 0) - (m.initial || 200) / 200;
+    cands.push({m, hit, shared: [...shared], strong, score});
+  }
+  cands.sort((a, b) => b.score - a.score);
+  // 同じポケモンの X/Y は1つにまとめる
+  const out = [], seen = new Set();
+  for (const c of cands){ const key = c.m.id.replace(/_mega(_[xy])?$/, ""); if (seen.has(key)) continue; seen.add(key); out.push(c); if (out.length >= 3) break; }
+  return out.length ? {targets, list: out, total: targets.length} : null;
+}
+function megaSuggestHtml(ev){
+  const r = megaSuggest(ev);
+  if (!r) return "";
+  const lv = MEGAS.levels || {};
+  const extra = (lv["1"] && lv["1"].extraCandy) || 1, extra3 = (lv["3"] && lv["3"].extraCandy) || 2;
+  const items = r.list.map(c => `<b>${esc(jaMegaName(c.m.name))}</b>（${c.shared.map(t => TYPE_JA_S[t] || t).join("・")}${r.total > 1 ? `・${c.hit}/${r.total}匹に有効` : ""}${c.strong ? "・攻撃も有利" : ""}）`).join("、");
+  return `<div class="megasug">⚡ アメを増やすメガ：${items}<span class="mhint">同じタイプのポケモンを捕まえるとアメ+${extra}（メガレベル3なら+${extra3}）</span></div>`;
+}
+function jaMegaName(en){
+  const m = String(en).match(/^(.+?) \((Mega(?: ([XY]))?)\)$/);
+  if (!m) return jaMons(en);
+  const base = (typeof POKE_JA !== "undefined" && POKE_JA[m[1]]) || m[1];
+  return "メガ" + base + (m[3] || "");
+}
+
 function cardHtml(ev, now, opts = {}){
   const st = stateOf(ev, now);
   const dayStart = opts.dayStart, dayEnd = dayStart ? addDays(dayStart, 1) : null;
@@ -627,6 +711,7 @@ function cardHtml(ev, now, opts = {}){
   if (x.raidbattles && x.raidbattles.bosses) mons += monChips(x.raidbattles.bosses);
   if (x.communityday && x.communityday.spawns) mons += monChips(x.communityday.spawns);
   if (x.spotlight) mons += monChips(x.spotlight.list && x.spotlight.list.length ? x.spotlight.list : [x.spotlight]);
+  const megaHtml = st !== "cancel" && st !== "over" ? megaSuggestHtml(ev) : "";
 
   const bl = ev.bonuses || [];
   const bonusHtml = bl.length ? `<ul class="bonuses">${bl.map(b => `<li>${bonusTag(b)}${esc(b.ja)}${b.ok ? "" : ` <span class="en">（英語）</span>`}</li>`).join("")}</ul>` : "";
@@ -648,7 +733,7 @@ function cardHtml(ev, now, opts = {}){
       <h3 class="title">${esc(ev.ja)}</h3>${orig}
     </div>${thumb}</div>
     <p class="when">🕒 ${esc(fmtRange(ev.start, ev.end))}${cd ? "<br>" + cd : ""}</p>
-    ${mons}${bonusHtml}${discl}${codes}
+    ${mons}${megaHtml}${bonusHtml}${discl}${codes}
     ${ev.link ? `<div class="links"><a href="${esc(ev.link)}" target="_blank" rel="noopener">詳細を見る（LeekDuck・英語）↗</a></div>` : ""}
   </article>`;
 }
@@ -833,6 +918,7 @@ setInterval(() => { if (document.visibilityState === "visible") refresh(); }, RE
 // 起動：キャッシュがあれば即表示 → 最新を取得
 const cached = loadCache();
 try { const cb = JSON.parse(localStorage.getItem(BONUS_CACHE_KEY) || "null"); if (cb && typeof cb.events === "object") BONUS = cb; } catch {}
+try { const cm = JSON.parse(localStorage.getItem(MEGAS_CACHE_KEY) || "null"); if (cm && Array.isArray(cm.megas)) MEGAS = cm; } catch {}
 if (cached){ try { EVENTS = normalize(cached.data); fetchedAt = new Date(cached.fetchedAt); applyBonuses(); } catch {} }
 render();
 refresh();

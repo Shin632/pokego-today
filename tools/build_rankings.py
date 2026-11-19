@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """レイド・ジム攻撃・ジム防衛で「育成すべきポケモン」のランキングを、ゲームデータから計算して JSON にする。
 
-  python3 tools/build_rankings.py <前回の rankings.json> <出力先 rankings.json>
+  python3 tools/build_rankings.py <前回の rankings.json> <出力先 rankings.json> [<前回の megas.json> <出力先 megas.json>]
 
 前回のデータが 24 時間以内なら計算をせずにそのまま使う（重いデータを毎回取りにいかないため）。
 
@@ -35,7 +35,7 @@ GAME_MASTER = "https://raw.githubusercontent.com/PokeMiners/game_masters/master/
 MOVES_CSV = "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/moves.csv"
 MOVE_NAMES_CSV = "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/move_names.csv"
 FRESH_HOURS = 24
-SCHEMA = 5               # 出力の形式を変えたら上げる（前回分を使い回さず計算し直す）
+SCHEMA = 6               # 出力の形式を変えたら上げる（前回分を使い回さず計算し直す）
 TOP_N = 10
 KEEP = {"raid": 250, "type": 60, "gym": 200, "defense": 30}   # 画面で絞り込んでも10件出せるよう多めに持つ
 ATTACKER_POOL = 150      # ジム防衛の評価に使う攻撃役の候補（レイド上位＋タイプ別上位）
@@ -440,18 +440,73 @@ def ranking(items, n):
     return out
 
 
-def main(prev_path, out_path):
+def load_mega_levels(gm):
+    """メガレベルごとの効果（同じタイプのポケモンを捕まえたときのアメ追加など）"""
+    out = {}
+    for x in gm:
+        m = x.get("data", {}).get("megaEvoLevelSettings")
+        if m and m.get("level") is not None and x["templateId"].startswith("MEGA_EVOLUTION_LEVEL_") and x["templateId"].count("_") == 3:
+            e = m.get("effects", {})
+            out[str(m.get("level"))] = {"extraCandy": e.get("sameTypeExtraCatchCandy", 0), "xlChance": e.get("sameTypeExtraCatchCandyXlChance", 0),
+                                        "extraXp": e.get("sameTypeExtraCatchXp", 0), "sameTypeAttack": e.get("sameTypeAttackBoost"),
+                                        "otherTypeAttack": e.get("differentTypeAttackBoost")}
+    return out
+
+
+def build_megas(pokemon, mega_cost, levels):
+    """イベント画面用：メガシンカできるポケモンの一覧と、ポケモン名（英語）→タイプの表"""
+    megas = []
+    for p in pokemon:
+        tags = p.get("tags", [])
+        if "mega" not in tags or "_primal" in p["speciesId"] or "shadow" in tags:
+            continue
+        c = mega_cost.get(p["dex"], {})
+        megas.append({"id": p["speciesId"], "name": p["speciesName"], "types": [t for t in p["types"] if t != "none"],
+                      "legendary": "legendary" in tags or "mythical" in tags,
+                      "initial": c.get("initial"), "subsequent": c.get("subsequent")})
+    types = {}
+    regional = {"Alolan": "Alolan", "Galarian": "Galarian", "Hisuian": "Hisuian", "Paldean": "Paldean"}
+    for p in pokemon:
+        if "shadow" in p.get("tags", []) or "mega" in p.get("tags", []):
+            continue
+        name = p["speciesName"]
+        t = [x for x in p["types"] if x != "none"]
+        if "(" not in name:
+            types.setdefault(name, t)
+        else:
+            base, form = name.split(" (", 1)
+            form = form.rstrip(")")
+            if form in regional:
+                types.setdefault(f"{form} {base}", t)
+            types.setdefault(base, t)   # フォルム違いは最初に見つかったものを代表に
+    return {"schema": SCHEMA, "generatedAt": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z"),
+            "levels": levels, "megas": megas, "types": types}
+
+
+def main(prev_path, out_path, prev_megas_path=None, out_megas_path=None):
+    prev_megas = None
+    if prev_megas_path:
+        try:
+            with open(prev_megas_path, encoding="utf-8") as f:
+                prev_megas = json.load(f)
+        except Exception:
+            prev_megas = None
     try:
         with open(prev_path, encoding="utf-8") as f:
             prev = json.load(f)
         age = dt.datetime.now(dt.timezone.utc) - dt.datetime.fromisoformat(prev["generatedAt"].replace("Z", "+00:00"))
-        if age < dt.timedelta(hours=FRESH_HOURS) and prev.get("raid") and prev.get("schema") == SCHEMA:
+        megas_ok = not out_megas_path or (prev_megas and prev_megas.get("schema") == SCHEMA)
+        if age < dt.timedelta(hours=FRESH_HOURS) and prev.get("raid") and prev.get("schema") == SCHEMA and megas_ok:
             with open(out_path, "w", encoding="utf-8") as f:
                 json.dump(prev, f, ensure_ascii=False)
+            if out_megas_path:
+                with open(out_megas_path, "w", encoding="utf-8") as f:
+                    json.dump(prev_megas, f, ensure_ascii=False)
             print(f"前回のランキングを再利用（{age} 前に計算）")
             return
     except Exception:
         prev = None
+    megas_data = prev_megas
 
     try:
         pv = json.loads(get(PVPOKE))
@@ -459,6 +514,7 @@ def main(prev_path, out_path):
         pve = load_pve_moves(gm)
         EVO.update(load_evolutions(gm))
         MEGA, UPGRADE = load_buddy_extra(gm)
+        MEGA_LEVELS = load_mega_levels(gm)
         del gm
         try:
             move_ja = load_move_names()
@@ -545,6 +601,8 @@ def main(prev_path, out_path):
             "gymAttackTargets": [d["id"] for d in defense_top[:GYM_TARGETS]],
             "gymDefense": defense_top,
         }
+        megas_data = build_megas(pokemon, MEGA, MEGA_LEVELS)
+        print("megas:", len(megas_data["megas"]), "types:", len(megas_data["types"]), "levels:", megas_data["levels"])
         print("raid:", [x["id"] for x in data["raid"][:15]])
         print("gymAttack:", [x["id"] for x in data["gymAttack"][:15]])
         print("gymDefense:", [(x["id"], x["seconds"]) for x in data["gymDefense"][:15]])
@@ -555,7 +613,10 @@ def main(prev_path, out_path):
         data = prev
     with open(out_path, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False)
+    if out_megas_path and megas_data:
+        with open(out_megas_path, "w", encoding="utf-8") as f:
+            json.dump(megas_data, f, ensure_ascii=False)
 
 
 if __name__ == "__main__":
-    main(sys.argv[1], sys.argv[2])
+    main(*sys.argv[1:5])
