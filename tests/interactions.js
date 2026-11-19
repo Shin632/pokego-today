@@ -204,6 +204,12 @@ const close = async (p, label) => { check(`${label}: JavaScriptエラーなし`,
     await p.fill('#q', 'ミニリュウ'); await p.waitForTimeout(400);
     const n = await p.$$eval('.task', e => e.length);
     check('research: 「ミニリュウ」で絞り込める', n >= 1, n);
+    // ひらがな・半角カナでも同じ件数（7回目で修正）
+    for (const q2 of ['みにりゅう', 'ﾐﾆﾘｭｳ']) {
+      await p.fill('#q', q2); await p.waitForTimeout(400);
+      const n2 = await p.$$eval('.task', e => e.length);
+      check(`research: 「${q2}」でも「ミニリュウ」と同じ件数`, n2 === n, `${n2} / ${n}`);
+    }
     await p.fill('#q', ''); await p.waitForTimeout(300);
     await p.click('details.gfold > summary'); await p.waitForTimeout(100);
     const link = await p.$('.grow'); if (link) { await link.click(); await p.waitForTimeout(300); }

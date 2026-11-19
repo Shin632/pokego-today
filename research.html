@@ -310,7 +310,7 @@ function prepare(cats){
       const tr = translateTask(t.text); t.ja = tr.ja; t.ok = tr.ok;
       for (const r of t.rewards) r.ja = rewardJa(r);
       t.score = scoreTask(t);
-      t.hay = (t.ja + " " + t.text + " " + t.rewards.map(r => r.ja + " " + r.name).join(" ")).toLowerCase();
+      t.hay = normQ(t.ja + " " + t.text + " " + t.rewards.map(r => r.ja + " " + r.name).join(" "));
     }
   }
   // イベントのタスクを先頭に
@@ -360,6 +360,8 @@ function setNotice(html, isErr){
 const HIT_U = 0.55;
 const DUST_HIT = 600;   // 捕まえたときの追加のほしのすながこれ以上なら当たり（ほしのすな稼ぎ）
 let CATCH_DUST = null;
+// 検索用にそろえる：全角・半角（NFKC）、ひらがな→カタカナ、大文字→小文字。空白は残す（英語名の「rare candy」用）
+const normQ = (s) => String(s || "").normalize("NFKC").toLowerCase().replace(/[ぁ-ゖ]/g, c => String.fromCharCode(c.charCodeAt(0) + 0x60));
 function monKey(r){ return String(r.name || "").replace(/ \(.*\)$/, "").replace(/ \d+$/, ""); }
 function encounterInfo(r){
   if (r.type !== "encounter") return null;
@@ -428,7 +430,7 @@ function render(){
   document.getElementById("lastUpdated").textContent = updatedAt ? `データ更新：${fmtD(updatedAt)} ${fmtT(updatedAt)}${isFallback ? "（予備データ）" : ""}` : "";
   const main = document.getElementById("main");
   if (!CATS_DATA){ if (!loading) main.innerHTML = `<div class="empty">表示できるデータがありません</div>`; return; }
-  const q = query.trim().toLowerCase();
+  const q = normQ(query.trim());
   let html = "", total = 0;
   if (filter === "all" && !q) html += goodSummary();
   for (const c of CATS_DATA){
@@ -439,7 +441,7 @@ function render(){
     const title = c.info.event ? `<span class="evbadge">イベント</span>${esc(c.info.ja)}` : `${c.info.icon} ${esc(c.info.ja)}`;
     html += `<section class="cat${c.info.event ? " event" : ""}"><h2>${title} <span class="count">${tasks.length}件</span></h2><div class="tasks">`;
     for (const t of tasks){
-      const hitOf = (r) => (f[2] && filter !== "all" && f[2](r)) || (q && (r.ja + " " + r.name).toLowerCase().includes(q));
+      const hitOf = (r) => (f[2] && filter !== "all" && f[2](r)) || (q && normQ(r.ja + " " + r.name).includes(q));
       // 絞り込みに当たる報酬を前に
       const sc = t.score;
       // 当たりのポケモンは前へ（🎯）、ハズレのポケモンと割に合うタスクのボールはグレーにして後ろへ
