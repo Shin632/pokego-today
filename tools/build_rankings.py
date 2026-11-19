@@ -36,7 +36,7 @@ GAME_MASTER = "https://raw.githubusercontent.com/PokeMiners/game_masters/master/
 MOVES_CSV = "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/moves.csv"
 MOVE_NAMES_CSV = "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/move_names.csv"
 FRESH_HOURS = 0          # レイドボスが入れ替わるので毎回計算する（計算は1分かからない）
-SCHEMA = 11               # 出力の形式を変えたら上げる（前回分を使い回さず計算し直す）
+SCHEMA = 12               # 出力の形式を変えたら上げる（前回分を使い回さず計算し直す）
 TOP_N = 10
 KEEP = {"raid": 250, "type": 60, "gym": 200, "defense": 30}   # 画面で絞り込んでも10件出せるよう多めに持つ
 ATTACKER_POOL = 150      # ジム防衛の評価に使う攻撃役の候補（レイド上位＋タイプ別上位）
@@ -665,6 +665,40 @@ ROCKET_URL = "https://raw.githubusercontent.com/bigfoott/ScrapedDuck/data/rocket
 ROCKET_JA = {"Giovanni": "サカキ", "Cliff": "クリフ", "Arlo": "アルロ", "Sierra": "シエラ"}
 
 
+def build_evo_use(pokemon, lists):
+    """リサーチなどで出会うポケモン（通常の姿）が、進化・メガシンカ後にどれくらい役立つか。
+    英語名（"Alolan Geodude" 形式）→ {"u": 役立ち度, "best": 役立つ姿, "use": 使い道}（役立ち度0のものは省略）"""
+    by_id = {p["speciesId"]: p for p in pokemon}
+    useful = usefulness_index(lists, max_rank=30)   # 通常の姿はシャドウより順位が下がりやすいので30位まで見る
+    out = {}
+    for p in pokemon:
+        tags = p.get("tags", [])
+        if "shadow" in tags or "mega" in tags:
+            continue
+        best = (0.0, None, None)
+        todo, seen = [p], set()
+        while todo:
+            q = todo.pop()
+            if q["speciesId"] in seen:
+                continue
+            seen.add(q["speciesId"])
+            for vid, f in [(q["speciesId"], 1.0)] + [(q["speciesId"] + suf, 0.8) for suf in ("_mega", "_mega_x", "_mega_y", "_primal")]:
+                if vid in useful and useful[vid][0] * f > best[0]:
+                    best = (useful[vid][0] * f, by_id[vid]["speciesName"] if vid in by_id else q["speciesName"], useful[vid][1])
+            for e in (q.get("family") or {}).get("evolutions") or []:
+                if e in by_id:
+                    todo.append(by_id[e])
+        if best[0] <= 0:
+            continue
+        name = p["speciesName"]
+        m = re.match(r"^(.+?) \((Alolan|Galarian|Hisuian|Paldean)\)$", name)
+        key = f"{m.group(2)} {m.group(1)}" if m else name
+        cur = out.get(key)
+        if not cur or best[0] > cur["u"]:
+            out[key] = {"u": round(best[0], 3), "best": best[1], "use": best[2]}
+    return out
+
+
 def build_rocket(pokemon, lists):
     """GOロケット団：倒すと捕まえられるシャドウポケモンの「育てたときの強さ」から、闘う優先度を出す。
     価値 = 進化後（シャドウ）のランキングでの強さ（リトレーン後は0.8倍）＋伝説 0.3 ＋ 野生で少ない（相棒5km以上）0.1
@@ -864,6 +898,9 @@ def main(prev_path, out_path, prev_megas_path=None, out_megas_path=None, prev_ra
             "gymDefense": defense_top,
         }
         megas_data = build_megas(pokemon, MEGA, MEGA_LEVELS, TYPE_BOOSTS)
+        lists_all = [("レイド総合", raid_top, LIST_WEIGHT_MAIN), ("ジム攻撃", gym_top, LIST_WEIGHT_MAIN), ("ジム防衛", defense_top, LIST_WEIGHT_MAIN)] \
+            + [(f"レイド・{type_ja[t]}", type_top[t], LIST_WEIGHT_TYPE) for t in TYPES]
+        megas_data["evoUse"] = build_evo_use(pokemon, lists_all)
         if out_raids_path:
             try:
                 lists = [("レイド総合", raid_top, LIST_WEIGHT_MAIN), ("ジム攻撃", gym_top, LIST_WEIGHT_MAIN), ("ジム防衛", defense_top, LIST_WEIGHT_MAIN)] \
