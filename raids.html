@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1f6feb">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>今のレイドボス｜今日のポケGOイベント</title>
+<style>
+:root{--bg:#f4f6fa;--panel:#ffffff;--text:#14171c;--sub:#5b6472;--line:#e3e7ee;--accent:#1f6feb;--muted:#9aa3b1;--radius:14px}
+@media (prefers-color-scheme: dark){:root{--bg:#0f1115;--panel:#1a1d24;--text:#eceff4;--sub:#a3acba;--line:#2b303a;--muted:#6c7584}}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--bg);color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic UI",Meiryo,sans-serif;
+  font-size:15px;line-height:1.5;-webkit-text-size-adjust:100%;
+  padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+.wrap{max-width:760px;margin:0 auto;padding:12px 14px 40px}
+.nav{display:flex;gap:8px;margin:2px 0 6px;overflow-x:auto;scrollbar-width:none}
+.nav::-webkit-scrollbar{display:none}
+.nav a{flex:0 0 auto;font-size:13px;color:var(--accent);text-decoration:none;border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:5px 12px}
+.nav a.cur{background:var(--accent);border-color:var(--accent);color:#fff}
+header.top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;padding:6px 2px 4px}
+h1{font-size:20px;margin:0}
+.lead{font-size:13px;color:var(--sub);margin:2px 0 0}
+.btn{appearance:none;font:inherit;font-size:13px;border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:999px;padding:7px 12px;cursor:pointer;white-space:nowrap}
+.btn[disabled]{opacity:.5}
+.notice{background:#fff4d6;color:#6b4b00;border-radius:10px;padding:8px 12px;font-size:13px;margin:8px 0}
+.notice.err{background:#ffe1e1;color:#8a1c1c}
+@media (prefers-color-scheme: dark){.notice{background:#3a2f12;color:#f3d999}.notice.err{background:#3f1a1a;color:#ffb4b4}}
+.toggles{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}
+.tg{font:inherit;font-size:12.5px;border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:999px;padding:4px 10px;cursor:pointer}
+.tg.off{color:var(--muted);text-decoration:line-through}
+.boss{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:12px;margin-top:12px}
+.bh{display:flex;gap:10px;align-items:flex-start}
+.bimg{width:64px;height:64px;object-fit:contain;flex:0 0 auto;background:var(--bg);border-radius:12px}
+.bname{font-size:18px;font-weight:800;line-height:1.3}
+.tier{display:inline-block;font-size:11px;font-weight:700;color:#fff;border-radius:6px;padding:1px 7px;margin-right:4px;vertical-align:2px}
+.tier.t5{background:#1f6feb}.tier.tm{background:#7c3aed}.tier.ts{background:#6b21a8}.tier.te{background:#b45309}
+.tp{display:inline-block;font-size:10.5px;font-weight:700;color:#fff;border-radius:5px;padding:0 6px;margin-left:4px;vertical-align:2px}
+.meta{font-size:12px;color:var(--sub);margin-top:3px}
+.rate{margin-top:10px;border-radius:10px;padding:8px 10px;background:var(--bg)}
+.rate .st{font-size:18px;letter-spacing:2px;color:#d97706}
+.rate .lb{font-weight:800;margin-left:6px}
+.rate.r4,.rate.r5{background:color-mix(in srgb,#d97706 14%,var(--bg))}
+.rate.r1{opacity:.85}
+.rate ul{margin:4px 0 0;padding-left:1.2em;font-size:12.5px;color:var(--sub)}
+.ct{margin-top:10px}
+.ct h3{font-size:13px;margin:0 0 4px;color:var(--sub);font-weight:700}
+.cr{display:grid;grid-template-columns:22px 1fr;gap:6px;padding:6px 0;border-top:1px dashed var(--line)}
+.cr:first-of-type{border-top:none}
+.cn{font-weight:800;color:var(--sub);text-align:center}
+.cnm{font-weight:700}
+.cmv{font-size:12.5px}
+.cmv .el{font-size:11px;color:#b45309;font-weight:700}
+.cst{font-size:11.5px;color:var(--sub)}
+.tag{display:inline-block;font-size:10.5px;font-weight:700;border-radius:5px;padding:0 5px;margin-left:4px;vertical-align:2px;border:1px solid currentColor}
+.tag.mega{color:#7c3aed}.tag.shadow{color:#6b21a8}.tag.leg{color:#b45309}
+.empty{color:var(--sub);font-size:14px;background:var(--panel);border:1px dashed var(--line);border-radius:var(--radius);padding:14px;text-align:center;margin-top:12px}
+details.box{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:10px 12px;margin-top:16px}
+details.box>summary{cursor:pointer;font-weight:700}
+.crit{font-size:13px;line-height:1.7;margin:8px 0 0;padding-left:1.2em}
+footer{margin-top:24px;font-size:12px;color:var(--sub);line-height:1.7}
+footer a{color:var(--sub)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="nav"><a href="index.html">📅 イベント</a><a href="raids.html" class="cur">🐉 レイド</a><a href="research.html">📋 リサーチ</a><a href="shop.html">🛒 ボックス判定</a><a href="ranks.html">🏆 育成TOP10</a></nav>
+  <header class="top">
+    <div><h1>今のレイドボス</h1><p class="lead">★5・メガ・シャドウ★5などの高ランクレイドと、有利なポケモン・周回おすすめ度</p></div>
+    <button class="btn" id="reload" type="button">↻ 更新</button>
+  </header>
+  <div id="notice"></div>
+  <div class="toggles" id="toggles"></div>
+  <main id="main"><div class="empty">読み込み中…</div></main>
+
+  <details class="box">
+    <summary>周回おすすめ度の決め方</summary>
+    <ul class="crit">
+      <li>次の点数の合計で★1〜5にしています（このアプリの目安です）。
+        <br>・<b>手に入る機会の少なさ</b>：シャドウの伝説 +1.5（シャドウレイドでしか手に入らない）、エリートレイド +1.5、伝説のメガ・ゲンシ +1、伝説 +1
+        <br>・<b>アメの集めにくさ</b>：伝説 +1（相棒20km・ほぼレイド頼み）、相棒5kmのポケモン +0.5
+        <br>・<b>メガ育成の大変さと恩恵</b>（メガレイドのみ）：メガ後のランキングでの強さ ×2（最大+2）、メガレベル4対応 +0.5
+        <br>・<b>地域限定</b> +1（地域によっては野生で出ない）
+        <br>・<b>育てたときの恩恵</b>：捕まえたポケモン（シャドウならシャドウ）の、育成ランキングでの強さ ×2（最大+2）。メガ・ゲンシできる伝説は、メガ・ゲンシ後の強さも見ます。</li>
+      <li>合計 1.5未満＝★1、2.5未満＝★2、3.5未満＝★3、4.5未満＝★4、それ以上＝★5。</li>
+      <li><b>「どれくらい久しぶりにレイドに出たか」は入っていません。</b>過去のレイドの出現履歴を公開データから取れないためです。代わりに伝説・シャドウ・エリートなどの区分で「手に入る機会の少なさ」を数えています。</li>
+      <li>「地域限定」は、データ元（PvPoke）で地域限定とされているポケモンです。日本で出るかどうかまでは分かりません。</li>
+    </ul>
+  </details>
+  <details class="box">
+    <summary>有利なポケモンの計算のしかた</summary>
+    <ul class="crit">
+      <li>育成TOP10と同じ計算です。レベル40・個体値15/15/15の攻撃役で、ボスのタイプと防御に対して、技1・技2の組み合わせごとの1秒あたりのダメージと倒されるまでの総ダメージから評価しています。</li>
+      <li>ボスの技・天候ブースト・フレンドボーナスは入れていません。★ の付いた技は、すごいわざマシンやイベントが必要な技です。</li>
+      <li>捕獲CPの最大値は個体値100%のときのCPです。</li>
+    </ul>
+  </details>
+  <footer>
+    <div>※ 非公式のファンツールです。レイドボスの一覧は <a href="https://leekduck.com/raid-bosses/" target="_blank" rel="noopener">LeekDuck</a> の内容を <a href="https://github.com/bigfoott/ScrapedDuck" target="_blank" rel="noopener">ScrapedDuck</a> 経由で取得しています。★1・★3 のレイドは表示していません。</div>
+    <div id="lastUpdated"></div>
+  </footer>
+</div>
+
+<script src="names-ja.js"></script>
+<script src="common.js"></script>
+<script>
+"use strict";
+const SOURCE = "https://raw.githubusercontent.com/Shin632/pokego-today/data/raids.json";
+const CACHE_KEY = "pogo-raids-cache-v1";
+const TYPE_INFO = {
+  normal:["ノーマル","#9fa19f"], fire:["ほのお","#e62829"], water:["みず","#2980ef"], electric:["でんき","#d8b300"], grass:["くさ","#3fa129"],
+  ice:["こおり","#3dcef3"], fighting:["かくとう","#ff8000"], poison:["どく","#9141cb"], ground:["じめん","#915121"], flying:["ひこう","#81b9ef"],
+  psychic:["エスパー","#ef4179"], bug:["むし","#91a119"], rock:["いわ","#afa981"], ghost:["ゴースト","#704170"], dragon:["ドラゴン","#5060e1"],
+  dark:["あく","#624d4e"], steel:["はがね","#60a1b8"], fairy:["フェアリー","#ef70ef"],
+};
+const RATE_LABEL = ["", "見送りでOK", "余裕があれば", "おすすめ", "かなりおすすめ", "最優先で周回"];
+let DATA = null;
+let show = {mega: true, shadow: true, legendary: true};
+
+const typeBadges = (ts) => ts.map(t => `<span class="tp" style="background:${(TYPE_INFO[t] || ["", "#888"])[1]}">${(TYPE_INFO[t] || [t])[0]}</span>`).join("");
+function tierBadge(b){
+  if (/Elite/i.test(b.tier)) return `<span class="tier te">エリート</span>`;
+  if (b.mega) return `<span class="tier tm">${/Primal/i.test(b.speciesName) ? "ゲンシ" : "メガ"}</span>`;
+  if (b.shadow) return `<span class="tier ts">シャドウ★5</span>`;
+  const m = b.tier.match(/(\d)-Star/); return `<span class="tier t5">★${m ? m[1] : "5"}</span>`;
+}
+function render(){
+  document.getElementById("toggles").innerHTML = [["mega", "メガ・ゲンシ"], ["shadow", "シャドウ"], ["legendary", "伝説・幻"]]
+    .map(([k, l]) => `<button type="button" class="tg${show[k] ? "" : " off"}" data-show="${k}">${show[k] ? "✓ " : ""}${l}を有利なポケモンに含める</button>`).join("");
+  document.getElementById("lastUpdated").textContent = DATA && DATA.generatedAt ? `計算した日時：${fmtD(new Date(DATA.generatedAt))} ${fmtT(new Date(DATA.generatedAt))}` : "";
+  const main = document.getElementById("main");
+  if (!DATA) return;
+  if (!DATA.bosses.length){ main.innerHTML = `<div class="empty">今は高ランクのレイドボスの情報がありません</div>`; return; }
+  main.innerHTML = DATA.bosses.map(b => {
+    const r = b.rating;
+    const cp = b.cp && b.cp.max > 0 ? `捕獲CP ${b.cp.min}〜<b>${b.cp.max}</b>${b.cpBoosted && b.cpBoosted.max > 0 ? `（天候ブースト ${b.cpBoosted.min}〜<b>${b.cpBoosted.max}</b>）` : ""}` : "";
+    const weather = b.weather && b.weather.length ? `ブーストする天候：${b.weather.map(esc).join("・")}` : "";
+    const counters = b.counters.filter(x => (show.mega || !x.mega) && (show.shadow || !x.shadow) && (show.legendary || !(x.legendary || x.mythical || x.ultrabeast))).slice(0, 3);
+    const mv = (m) => `${esc(m.ja || m.en)}${m.elite ? `<span class="el">★</span>` : ""}`;
+    const ct = counters.length ? counters.map((x, i) => `<div class="cr"><div class="cn">${i + 1}</div><div>
+        <div class="cnm">${esc(nameJa(x.name))}${typeBadges(x.types)}${x.mega ? `<span class="tag mega">メガ</span>` : ""}${x.shadow ? `<span class="tag shadow">シャドウ</span>` : ""}${x.legendary || x.mythical || x.ultrabeast ? `<span class="tag leg">${x.mythical ? "幻" : "伝説"}</span>` : ""}</div>
+        <div class="cmv">技1 <b>${mv(x.fast)}</b> ／ 技2 <b>${mv(x.charged)}</b></div>
+        <div class="cst">DPS ${x.dps.toFixed(1)}${x.difficulty ? ` ・ 育成難易度 ${"★".repeat(x.difficulty.level)}${"☆".repeat(5 - x.difficulty.level)}` : ""}</div></div></div>`).join("")
+      : `<div class="cst">条件に合うポケモンがいません</div>`;
+    const img = b.image ? `<img class="bimg" src="${esc(b.image)}" alt="" loading="lazy" onerror="this.remove()">` : "";
+    return `<article class="boss">
+      <div class="bh">${img}<div>
+        <div>${tierBadge(b)}${b.shiny ? `<span class="tag leg">✨色違いあり</span>` : ""}</div>
+        <div class="bname">${esc(nameJa(b.speciesName))}${typeBadges(b.types)}</div>
+        <div class="meta">${cp}</div><div class="meta">${weather}</div>
+      </div></div>
+      <div class="rate r${r.stars}"><span>周回おすすめ度</span> <span class="st">${"★".repeat(r.stars)}${"☆".repeat(5 - r.stars)}</span><span class="lb">${RATE_LABEL[r.stars]}</span>
+        <ul>${r.reasons.map(x => `<li>${esc(x)}</li>`).join("")}</ul></div>
+      <div class="ct"><h3>有利なポケモン TOP3</h3>${ct}</div>
+    </article>`;
+  }).join("");
+}
+async function refresh(){
+  const btn = document.getElementById("reload"); btn.disabled = true; btn.textContent = "更新中…";
+  try {
+    const ctl = new AbortController(); const timer = setTimeout(() => ctl.abort(), 15000);
+    const res = await fetch(SOURCE, {cache: "no-cache", signal: ctl.signal}); clearTimeout(timer);
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    const d = await res.json(); if (!d || !Array.isArray(d.bosses)) throw new Error("形式が違います");
+    DATA = d; try { localStorage.setItem(CACHE_KEY, JSON.stringify(d)); } catch {}
+    document.getElementById("notice").innerHTML = "";
+  } catch (e){
+    document.getElementById("notice").innerHTML = DATA ? `<div class="notice">最新のデータを取得できませんでした（${esc(e.message || e)}）。前回のデータを表示しています。</div>`
+      : `<div class="notice err">データを取得できませんでした（${esc(e.message || e)}）。「更新」を押してください。</div>`;
+    if (!DATA) document.getElementById("main").innerHTML = "";
+  } finally { btn.disabled = false; btn.textContent = "↻ 更新"; render(); }
+}
+document.getElementById("toggles").addEventListener("click", e => { const b = e.target.closest("[data-show]"); if (b){ show[b.dataset.show] = !show[b.dataset.show]; render(); } });
+document.getElementById("reload").addEventListener("click", refresh);
+try { const c = JSON.parse(localStorage.getItem(CACHE_KEY) || "null"); if (c && Array.isArray(c.bosses)) DATA = c; } catch {}
+render();
+refresh();
+</script>
+</body>
+</html>

@@ -73,7 +73,7 @@ footer a{color:var(--sub)}
 </head>
 <body>
 <div class="wrap">
-  <nav class="nav"><a href="index.html">📅 イベント</a><a href="research.html">📋 リサーチ</a><a href="shop.html">🛒 ボックス判定</a><a href="ranks.html" class="cur">🏆 育成TOP10</a></nav>
+  <nav class="nav"><a href="index.html">📅 イベント</a><a href="raids.html">🐉 レイド</a><a href="research.html">📋 リサーチ</a><a href="shop.html">🛒 ボックス判定</a><a href="ranks.html" class="cur">🏆 育成TOP10</a></nav>
   <header class="top">
     <div><h1>育成おすすめ TOP10</h1><p class="lead">ゲームのデータから計算した、レイド・ジム攻撃・ジム防衛に強いポケモン</p></div>
     <button class="btn" id="reload" type="button">↻ 更新</button>
@@ -105,7 +105,7 @@ footer a{color:var(--sub)}
     </ul>
   </details>
   <footer>
-    <div>※ 非公式のファンツールです。データは <a href="https://github.com/pvpoke/pvpoke" target="_blank" rel="noopener">PvPoke</a>（種族値・覚える技・実装状況）、<a href="https://github.com/PokeMiners/game_masters" target="_blank" rel="noopener">PokeMiners</a>（レイド・ジムでの技の数値）、<a href="https://github.com/PokeAPI/pokeapi" target="_blank" rel="noopener">PokeAPI</a>（技の日本語名）の公開データを使い、1日1回計算しています。</div>
+    <div>※ 非公式のファンツールです。データは <a href="https://github.com/pvpoke/pvpoke" target="_blank" rel="noopener">PvPoke</a>（種族値・覚える技・実装状況）、<a href="https://github.com/PokeMiners/game_masters" target="_blank" rel="noopener">PokeMiners</a>（レイド・ジムでの技の数値）、<a href="https://github.com/PokeAPI/pokeapi" target="_blank" rel="noopener">PokeAPI</a>（技の日本語名）の公開データを使い、3時間ごとに計算しています。</div>
     <div id="lastUpdated"></div>
   </footer>
 </div>
@@ -128,37 +128,6 @@ const TAB_DESC = {
   gymDefense: "ジムに置いて、倒されるまでに時間がかかるポケモン（伝説・メガ・シャドウはジムに置けないので除外）。",
   buddy: "相棒にして歩くと育成がはかどるポケモン。上の各TOP10に出るポケモンを、アメ・メガエナジー・歩く距離から並べています。",
 };
-// フォルム名（英語の括弧書き → 日本語）
-const FORMS = {
-  "Shadow": ["pre", "シャドウ"], "Mega": ["pre", "メガ"], "Primal": ["pre", "ゲンシ"],
-  "Mega X": ["prepost", "メガ", "X"], "Mega Y": ["prepost", "メガ", "Y"],
-  "Black": ["pre", "ブラック"], "White": ["pre", "ホワイト"],
-  "Alolan": ["suf", "アローラ"], "Galarian": ["suf", "ガラル"], "Hisuian": ["suf", "ヒスイ"], "Paldean": ["suf", "パルデア"],
-  "Galarian Standard": ["suf", "ガラル"], "Standard": ["drop"],
-  "Origin": ["suf", "オリジンフォルム"], "Altered": ["suf", "アナザーフォルム"], "Incarnate": ["suf", "けしんフォルム"], "Therian": ["suf", "れいじゅうフォルム"],
-  "Dawn Wings": ["suf", "あかつきのつばさ"], "Dusk Mane": ["suf", "たそがれのたてがみ"],
-  "Crowned Sword": ["suf", "けんのおう"], "Crowned Shield": ["suf", "たてのおう"],
-  "Resolute": ["suf", "かくごのすがた"], "Ordinary": ["suf", "いつものすがた"],
-  "Burn": ["suf", "ブレイズカセット"], "Chill": ["suf", "フリーズカセット"], "Douse": ["suf", "アクアカセット"], "Shock": ["suf", "イナズマカセット"],
-  "Unbound": ["suf", "ときはなたれし"], "Land": ["suf", "ランドフォルム"], "Sky": ["suf", "スカイフォルム"], "Aria": ["suf", "ボイスフォルム"],
-  "Rapid Strike": ["suf", "れんげきのかた"], "Single Strike": ["suf", "いちげきのかた"],
-};
-function nameJa(en){
-  const m = String(en).match(/^([^(]+?)\s*((?:\([^)]*\)\s*)*)$/);
-  if (!m) return jaMons(en);
-  const base = m[1].trim();
-  let ja = (typeof POKE_JA !== "undefined" && POKE_JA[base]) || base, pre = "", post = "", suf = [];
-  for (const g of m[2].match(/\(([^)]*)\)/g) || []){
-    const k = g.slice(1, -1), f = FORMS[k];
-    if (!f) suf.push(k);
-    else if (f[0] === "pre") pre = f[1] + pre;
-    else if (f[0] === "prepost"){ pre = f[1] + pre; post = f[2]; }
-    else if (f[0] === "suf") suf.push(f[1]);
-  }
-  // 「シャドウ」は「メガ」「ゲンシ」より前に来ないので、シャドウ＋リージョンは「シャドウ〇〇（アローラ）」
-  return pre + ja + post + (suf.length ? `（${suf.join("・")}）` : "");
-}
-
 let DATA = null, tab = "raid", type = "all";
 let show = {mega: true, shadow: true, legendary: true};
 let easyOnly = false;   // 育成難易度1〜3だけを表示

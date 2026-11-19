@@ -59,3 +59,36 @@ const WD = ["日","月","火","水","木","金","土"];
 const pad = (n)=>String(n).padStart(2,"0");
 const fmtT = (d)=>`${d.getHours()}:${pad(d.getMinutes())}`;
 const fmtD = (d)=>`${d.getMonth()+1}/${d.getDate()}(${WD[d.getDay()]})`;
+
+// フォルム名（英語の括弧書き → 日本語）
+const FORMS = {
+  "Shadow": ["pre", "シャドウ"], "Mega": ["pre", "メガ"], "Primal": ["pre", "ゲンシ"],
+  "Mega X": ["prepost", "メガ", "X"], "Mega Y": ["prepost", "メガ", "Y"],
+  "Black": ["pre", "ブラック"], "White": ["pre", "ホワイト"],
+  "Alolan": ["suf", "アローラ"], "Galarian": ["suf", "ガラル"], "Hisuian": ["suf", "ヒスイ"], "Paldean": ["suf", "パルデア"],
+  "Galarian Standard": ["suf", "ガラル"], "Standard": ["drop"],
+  "Origin": ["suf", "オリジンフォルム"], "Altered": ["suf", "アナザーフォルム"], "Incarnate": ["suf", "けしんフォルム"], "Therian": ["suf", "れいじゅうフォルム"],
+  "Dawn Wings": ["suf", "あかつきのつばさ"], "Dusk Mane": ["suf", "たそがれのたてがみ"],
+  "Crowned Sword": ["suf", "けんのおう"], "Crowned Shield": ["suf", "たてのおう"],
+  "Resolute": ["suf", "かくごのすがた"], "Ordinary": ["suf", "いつものすがた"],
+  "Burn": ["suf", "ブレイズカセット"], "Chill": ["suf", "フリーズカセット"], "Douse": ["suf", "アクアカセット"], "Shock": ["suf", "イナズマカセット"],
+  "Unbound": ["suf", "ときはなたれし"], "Land": ["suf", "ランドフォルム"], "Sky": ["suf", "スカイフォルム"], "Aria": ["suf", "ボイスフォルム"],
+  "Rapid Strike": ["suf", "れんげきのかた"], "Single Strike": ["suf", "いちげきのかた"],
+};
+/** PvPoke の名前（"Charizard (Mega X)" "Tornadus (Incarnate) (Shadow)" など）を日本語に */
+function nameJa(en){
+  const m = String(en).match(/^([^(]+?)\s*((?:\([^)]*\)\s*)*)$/);
+  if (!m) return jaMons(en);
+  const base = m[1].trim();
+  let ja = (typeof POKE_JA !== "undefined" && POKE_JA[base]) || base, pre = "", post = "", suf = [];
+  for (const g of m[2].match(/\(([^)]*)\)/g) || []){
+    const k = g.slice(1, -1), f = FORMS[k];
+    if (!f) suf.push(k);
+    else if (f[0] === "pre") pre = f[1] + pre;
+    else if (f[0] === "prepost"){ pre = f[1] + pre; post = f[2]; }
+    else if (f[0] === "suf") suf.push(f[1]);
+  }
+  // 「シャドウ」は「メガ」「ゲンシ」より前に来ないので、シャドウ＋リージョンは「シャドウ〇〇（アローラ）」
+  return pre + ja + post + (suf.length ? `（${suf.join("・")}）` : "");
+}
+

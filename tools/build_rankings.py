@@ -27,6 +27,7 @@ import datetime as dt
 import io
 import json
 import math
+import re
 import sys
 import urllib.request
 
@@ -34,8 +35,8 @@ PVPOKE = "https://raw.githubusercontent.com/pvpoke/pvpoke/master/src/data/gamema
 GAME_MASTER = "https://raw.githubusercontent.com/PokeMiners/game_masters/master/latest/latest.json"
 MOVES_CSV = "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/moves.csv"
 MOVE_NAMES_CSV = "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/move_names.csv"
-FRESH_HOURS = 24
-SCHEMA = 9               # 出力の形式を変えたら上げる（前回分を使い回さず計算し直す）
+FRESH_HOURS = 0          # レイドボスが入れ替わるので毎回計算する（計算は1分かからない）
+SCHEMA = 10               # 出力の形式を変えたら上げる（前回分を使い回さず計算し直す）
 TOP_N = 10
 KEEP = {"raid": 250, "type": 60, "gym": 200, "defense": 30}   # 画面で絞り込んでも10件出せるよう多めに持つ
 ATTACKER_POOL = 150      # ジム防衛の評価に使う攻撃役の候補（レイド上位＋タイプ別上位）
@@ -537,7 +538,130 @@ def build_megas(pokemon, mega_cost, levels, boosts=None):
             "levels": levels, "megas": megas, "types": types, "buddyKm": buddy}
 
 
-def main(prev_path, out_path, prev_megas_path=None, out_megas_path=None):
+RAIDS_URL = "https://raw.githubusercontent.com/bigfoott/ScrapedDuck/data/raids.json"
+HIGH_TIER = re.compile(r"5-Star|Mega|Elite|Primal|6-Star|Legendary|Ultra Beast", re.I)
+BOSS_CPM = 0.79
+WEATHER_JA = {"sunny": "晴れ", "clear": "晴れ", "rainy": "雨", "partly cloudy": "ときどきくもり", "cloudy": "くもり",
+              "windy": "強風", "snow": "雪", "fog": "霧"}
+
+
+def raid_name_candidates(name):
+    """ScrapedDuck のボス名（"Shadow Tornadus (Incarnate)" "Mega Charizard Y" など）→ PvPoke の名前の候補"""
+    s = name.strip()
+    shadow = s.startswith("Shadow ")
+    if shadow:
+        s = s[len("Shadow "):]
+    pre = None
+    m = re.match(r"^(Mega|Primal) (.+?)(?: ([XY]))?$", s)
+    if m:
+        pre = "Mega " + m.group(3) if m.group(1) == "Mega" and m.group(3) else m.group(1)
+        s = m.group(2)
+    form = ""
+    fm = re.match(r"^(.+?) (\(.+\))$", s)
+    if fm:
+        s, form = fm.group(1), " " + fm.group(2)
+    reg = re.match(r"^(Alolan|Galarian|Hisuian|Paldean) (.+)$", s)
+    region = ""
+    if reg:
+        region, s = f" ({reg.group(1)})", reg.group(2)
+    tail = (f" ({pre})" if pre else "") + (" (Shadow)" if shadow else "")
+    return [s + region + form + tail, s + region + tail, s + tail, s]
+
+
+def usefulness_index(lists, max_rank=20):
+    """speciesId → (役立ち度 0〜1, 代表の使い道)"""
+    out = {}
+    for label, lst, w in lists:
+        for rank, x in enumerate(lst[:max_rank], 1):
+            u = x["pct"] / 100 * w
+            if u > out.get(x["id"], (0, None))[0]:
+                out[x["id"]] = (u, f"{label} {rank}位")
+    return out
+
+
+def build_raids(pokemon, pve, move_ja, move_en, lists, mega):
+    raw = json.loads(get(RAIDS_URL))
+    by_name = {}
+    for p in pokemon:
+        by_name.setdefault(p["speciesName"], p)
+    useful = usefulness_index(lists)
+    bosses = []
+    for r in raw:
+        tier = r.get("tier") or ""
+        if not HIGH_TIER.search(tier):
+            continue
+        p = next((by_name[c] for c in raid_name_candidates(r["name"]) if c in by_name), None)
+        if not p:
+            print(f"::warning::レイドボスが見つかりません: {r['name']}")
+            continue
+        tags = set(p.get("tags", []))
+        shadow = r["name"].startswith("Shadow ")
+        is_mega_raid = bool(re.search(r"Mega|Primal", tier, re.I)) or "mega" in tags
+        boss_types = [t for t in p["types"] if t != "none"] or [t["name"] for t in r.get("types", [])]
+        boss_def = (p["baseStats"]["def"] + 15) * BOSS_CPM
+        # 有利なポケモン
+        counters = []
+        for a in pokemon:
+            b = best_attack(a, pve, boss_def, boss_types)
+            if b:
+                counters.append(entry(a, b, move_ja, move_en))
+        counters = ranking(counters, 30)
+        # 周回おすすめ度
+        legend = bool({"legendary", "mythical", "ultrabeast"} & tags)
+        base = by_name.get(p["speciesName"].split(" (")[0])
+        pts, reasons = 0.0, []
+        if shadow and legend:
+            pts += 1.5; reasons.append("シャドウの伝説：シャドウレイドでしか手に入らず、開催も限られる")
+        elif re.search(r"Elite", tier, re.I):
+            pts += 1.5; reasons.append("エリートレイド：開催が少ない")
+        elif is_mega_raid and legend:
+            pts += 1; reasons.append("伝説のメガ・ゲンシのレイドは開催が限られる")
+        elif legend:
+            pts += 1; reasons.append("伝説：レイドでしか手に入らない")
+        if legend:
+            pts += 1; reasons.append("アメが集めにくい（相棒20km、ほぼレイド頼み）")
+        elif base and (base.get("buddyDistance") or 0) >= 5:
+            pts += 0.5; reasons.append(f"アメ集めがやや大変（相棒{base.get('buddyDistance')}km）")
+        if is_mega_raid:
+            u_mega, use_mega = useful.get(p["speciesId"], (0, None))
+            m = mega.get(p["dex"], {})
+            pts += 2 * u_mega
+            if use_mega:
+                reasons.append(f"メガ後が強い（{use_mega}）")
+            if m.get("level4"):
+                pts += 0.5; reasons.append("メガレベル4対応（エナジーが5000必要）")
+            reasons.append("メガエナジーは主にメガレイドで集める")
+        if "regional" in tags or (base and "regional" in base.get("tags", [])):
+            pts += 1; reasons.append("地域限定ポケモン（地域によっては野生で出ない）")
+        # 捕まえたポケモンを育てたときの恩恵
+        caught_id = p["speciesId"] if (shadow or not is_mega_raid) else base_id(p["speciesId"])
+        u_caught, use_caught = useful.get(caught_id, (0, None))
+        if not is_mega_raid and not shadow:
+            for v in (p["speciesId"] + "_mega", p["speciesId"] + "_mega_x", p["speciesId"] + "_mega_y", p["speciesId"] + "_primal"):
+                if v in useful and useful[v][0] * 0.8 > u_caught:
+                    u_caught, use_caught = useful[v][0] * 0.8, useful[v][1] + "（メガ・ゲンシ後）"
+        pts += 2 * u_caught
+        if use_caught and not is_mega_raid:
+            reasons.append(f"育てると強い（{use_caught}）")
+        if not use_caught and not is_mega_raid:
+            reasons.append("攻撃・ジムのランキングには入っていない")
+        stars = 1 if pts < 1.5 else 2 if pts < 2.5 else 3 if pts < 3.5 else 4 if pts < 4.5 else 5
+        cp = r.get("combatPower") or {}
+        bosses.append({
+            "name": r["name"], "id": p["speciesId"], "speciesName": p["speciesName"], "tier": tier, "shadow": shadow, "mega": is_mega_raid,
+            "types": boss_types, "shiny": bool(r.get("canBeShiny")), "image": r.get("image"),
+            "weather": [WEATHER_JA.get((w.get("name") or "").lower(), w.get("name")) for w in r.get("boostedWeather", [])],
+            "cp": cp.get("normal"), "cpBoosted": cp.get("boosted"),
+            "rating": {"stars": stars, "points": round(pts, 2), "reasons": reasons},
+            "counters": counters,
+        })
+    order = {"5": 0, "Mega": 1}
+    bosses.sort(key=lambda b: (-b["rating"]["stars"], b["mega"], b["name"]))
+    return {"schema": SCHEMA, "generatedAt": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z"),
+            "bosses": bosses}
+
+
+def main(prev_path, out_path, prev_megas_path=None, out_megas_path=None, prev_raids_path=None, out_raids_path=None):
     prev_megas = None
     if prev_megas_path:
         try:
@@ -561,6 +685,13 @@ def main(prev_path, out_path, prev_megas_path=None, out_megas_path=None):
     except Exception:
         prev = None
     megas_data = prev_megas
+    raids_data = None
+    if prev_raids_path:
+        try:
+            with open(prev_raids_path, encoding="utf-8") as f:
+                raids_data = json.load(f)
+        except Exception:
+            raids_data = None
 
     try:
         pv = json.loads(get(PVPOKE))
@@ -657,6 +788,14 @@ def main(prev_path, out_path, prev_megas_path=None, out_megas_path=None):
             "gymDefense": defense_top,
         }
         megas_data = build_megas(pokemon, MEGA, MEGA_LEVELS, TYPE_BOOSTS)
+        if out_raids_path:
+            try:
+                lists = [("レイド総合", raid_top, LIST_WEIGHT_MAIN), ("ジム攻撃", gym_top, LIST_WEIGHT_MAIN), ("ジム防衛", defense_top, LIST_WEIGHT_MAIN)] \
+                    + [(f"レイド・{type_ja[t]}", type_top[t], LIST_WEIGHT_TYPE) for t in TYPES]
+                raids_data = build_raids(pokemon, pve, move_ja, move_en, lists, MEGA)
+                print("raids:", [(b["name"], b["rating"]["stars"], [c["id"] for c in b["counters"][:3]]) for b in raids_data["bosses"]])
+            except Exception as ex:
+                print(f"::warning::raids: {ex}")
         print("megas:", len(megas_data["megas"]), "types:", len(megas_data["types"]), "levels:", megas_data["levels"])
         print("raid:", [x["id"] for x in data["raid"][:15]])
         print("gymAttack:", [x["id"] for x in data["gymAttack"][:15]])
@@ -671,7 +810,10 @@ def main(prev_path, out_path, prev_megas_path=None, out_megas_path=None):
     if out_megas_path and megas_data:
         with open(out_megas_path, "w", encoding="utf-8") as f:
             json.dump(megas_data, f, ensure_ascii=False)
+    if out_raids_path and raids_data and raids_data.get("bosses") is not None:
+        with open(out_raids_path, "w", encoding="utf-8") as f:
+            json.dump(raids_data, f, ensure_ascii=False)
 
 
 if __name__ == "__main__":
-    main(*sys.argv[1:5])
+    main(*sys.argv[1:7])
