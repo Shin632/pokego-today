@@ -107,7 +107,7 @@ footer a{color:var(--sub)}
 </head>
 <body>
 <div class="wrap">
-  <nav class="nav"><a href="index.html">📅 イベント</a><a href="raids.html">🐉 レイド</a><a href="rocket.html">🚀 ロケット団</a><a href="research.html" class="cur">📋 リサーチ</a><a href="shop.html">🛒 ボックス判定</a><a href="ranks.html">🏆 育成TOP10</a></nav>
+  <nav class="nav"><a href="index.html">📅 イベント</a><a href="spawns.html">🌿 野生</a><a href="raids.html">🐉 レイド</a><a href="rocket.html">🚀 ロケット団</a><a href="research.html" class="cur">📋 リサーチ</a><a href="shop.html">🛒 ボックス判定</a><a href="ranks.html">🏆 育成TOP10</a></nav>
   <header class="top">
     <div>
       <h1>フィールドリサーチ一覧</h1>
@@ -282,10 +282,6 @@ function taskEffort(text){
   for (const [re, fn] of EFFORT_RULES){ const m = String(text).match(re); if (m){ const [lv, why] = fn(...m.slice(1)); return {lv, why, known: true}; } }
   return {lv: 3, why: "", known: false};
 }
-// 出会えると人気・貴重なポケモン（このアプリの判断。ドラゴン系の進化前、化石、ラプラスなど）
-const PRIZE_MONS = new Set(["Dratini","Larvitar","Bagon","Beldum","Gible","Axew","Deino","Goomy","Jangmo-o","Frigibax","Dreepy",
-  "Lapras","Snorlax","Aerodactyl","Omanyte","Kabuto","Lileep","Anorith","Cranidos","Shieldon","Tirtouga","Archen","Tyrunt","Amaura",
-  "Spinda","Ditto","Riolu","Feebas","Scyther","Chansey","Togepi","Ralts","Mawile"]);
 const interp = (x, pts) => { if (x <= pts[0][0]) return pts[0][1]; for (let i = 1; i < pts.length; i++){ const [x1, y1] = pts[i], [x0, y0] = pts[i-1]; if (x <= x1) return y0 + (y1 - y0) * (x - x0) / (x1 - x0); } return pts[pts.length-1][1]; };
 /** 報酬1つの価値 0〜10（目安） */
 function rewardValue(r){

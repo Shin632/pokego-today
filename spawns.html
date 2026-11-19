@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1f6feb">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>今の野生ポケモン｜今日のポケGOイベント</title>
+<style>
+:root{--bg:#f4f6fa;--panel:#ffffff;--text:#14171c;--sub:#5b6472;--line:#e3e7ee;--accent:#1f6feb;--muted:#9aa3b1;--radius:14px}
+@media (prefers-color-scheme: dark){:root{--bg:#0f1115;--panel:#1a1d24;--text:#eceff4;--sub:#a3acba;--line:#2b303a;--muted:#6c7584}}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--bg);color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic UI",Meiryo,sans-serif;
+  font-size:15px;line-height:1.5;-webkit-text-size-adjust:100%;
+  padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+.wrap{max-width:760px;margin:0 auto;padding:12px 14px 40px}
+.nav{display:flex;gap:8px;margin:2px 0 6px;overflow-x:auto;scrollbar-width:none}
+.nav::-webkit-scrollbar{display:none}
+.nav a{flex:0 0 auto;font-size:13px;color:var(--accent);text-decoration:none;border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:5px 12px}
+.nav a.cur{background:var(--accent);border-color:var(--accent);color:#fff}
+header.top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;padding:6px 2px 4px}
+h1{font-size:20px;margin:0}
+.lead{font-size:13px;color:var(--sub);margin:2px 0 0}
+.btn{appearance:none;font:inherit;font-size:13px;border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:999px;padding:7px 12px;cursor:pointer;white-space:nowrap}
+.btn[disabled]{opacity:.5}
+.notice{background:#fff4d6;color:#6b4b00;border-radius:10px;padding:8px 12px;font-size:13px;margin:8px 0}
+.notice.err{background:#ffe1e1;color:#8a1c1c}
+@media (prefers-color-scheme: dark){.notice{background:#3a2f12;color:#f3d999}.notice.err{background:#3f1a1a;color:#ffb4b4}}
+section{margin-top:16px}
+section>h2{font-size:16px;margin:0 0 8px;display:flex;align-items:center;gap:6px}
+.count{font-size:12px;font-weight:500;color:var(--sub)}
+.sub2{font-size:12px;color:var(--sub);margin:-4px 2px 8px}
+/* ピックアップ */
+.pick{display:grid;gap:8px}
+.pc{display:grid;grid-template-columns:56px 1fr;gap:10px;align-items:center;background:linear-gradient(135deg,#fff8e6,var(--panel) 70%);border:2px solid #f5b83d;border-radius:var(--radius);padding:9px 11px}
+@media (prefers-color-scheme: dark){.pc{background:linear-gradient(135deg,#2f2614,var(--panel) 70%);border-color:#a7731c}}
+.pc.rare{background:linear-gradient(135deg,#f1ebff,var(--panel) 70%);border-color:#8b5cf6}
+@media (prefers-color-scheme: dark){.pc.rare{background:linear-gradient(135deg,#251c3d,var(--panel) 70%);border-color:#6d48c9}}
+.pc img{width:56px;height:56px;object-fit:contain}
+.pc .ph{width:56px;height:56px;border-radius:12px;background:var(--bg)}
+.pn{font-size:17px;font-weight:800;line-height:1.3}
+.why{font-size:12.5px;margin-top:1px}
+.src{font-size:11.5px;color:var(--sub);margin-top:2px}
+.badge{display:inline-block;font-size:11px;font-weight:700;border-radius:6px;padding:0 6px;margin-left:4px;vertical-align:2px}
+.b-hit{background:#ffe3a3;color:#7a4a00}
+.b-rare{background:#e9ddff;color:#5b21b6}
+.b-time{background:#dbeafe;color:#1e40af}
+@media (prefers-color-scheme: dark){.b-hit{background:#5a3f0b;color:#ffd27a}.b-rare{background:#3b2a66;color:#d8c8ff}.b-time{background:#1e2f55;color:#bcd2ff}}
+.timeln{font-size:12px;color:#1e40af;margin-top:2px}
+@media (prefers-color-scheme: dark){.timeln{color:#9dbbff}}
+/* その他 */
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.ch{display:flex;align-items:center;gap:4px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:3px 9px 3px 4px;font-size:13px;line-height:1.25}
+.ch img{width:30px;height:30px;object-fit:contain}
+.ch.noimg{padding-left:9px}
+.ch.miss{opacity:.42;filter:grayscale(1)}
+.ch .t{display:block;font-size:10.5px;color:#1e40af}
+@media (prefers-color-scheme: dark){.ch .t{color:#9dbbff}}
+.sh{font-size:11px}
+.legend{font-size:11.5px;color:var(--sub);margin:6px 2px 0}
+.empty{color:var(--sub);font-size:14px;background:var(--panel);border:1px dashed var(--line);border-radius:var(--radius);padding:14px;text-align:center}
+details.box{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:10px 12px;margin-top:16px}
+details.box>summary{cursor:pointer;font-weight:700}
+.crit{font-size:13px;line-height:1.7;margin:8px 0 0;padding-left:1.2em}
+footer{margin-top:24px;font-size:12px;color:var(--sub);line-height:1.7}
+footer a{color:var(--sub)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="nav"><a href="index.html">📅 イベント</a><a href="spawns.html" class="cur">🌿 野生</a><a href="raids.html">🐉 レイド</a><a href="rocket.html">🚀 ロケット団</a><a href="research.html">📋 リサーチ</a><a href="shop.html">🛒 ボックス判定</a><a href="ranks.html">🏆 育成TOP10</a></nav>
+  <header class="top">
+    <div><h1>今の野生ポケモン</h1><p class="lead">開催中のイベントで野生に出るポケモンと、捕まえるべきポケモン</p></div>
+    <button class="btn" id="reload" type="button">↻ 更新</button>
+  </header>
+  <div id="notice"></div>
+  <main id="main"><div class="empty">読み込み中…</div></main>
+
+  <details class="box">
+    <summary>見方・決め方</summary>
+    <ul class="crit">
+      <li><b>🎯 捕まえるべき</b>：人気・貴重なポケモン（ミニリュウ・ダンバルなどの進化前、化石、ラプラスなど）、または進化・メガシンカ後が育成ランキング（レイド・ジムの上位30位）で強いポケモンです。フィールドリサーチの「当たり」と同じ基準です。イベントで「捕まえるとほしのすながもらえる」などの特典があるポケモンも入れています。</li>
+      <li><b>💎 出現しにくい</b>：イベントの説明に「運が良ければ（If you're lucky）」「まれに（rare）」などと書かれているポケモンです。捕まえるべきポケモンでもあれば 🎯 も付けます。</li>
+      <li><b>🕒 時間の注釈</b>：コミュニティ・デイやスポットライトアワーなど短いイベントは、その時間だけ出やすくなります。説明に「毎日◯時〜◯時」「夜」などがあるポケモンにも付けます。</li>
+      <li><b>グレー（スルーしてよい）</b>：人気・貴重ではなく、進化・メガシンカしても育成ランキング上位30位に入らず、PvPでも上位（スーパー・ハイパー100位、マスター50位）に入らないポケモンです。図鑑埋めや色違い集めが目的なら捕まえてください。</li>
+    </ul>
+  </details>
+  <footer>
+    <div>※ 非公式のファンツールです。イベントの「野生で出るポケモン」は <a href="https://leekduck.com/events/" target="_blank" rel="noopener">LeekDuck</a> の各イベントページから3時間ごとに集めています。</div>
+    <div>※ イベントで増えるポケモンだけを表示しています。シーズンごとの通常の出現（場所や天候で変わるもの）は含みません。</div>
+    <div id="lastUpdated"></div>
+  </footer>
+</div>
+
+<script src="names-ja.js"></script>
+<script src="common.js"></script>
+<script>
+"use strict";
+const EVENTS_URL = "https://raw.githubusercontent.com/bigfoott/ScrapedDuck/data/events.json";
+const BONUS_URL = "https://raw.githubusercontent.com/Shin632/pokego-today/data/bonuses.json";
+const MEGAS_URL = "https://raw.githubusercontent.com/Shin632/pokego-today/data/megas.json";
+const HIT_U = 0.55;
+const DAY_MS = 86400000;
+let EVENTS = null, BONUS = null, MEGAS = null;
+
+// ===== 時刻（Z付きはUTC、無しは端末の現地時間） =====
+function parseTime(s){
+  if (!s) return null;
+  if (/Z$|[+-]\d{2}:?\d{2}$/.test(s)){ const d = new Date(s); return isNaN(d) ? null : d; }
+  const m = String(s).match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?/);
+  return m ? new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +(m[6] || 0)) : null;
+}
+const sameDay = (a, b) => a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+const T12 = (h, m, ap) => `${(+h % 12) + (/p/i.test(ap) ? 12 : 0)}:${m}`;
+
+// ===== ポケモンの評価（リサーチと同じ基準） =====
+const monKey = (n) => String(n || "").replace(/ \(.*\)$/, "").replace(/ \d+$/, "").trim();
+function judge(name){
+  const k = monKey(name), base = k.replace(/^(Alolan|Galarian|Hisuian|Paldean) /, "");
+  const ev = MEGAS && MEGAS.evoUse ? MEGAS.evoUse[k] || null : null;
+  const prize = PRIZE_MONS.has(base), u = ev ? ev.u : 0, pvp = ev && ev.pvp;
+  const cls = prize || u >= HIT_U ? "hit" : (MEGAS && MEGAS.evoUse && !prize && u === 0 && !pvp ? "miss" : "");
+  const why = [];
+  if (ev && ev.use) why.push(`${nameJa(ev.best)}：${ev.use}`);
+  if (prize) why.unshift("人気・貴重なポケモン");
+  if (pvp) why.push(`PvP：${nameJa(pvp.best)}（${pvp.league} ${pvp.rank}位）`);
+  return {cls, why, u, prize};
+}
+
+// ===== 出現しにくい・時間帯の読み取り =====
+const RARE_RE = /if you(?:'|’)re lucky|\brare(?:r|ly)?\b|uncommon|less (?:often|frequent)/i;
+const SHINY_ONLY_RE = /shiny one|special background/i;
+function isRareContext(ctx){ const t = (ctx || []).join(" "); return RARE_RE.test(t) && !SHINY_ONLY_RE.test(t); }
+/** 説明文の中から「◯◯を捕まえると△△がもらえる」というイベントの特典を拾う */
+function catchRewardFor(name, texts){
+  const n = monKey(name);
+  for (const raw of texts){
+    const t = String(raw || "");
+    if (!t.includes(n) || !/for catching/i.test(t)) continue;
+    let m = t.match(/receive ([\d,]+) Stardust for catching/i);
+    if (m) return `イベント特典：捕まえるとほしのすな ${m[1]}`;
+    if (/Stardust/i.test(t)) return "イベント特典：捕まえるとほしのすなが多くもらえる";
+    if (/Candy/i.test(t)) return "イベント特典：捕まえるとアメが多くもらえる";
+    if (/XP/i.test(t)) return "イベント特典：捕まえるとXPが多くもらえる";
+    return "イベント特典：捕まえるとボーナスあり";
+  }
+  return null;
+}
+/** 説明文の中から、そのポケモンについての時間帯の言及を拾う */
+function timeNoteFor(name, texts){
+  const n = monKey(name);
+  for (const raw of texts){
+    const t = String(raw || "");
+    if (!t.includes(n)) continue;
+    const m = t.match(/from (\d{1,2}):(\d{2}) ?([ap])\.?m\.? to (\d{1,2}):(\d{2}) ?([ap])\.?m\.?/i);
+    if (m) return `${/each day|daily/i.test(t) ? "毎日" : ""}${T12(m[1], m[2], m[3])}〜${T12(m[4], m[5], m[6])}に出やすい`;
+    if (/\bnight(?:time)?\b|\bevening\b/i.test(t)) return "夜に出やすい";
+    if (/\bday ?time\b|during the day/i.test(t)) return "昼に出やすい";
+  }
+  return null;
+}
+
+// ===== 集計 =====
+function collect(now){
+  const evById = {};
+  for (const e of EVENTS || []) evById[e.eventID] = e;
+  const mons = new Map();
+  const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+  for (const [id, b] of Object.entries((BONUS && BONUS.events) || {})){
+    const e = evById[id];
+    if (!e || !Array.isArray(b.spawns) || !b.spawns.length) continue;
+    const s = parseTime(e.start), en = parseTime(e.end);
+    if (!s || !en || en <= now || s >= todayEnd) continue;      // 開催中か、今日このあと始まるもの
+    const live = s <= now;
+    const short = en - s <= 2 * DAY_MS;
+    const evName = translateName({name: e.name, type: e.eventType});
+    // 出現欄の説明 → 注意書き → ボーナスの順に見る（具体的な数字が書かれていることが多い順）
+    const texts = [...b.spawns.flatMap(g => g.context || []), ...(b.notes || []), ...(b.bonuses || []).map(x => x.text)];
+    for (const g of b.spawns){
+      const rare = isRareContext(g.context);
+      for (const p of g.pokemon){
+        const key = monKey(p.name);
+        if (!mons.has(key)) mons.set(key, {name: p.name, key, image: safeUrl(p.image), shiny: false, rare: false, sources: [], times: [], rewards: []});
+        const m = mons.get(key);
+        m.shiny = m.shiny || p.shiny; m.rare = m.rare || rare;
+        if (!m.image) m.image = safeUrl(p.image);
+        if (!m.sources.some(x => x.id === id)) m.sources.push({id, name: evName, live, short, s, en});
+        if (short) m.times.push(`${sameDay(s, en) ? "" : fmtD(s) + " "}${fmtT(s)}〜${fmtT(en)}のみ${live ? "" : "（このあと）"}`);
+        const tn = timeNoteFor(p.name, texts); if (tn) m.times.push(tn);
+        const rw = catchRewardFor(p.name, texts); if (rw && !m.rewards.includes(rw)) m.rewards.push(rw);
+      }
+    }
+  }
+  for (const m of mons.values()){
+    m.j = judge(m.name); m.times = [...new Set(m.times)]; m.onlyLater = m.sources.every(x => !x.live);
+    if (m.rewards.length){ m.j.cls = "hit"; m.j.why = [...m.rewards, ...m.j.why]; }   // イベントの特典があるポケモンは捕まえるべき
+  }
+  return [...mons.values()];
+}
+
+// ===== 描画 =====
+const nameOf = (m) => jaMons(monKey(m.name));
+function bigCard(m, rareSection){
+  const img = m.image ? `<img src="${esc(m.image)}" alt="" loading="lazy" onerror="this.outerHTML='<div class=&quot;ph&quot;></div>'">` : `<div class="ph"></div>`;
+  const badges = (m.j.cls === "hit" ? `<span class="badge b-hit">🎯 捕まえるべき</span>` : "") + (rareSection ? `<span class="badge b-rare">💎 出現しにくい</span>` : "");
+  const why = m.j.why.length ? `<div class="why">${m.j.why.map(esc).join(" ／ ")}</div>` : "";
+  const time = m.times.length ? `<div class="timeln">🕒 ${m.times.map(esc).join("、")}</div>` : "";
+  return `<div class="pc${rareSection ? " rare" : ""}">${img}<div>
+    <div class="pn">${esc(nameOf(m))}${m.shiny ? `<span class="sh" title="色違いあり">✨</span>` : ""}${badges}</div>
+    ${why}${time}<div class="src">${m.sources.map(x => esc(x.name)).join("、")}</div></div></div>`;
+}
+function chip(m){
+  const img = m.image ? `<img src="${esc(m.image)}" alt="" loading="lazy" onerror="this.parentNode.classList.add('noimg');this.remove()">` : "";
+  const cls = ["ch"]; if (!img) cls.push("noimg"); if (m.j.cls === "miss") cls.push("miss");
+  const tip = m.j.cls === "miss" ? "進化しても育成ランキング上位30位に入らず、PvPでも上位に入らない" : m.j.why.join(" ／ ");
+  return `<span class="${cls.join(" ")}"${tip ? ` title="${esc(tip)}"` : ""}>${img}<span>${esc(nameOf(m))}${m.shiny ? `<span class="sh">✨</span>` : ""}${m.times.length ? `<span class="t">🕒 ${esc(m.times[0])}</span>` : ""}</span></span>`;
+}
+function render(){
+  const main = document.getElementById("main");
+  if (!EVENTS || !BONUS){ return; }
+  const now = new Date();
+  const all = collect(now);
+  if (!all.length){ main.innerHTML = `<div class="empty">今、野生の出現が増えるイベントは見つかりませんでした</div>`; return; }
+  const sortKey = (a, b) => (a.onlyLater - b.onlyLater) || ((b.j.u || 0) - (a.j.u || 0)) || nameOf(a).localeCompare(nameOf(b), "ja");
+  const rare = all.filter(m => m.rare).sort(sortKey);
+  const pick = all.filter(m => !m.rare && m.j.cls === "hit").sort(sortKey);
+  const rest = all.filter(m => !m.rare && m.j.cls !== "hit").sort((a, b) => ((a.j.cls === "miss") - (b.j.cls === "miss")) || sortKey(a, b));
+  let html = "";
+  html += `<section><h2>🎯 捕まえるべきポケモン <span class="count">${pick.length}種類</span></h2>
+    ${pick.length ? `<div class="pick">${pick.map(m => bigCard(m, false)).join("")}</div>` : `<div class="empty">今は特にありません</div>`}</section>`;
+  html += `<section><h2>💎 出現しにくいポケモン <span class="count">${rare.length}種類</span></h2>
+    <p class="sub2">「運が良ければ出会える」とされているポケモン。見かけたら逃さずに。</p>
+    ${rare.length ? `<div class="pick">${rare.map(m => bigCard(m, true)).join("")}</div>` : `<div class="empty">今は特にありません</div>`}</section>`;
+  const misses = rest.filter(m => m.j.cls === "miss").length;
+  html += `<section><h2>🌿 そのほかの出現ポケモン <span class="count">${rest.length}種類（うちスルー推奨 ${misses}）</span></h2>
+    ${rest.length ? `<div class="chips">${rest.map(chip).join("")}</div>` : `<div class="empty">ありません</div>`}
+    <p class="legend">グレー＝スルーしてよいポケモン（育成ランキングにもPvPにも入らない）。🕒＝時間の注釈。</p></section>`;
+  const evs = new Map(); all.forEach(m => m.sources.forEach(s => evs.set(s.id, s)));
+  html += `<section><h2>📅 対象のイベント <span class="count">${evs.size}件</span></h2><div class="sub2">${[...evs.values()].sort((a, b) => a.en - b.en).map(s =>
+    `${esc(s.name)}（${s.live ? "開催中・" : ""}${fmtD(s.s)} ${fmtT(s.s)}〜${fmtD(s.en)} ${fmtT(s.en)}）`).join("<br>")}</div></section>`;
+  main.innerHTML = html;
+  document.getElementById("lastUpdated").textContent = BONUS.updatedAt ? `出現データの取得：${fmtD(new Date(BONUS.updatedAt))} ${fmtT(new Date(BONUS.updatedAt))}` : "";
+}
+async function getJson(url){
+  const ctl = new AbortController(); const timer = setTimeout(() => ctl.abort(), 15000);
+  try { const res = await fetch(url, {cache: "no-cache", signal: ctl.signal}); if (!res.ok) throw new Error("HTTP " + res.status); return await res.json(); }
+  finally { clearTimeout(timer); }
+}
+async function refresh(){
+  const btn = document.getElementById("reload"); btn.disabled = true; btn.textContent = "更新中…";
+  try {
+    const [e, b, m] = await Promise.all([getJson(EVENTS_URL), getJson(BONUS_URL), getJson(MEGAS_URL).catch(() => null)]);
+    EVENTS = e; BONUS = b; if (m) MEGAS = m;
+    try { localStorage.setItem("pogo-spawns-cache-v1", JSON.stringify({e, b})); if (m) localStorage.setItem("pogo-megas-cache-v1", JSON.stringify(m)); } catch {}
+    document.getElementById("notice").innerHTML = "";
+  } catch (err){
+    document.getElementById("notice").innerHTML = EVENTS ? `<div class="notice">最新のデータを取得できませんでした（${esc(err.message || err)}）。前回のデータを表示しています。</div>`
+      : `<div class="notice err">データを取得できませんでした（${esc(err.message || err)}）。「更新」を押してください。</div>`;
+    if (!EVENTS) document.getElementById("main").innerHTML = "";
+  } finally { btn.disabled = false; btn.textContent = "↻ 更新"; render(); }
+}
+document.getElementById("reload").addEventListener("click", refresh);
+try { const c = JSON.parse(localStorage.getItem("pogo-spawns-cache-v1") || "null"); if (c){ EVENTS = c.e; BONUS = c.b; } } catch {}
+try { const m = JSON.parse(localStorage.getItem("pogo-megas-cache-v1") || "null"); if (m) MEGAS = m; } catch {}
+render();
+refresh();
+setInterval(render, 60000);
+</script>
+</body>
+</html>
