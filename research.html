@@ -67,6 +67,7 @@ section.cat.event .task{border-left:5px solid var(--event)}
 .rw.prize{border-color:#f5b83d;background:color-mix(in srgb,#f5b83d 14%,var(--bg))}
 .rw .tg{font-size:13px;margin-right:1px}
 .legend{font-size:11.5px;color:var(--sub);margin-top:6px}
+.task.meh .tt{color:var(--muted);font-weight:600}
 .rw.low.hit{opacity:.8}
 .sh{font-size:11px}
 .empty{color:var(--sub);font-size:14px;background:var(--panel);border:1px dashed var(--line);border-radius:var(--radius);padding:14px;text-align:center}
@@ -118,7 +119,7 @@ footer a{color:var(--sub)}
   <div class="tools">
     <input class="search" id="q" type="search" placeholder="ポケモン・アイテムで探す（例：ミニリュウ）" autocomplete="off">
     <div class="chips" id="chips"></div>
-    <div class="legend">🎯＝当たりのポケモン（人気・貴重、または進化・メガ後が強い） ／ グレー＝ハズレ（進化しても育成ランキング上位30位に入らない）</div>
+    <div class="legend">🎯＝当たりのポケモン（人気・貴重、または進化・メガ後が強い） ／ グレー＝ハズレ（進化しても育成ランキング上位30位に入らず、PvPでも使われない） ／ タイトルがグレー＝割に合わないタスク</div>
   </div>
   <main id="main"><div class="empty">読み込み中…</div></main>
   <footer>
@@ -409,7 +410,8 @@ function setNotice(html, isErr){
 // ===== 描画 =====
 /** 出会えるポケモンの当たり・ハズレ
  *  当たり：人気・貴重なポケモン、または進化・メガシンカ後が育成ランキング（上位30位）で役立ち度0.55以上
- *  ハズレ：人気・貴重でなく、進化・メガシンカ後もランキング上位30位に入らない */
+ *  ハズレ：人気・貴重でなく、進化・メガシンカ後もランキング上位30位に入らず、PvP（対戦）でも使われない
+ *         （PvP：スーパー・ハイパーリーグ100位以内、マスターリーグ50位以内なら「使える」としてハズレにしない） */
 const HIT_U = 0.55;
 function monKey(r){ return String(r.name || "").replace(/ \(.*\)$/, "").replace(/ \d+$/, ""); }
 function encounterInfo(r){
@@ -418,8 +420,9 @@ function encounterInfo(r){
   const e = EVO_USE ? EVO_USE[k] || null : null;
   const prize = PRIZE_MONS.has(base);
   const u = e ? e.u : 0;
-  const cls = prize || u >= HIT_U ? "hit" : (EVO_USE && !prize && u === 0 ? "miss" : "");
-  return {cls, e, prize};
+  const pvp = e && e.pvp ? e.pvp : null;
+  const cls = prize || u >= HIT_U ? "hit" : (EVO_USE && !prize && u === 0 && !pvp ? "miss" : "");
+  return {cls, e, prize, pvp};
 }
 /** 価値の低い報酬：ボール（割に合うタスクのみ）、ハズレのポケモン（すべてのタスク） */
 function isLowValue(r, good){
@@ -434,7 +437,12 @@ function rewardHtml(r, hit, low, prize){
   let tip = "";
   if (r.type === "encounter"){
     const i = encounterInfo(r);
-    tip = i && i.e ? `${nameJa(i.e.best)}：${i.e.use}` : i && i.prize ? "人気・貴重なポケモン" : i && i.cls === "miss" ? "進化しても育成ランキング上位30位に入らない" : "";
+    const parts = [];
+    if (i && i.e && i.e.use) parts.push(`${nameJa(i.e.best)}：${i.e.use}`);
+    if (i && i.pvp) parts.push(`PvP：${nameJa(i.pvp.best)}がPvPokeの${i.pvp.league} ${i.pvp.rank}位`);
+    if (i && i.prize && !parts.length) parts.push("人気・貴重なポケモン");
+    if (i && i.cls === "miss") parts.push("進化しても育成ランキング上位30位に入らず、PvPでも上位に入らない");
+    tip = parts.join(" ／ ");
   }
   if (r.type === "encounter"){
     const cp = r.cpMax ? `<span class="cp">CP ${esc(r.cpMin)}〜${esc(r.cpMax)}</span>` : "";
@@ -490,7 +498,7 @@ function render(){
       const rs = [...t.rewards].sort((a, b) => (hitOf(b) - hitOf(a)) || (isPrizeMon(b) - isPrizeMon(a)) || (lowOf(a) - lowOf(b)));
       const badge = sc.great ? `<span class="good-b">👍👍 とても割に合う</span>` : sc.good ? `<span class="good-b">👍 割に合う</span>` : "";
       const meta = sc.effort.known ? `<div class="meta">手間：<b>${effortLabel(sc.effort.lv)}</b>${sc.effort.why ? `（${esc(sc.effort.why)}）` : ""} ・ 見返り：<b>${valueLabel(sc.value)}</b></div>` : "";
-      html += `<article class="task${sc.great ? " good great" : sc.good ? " good" : ""}" id="${t.anchor}">${badge}<div class="tt">${esc(t.ja)}</div>${t.ja !== t.text ? `<div class="te">${esc(t.text)}</div>` : ""}
+      html += `<article class="task${sc.great ? " good great" : sc.good ? " good" : " meh"}" id="${t.anchor}">${badge}<div class="tt">${esc(t.ja)}</div>${t.ja !== t.text ? `<div class="te">${esc(t.text)}</div>` : ""}
         ${meta}<div class="rewards">${rs.map(r => rewardHtml(r, hitOf(r), lowOf(r), isPrizeMon(r))).join("") || `<span class="te">報酬の情報なし</span>`}</div></article>`;
     }
     html += `</div></section>`;

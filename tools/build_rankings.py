@@ -36,7 +36,7 @@ GAME_MASTER = "https://raw.githubusercontent.com/PokeMiners/game_masters/master/
 MOVES_CSV = "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/moves.csv"
 MOVE_NAMES_CSV = "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/move_names.csv"
 FRESH_HOURS = 0          # レイドボスが入れ替わるので毎回計算する（計算は1分かからない）
-SCHEMA = 12               # 出力の形式を変えたら上げる（前回分を使い回さず計算し直す）
+SCHEMA = 13               # 出力の形式を変えたら上げる（前回分を使い回さず計算し直す）
 TOP_N = 10
 KEEP = {"raid": 250, "type": 60, "gym": 200, "defense": 30}   # 画面で絞り込んでも10件出せるよう多めに持つ
 ATTACKER_POOL = 150      # ジム防衛の評価に使う攻撃役の候補（レイド上位＋タイプ別上位）
@@ -665,7 +665,27 @@ ROCKET_URL = "https://raw.githubusercontent.com/bigfoott/ScrapedDuck/data/rocket
 ROCKET_JA = {"Giovanni": "サカキ", "Cliff": "クリフ", "Arlo": "アルロ", "Sierra": "シエラ"}
 
 
-def build_evo_use(pokemon, lists):
+PVP_URL = "https://raw.githubusercontent.com/pvpoke/pvpoke/master/src/data/rankings/all/overall/rankings-{cp}.json"
+PVP_LEAGUES = [(1500, "スーパーリーグ", 100), (2500, "ハイパーリーグ", 100), (10000, "マスターリーグ", 50)]   # (CP上限, 名前, 何位までを「使える」とするか)
+
+
+def load_pvp_ranks():
+    """speciesId → (リーグ名, 順位, 順位/基準) のうち、いちばん良いもの（基準以内のものだけ）"""
+    out = {}
+    for cp, name, limit in PVP_LEAGUES:
+        try:
+            data = json.loads(get(PVP_URL.format(cp=cp)))
+        except Exception as ex:
+            print(f"::warning::PvPランキング（{name}）を取得できませんでした: {ex}")
+            continue
+        for rank, x in enumerate(data[:limit], 1):
+            r = (name, rank, rank / limit)
+            if x["speciesId"] not in out or r[2] < out[x["speciesId"]][2]:
+                out[x["speciesId"]] = r
+    return out
+
+
+def build_evo_use(pokemon, lists, pvp=None):
     """リサーチなどで出会うポケモン（通常の姿）が、進化・メガシンカ後にどれくらい役立つか。
     英語名（"Alolan Geodude" 形式）→ {"u": 役立ち度, "best": 役立つ姿, "use": 使い道}（役立ち度0のものは省略）"""
     by_id = {p["speciesId"]: p for p in pokemon}
@@ -676,6 +696,7 @@ def build_evo_use(pokemon, lists):
         if "shadow" in tags or "mega" in tags:
             continue
         best = (0.0, None, None)
+        best_pvp = None
         todo, seen = [p], set()
         while todo:
             q = todo.pop()
@@ -685,17 +706,23 @@ def build_evo_use(pokemon, lists):
             for vid, f in [(q["speciesId"], 1.0)] + [(q["speciesId"] + suf, 0.8) for suf in ("_mega", "_mega_x", "_mega_y", "_primal")]:
                 if vid in useful and useful[vid][0] * f > best[0]:
                     best = (useful[vid][0] * f, by_id[vid]["speciesName"] if vid in by_id else q["speciesName"], useful[vid][1])
+            pr = (pvp or {}).get(q["speciesId"])
+            if pr and (best_pvp is None or pr[2] < best_pvp["ratio"]):
+                best_pvp = {"league": pr[0], "rank": pr[1], "ratio": pr[2], "best": q["speciesName"]}
             for e in (q.get("family") or {}).get("evolutions") or []:
                 if e in by_id:
                     todo.append(by_id[e])
-        if best[0] <= 0:
+        if best[0] <= 0 and not best_pvp:
             continue
         name = p["speciesName"]
         m = re.match(r"^(.+?) \((Alolan|Galarian|Hisuian|Paldean)\)$", name)
         key = f"{m.group(2)} {m.group(1)}" if m else name
         cur = out.get(key)
-        if not cur or best[0] > cur["u"]:
-            out[key] = {"u": round(best[0], 3), "best": best[1], "use": best[2]}
+        if not cur or best[0] > cur["u"] or (best_pvp and not cur.get("pvp")):
+            item = {"u": round(best[0], 3), "best": best[1], "use": best[2]}
+            if best_pvp:
+                item["pvp"] = {k: best_pvp[k] for k in ("league", "rank", "best")}
+            out[key] = item
     return out
 
 
@@ -900,7 +927,7 @@ def main(prev_path, out_path, prev_megas_path=None, out_megas_path=None, prev_ra
         megas_data = build_megas(pokemon, MEGA, MEGA_LEVELS, TYPE_BOOSTS)
         lists_all = [("レイド総合", raid_top, LIST_WEIGHT_MAIN), ("ジム攻撃", gym_top, LIST_WEIGHT_MAIN), ("ジム防衛", defense_top, LIST_WEIGHT_MAIN)] \
             + [(f"レイド・{type_ja[t]}", type_top[t], LIST_WEIGHT_TYPE) for t in TYPES]
-        megas_data["evoUse"] = build_evo_use(pokemon, lists_all)
+        megas_data["evoUse"] = build_evo_use(pokemon, lists_all, load_pvp_ranks())
         if out_raids_path:
             try:
                 lists = [("レイド総合", raid_top, LIST_WEIGHT_MAIN), ("ジム攻撃", gym_top, LIST_WEIGHT_MAIN), ("ジム防衛", defense_top, LIST_WEIGHT_MAIN)] \
