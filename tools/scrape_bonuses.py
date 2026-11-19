@@ -101,6 +101,38 @@ def parse_spawns(root):
     return groups
 
 
+MOVE_HEAD = re.compile(r"featured attack|exclusive (?:move|attack)|attack|move", re.I)
+MOVE_SENT = re.compile(r"(?:will know|that knows?|learn(?:s)? the|knowing the|exclusive (?:Fast|Charged) Attack|Elite (?:Fast|Charged) TM|legacy)", re.I)
+
+
+def parse_moves(root):
+    """レガシー技（イベント限定の技）についての文を集める。
+    「Featured Attack」などの見出しの下の文と、本文中の「will know the Charged Attack ...」のような文。"""
+    out = []
+    def add(t, section):
+        t = clean(t)
+        if t and len(t) <= 600 and not any(o["text"] == t for o in out):
+            out.append({"section": section, "text": t})
+    for h in root.find_all("h2"):
+        title = clean(h.get_text(" "))
+        if not (MOVE_HEAD.search(title) or MOVE_HEAD.search(h.get("id") or "")):
+            continue
+        sib = h.find_next_sibling()
+        while sib is not None and sib.name != "h2":
+            for line in sib.get_text("\n").split("\n"):
+                add(line, title)
+            sib = sib.find_next_sibling()
+    for el in root.find_all(["p", "li", "div"]):
+        if el.find(["p", "li", "div"]):
+            continue   # いちばん内側の要素だけ見る
+        t = clean(el.get_text(" "))
+        if MOVE_SENT.search(t):
+            for sent in re.split(r"(?<=[.!])\s+", t):
+                if MOVE_SENT.search(sent):
+                    add(sent, heading_of(el))
+    return out[:12]
+
+
 def parse_page(html):
     soup = BeautifulSoup(html, "html.parser")
     root = soup.select_one(".page-content") or soup
@@ -144,7 +176,7 @@ def parse_page(html):
             while sib is not None and sib.name != "h2" and sum(len(x) for x in parts) < 2500:
                 parts.append(str(sib)[:800]); sib = sib.find_next_sibling()
             sample = "".join(parts)[:2500]
-    return bonuses, notes[:MAX_NOTES], spawns, sample
+    return bonuses, notes[:MAX_NOTES], spawns, sample, parse_moves(root)
 
 
 def main(prev_path, out_path):
@@ -172,9 +204,9 @@ def main(prev_path, out_path):
     for i, e in enumerate(targets):
         eid = e["eventID"]
         try:
-            bonuses, notes, spawns, sample = parse_page(get(e["link"]))
+            bonuses, notes, spawns, sample, moves = parse_page(get(e["link"]))
             out[eid] = {"fetchedAt": now_utc().isoformat(timespec="seconds").replace("+00:00", "Z"),
-                        "bonuses": bonuses, "notes": notes, "spawns": spawns}
+                        "bonuses": bonuses, "notes": notes, "spawns": spawns, "moves": moves}
             if sample:
                 out[eid]["spawnSample"] = sample
             ok += 1
