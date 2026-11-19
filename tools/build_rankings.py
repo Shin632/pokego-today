@@ -27,6 +27,7 @@ import datetime as dt
 import io
 import json
 import math
+import os
 import re
 import sys
 import urllib.request
@@ -724,6 +725,25 @@ def load_pvp_ranks():
     return out
 
 
+def build_pokedex(pokemon, pvp):
+    """ポケモン検索ページ用：実装済みのポケモンの名前・タイプ・進化系統・相棒の距離・PvPの順位"""
+    species = []
+    for p in pokemon:
+        tags = p.get("tags", [])
+        fam = (p.get("family") or {}).get("id") or ("FAMILY_" + base_id(p["speciesId"]).upper())
+        item = {"id": p["speciesId"], "name": p["speciesName"], "dex": p["dex"], "types": [t for t in p["types"] if t != "none"],
+                "family": fam, "buddy": p.get("buddyDistance")}
+        flags = [t for t in ("legendary", "mythical", "ultrabeast", "mega", "shadow", "regional") if t in tags]
+        if flags:
+            item["tags"] = flags
+        pr = pvp.get(p["speciesId"])
+        if pr:
+            item["pvp"] = [pr[0], pr[1]]
+        species.append(item)
+    return {"schema": SCHEMA, "generatedAt": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z"),
+            "species": species}
+
+
 def build_evo_use(pokemon, lists, pvp=None):
     """リサーチなどで出会うポケモン（通常の姿）が、進化・メガシンカ後にどれくらい役立つか。
     英語名（"Alolan Geodude" 形式）→ {"u": 役立ち度, "best": 役立つ姿, "use": 使い道}（役立ち度0のものは省略）"""
@@ -861,6 +881,7 @@ def main(prev_path, out_path, prev_megas_path=None, out_megas_path=None, prev_ra
     except Exception:
         prev = None
     megas_data = prev_megas
+    pokedex_data = None
     raids_data = None
     if prev_raids_path:
         try:
@@ -967,7 +988,9 @@ def main(prev_path, out_path, prev_megas_path=None, out_megas_path=None, prev_ra
         megas_data = build_megas(pokemon, MEGA, MEGA_LEVELS, TYPE_BOOSTS, CATCH_DUST)
         lists_all = [("レイド総合", raid_top, LIST_WEIGHT_MAIN), ("ジム攻撃", gym_top, LIST_WEIGHT_MAIN), ("ジム防衛", defense_top, LIST_WEIGHT_MAIN)] \
             + [(f"レイド・{type_ja[t]}", type_top[t], LIST_WEIGHT_TYPE) for t in TYPES]
-        megas_data["evoUse"] = build_evo_use(pokemon, lists_all, load_pvp_ranks())
+        PVP = load_pvp_ranks()
+        megas_data["evoUse"] = build_evo_use(pokemon, lists_all, PVP)
+        pokedex_data = build_pokedex(pokemon, PVP)
         # 技名（英語 → 日本語）。イベントページの「レガシー技」の説明を訳すのに使う
         megas_data["moveJa"] = {move_en[mid]: move_ja[mid] for mid in move_en if mid in move_ja and move_ja[mid]}
         if out_raids_path:
@@ -997,6 +1020,9 @@ def main(prev_path, out_path, prev_megas_path=None, out_megas_path=None, prev_ra
     if out_megas_path and megas_data:
         with open(out_megas_path, "w", encoding="utf-8") as f:
             json.dump(megas_data, f, ensure_ascii=False)
+        if pokedex_data:   # ポケモン検索ページ用（megas.json と同じ場所に置く）
+            with open(os.path.join(os.path.dirname(out_megas_path) or ".", "pokedex.json"), "w", encoding="utf-8") as f:
+                json.dump(pokedex_data, f, ensure_ascii=False, separators=(",", ":"))
     if out_raids_path and raids_data and raids_data.get("bosses") is not None:
         with open(out_raids_path, "w", encoding="utf-8") as f:
             json.dump(raids_data, f, ensure_ascii=False)

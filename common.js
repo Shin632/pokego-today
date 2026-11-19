@@ -160,3 +160,60 @@ function translateName(ev){
 const PRIZE_MONS = new Set(["Dratini","Larvitar","Bagon","Beldum","Gible","Axew","Deino","Goomy","Jangmo-o","Frigibax","Dreepy",
   "Lapras","Snorlax","Aerodactyl","Omanyte","Kabuto","Lileep","Anorith","Cranidos","Shieldon","Tirtouga","Archen","Tyrunt","Amaura",
   "Spinda","Ditto","Riolu","Feebas","Scyther","Chansey","Togepi","Ralts","Mawile"]);
+
+// ===== フィールドリサーチのタスク文の翻訳（research.html と search.html で使う） =====
+const TYPES_JA = {Normal:"ノーマル",Fire:"ほのお",Water:"みず",Grass:"くさ",Electric:"でんき",Ice:"こおり",Fighting:"かくとう",Poison:"どく",
+  Ground:"じめん",Flying:"ひこう",Psychic:"エスパー",Bug:"むし",Rock:"いわ",Ghost:"ゴースト",Dragon:"ドラゴン",Dark:"あく",Steel:"はがね",Fairy:"フェアリー"};
+const THROWS = {Nice:"ナイス",Great:"グレート",Excellent:"エクセレント"};
+const STARS = {one:1,two:2,three:3,four:4,five:5,six:6};
+const N = (w) => /^an?$/i.test(w) ? 1 : w;
+const row = (r) => r ? "連続で" : "";
+const TASK_RULES = [
+  [/^Catch (\d+|an?) Pokémon$/i, (n) => `ポケモンを${N(n)}匹捕まえる`],
+  [/^Catch (\d+|an?) (\w+)- or (\w+)-type Pokémon$/i, (n, a, b) => `${TYPES_JA[a] || a}か${TYPES_JA[b] || b}タイプのポケモンを${N(n)}匹捕まえる`],
+  [/^Catch (\d+|an?) (\w+)-type Pokémon$/i, (n, t) => `${TYPES_JA[t] || t}タイプのポケモンを${N(n)}匹捕まえる`],
+  [/^Catch (\d+) different species of Pokémon$/i, (n) => `ちがう種類のポケモンを${n}匹捕まえる`],
+  [/^Catch (\d+|an?) Pokémon with Weather Boost$/i, (n) => `天候ブーストされたポケモンを${N(n)}匹捕まえる`],
+  [/^Catch (\d+|an?) Shadow Pokémon$/i, (n) => `シャドウポケモンを${N(n)}匹捕まえる`],
+  [/^Use (\d+|an?) Berr(?:y|ies) to help catch Pokémon$/i, (n) => `きのみを${N(n)}個使ってポケモンを捕まえる`],
+  [/^Make (\d+|an?) (Nice|Great|Excellent) Curveball Throws?( in a row)?$/i, (n, t, r) => `${THROWS[t]}カーブボールを${N(n)}回${row(r)}投げる`],
+  [/^Make (\d+|an?) (Nice|Great|Excellent) Throws?( in a row)?$/i, (n, t, r) => `${THROWS[t]}スローを${N(n)}回${row(r)}投げる`],
+  [/^Make (\d+|an?) Curveball Throws?( in a row)?$/i, (n, r) => `カーブボールを${N(n)}回${row(r)}投げる`],
+  [/^Battle in (\d+|an?) raids?$/i, (n) => `レイドバトルに${N(n)}回参加する`],
+  [/^Win (\d+|an?) raids?$/i, (n) => `レイドバトルに${N(n)}回勝つ`],
+  [/^Win an? (\w+)-star raid or higher$/i, (s) => `★${STARS[s.toLowerCase()] || s}以上のレイドバトルに勝つ`],
+  [/^Win (\d+|an?) Max Battles?$/i, (n) => `マックスバトルに${N(n)}回勝つ`],
+  [/^Battle in (\d+|an?) Max Battles?$/i, (n) => `マックスバトルに${N(n)}回参加する`],
+  [/^Unlock (\d+|an?) Max Moves?$/i, (n) => `マックスわざを${N(n)}回解放する`],
+  [/^Defeat (\d+|an?) Team GO Rocket Grunts?$/i, (n) => `GOロケット団のしたっぱに${N(n)}回勝つ`],
+  [/^Earn (\d+) Stardust$/i, (n) => `ほしのすなを${n}集める`],
+  [/^Earn (\d+) XP$/i, (n) => `XPを${n}獲得する`],
+  [/^Earn (\d+|an?) Cand(?:y|ies) walking with your buddy$/i, (n) => `相棒と歩いてアメを${N(n)}個見つける`],
+  [/^Explore (\d+(?:\.\d+)?) km$/i, (n) => `${n}km歩く`],
+  [/^Hatch (\d+|an?) Eggs?$/i, (n) => `タマゴを${N(n)}個かえす`],
+  [/^Spin (\d+|an?) PokéStops? or Gyms?$/i, (n) => `ポケストップかジムを${N(n)}回まわす`],
+  [/^Spin (\d+|an?) PokéStops?$/i, (n) => `ポケストップを${N(n)}回まわす`],
+  [/^Take a snapshot of a wild Pokémon$/i, () => "野生のポケモンのGOスナップショットを撮る"],
+  [/^Take (\d+|an?) snapshots? of (.+)$/i, (n, w) => `${jaMons(w)}のGOスナップショットを${N(n)}回撮る`],
+  [/^Evolve (\d+|an?) Pokémon$/i, (n) => `ポケモンを${N(n)}匹進化させる`],
+  [/^Power up Pokémon (\d+) times$/i, (n) => `ポケモンを${n}回強化する`],
+  [/^Send (\d+|an?) Gifts? and add a sticker to each$/i, (n) => `ステッカーを付けてギフトを${N(n)}個送る`],
+  [/^Send (\d+|an?) Gifts? to friends$/i, (n) => `フレンドにギフトを${N(n)}個送る`],
+  [/^Trade (\d+|an?) Pokémon$/i, (n) => `ポケモンを${N(n)}回交換する`],
+  [/^Purify (\d+|an?) Shadow Pokémon$/i, (n) => `シャドウポケモンを${N(n)}匹リトレーンする`],
+  [/^Mega Evolve (\d+|an?) Pokémon$/i, (n) => `ポケモンを${N(n)}回メガシンカさせる`],
+  [/^Transfer (\d+|an?) Pokémon$/i, (n) => `ポケモンを${N(n)}匹博士に送る`],
+  [/^Battle in the GO Battle League (\d+) times$/i, (n) => `GOバトルリーグで${n}回対戦する`],
+  [/^Win (\d+|an?) battles? in the GO Battle League$/i, (n) => `GOバトルリーグで${N(n)}回勝つ`],
+  [/^Use (\d+|an?) supereffective Charged Attacks?.*$/i, (n) => `効果ばつぐんのスペシャルアタックを${N(n)}回使う`],
+  [/^Play with your buddy (\d+) times$/i, (n) => `相棒と${n}回遊ぶ`],
+  [/^Give your buddy (\d+|an?) treats?$/i, (n) => `相棒におやつを${N(n)}回あげる`],
+  [/^Earn (\d+|an?) hearts? with your buddy$/i, (n) => `相棒とハートを${N(n)}個ためる`],
+  [/^Catch (\d+|an?) (.+)$/i, (n, w) => { const j = jaMons(w); return j !== w ? `${j}を${N(n)}匹捕まえる` : null; }],
+];
+function translateTask(t){
+  const s = String(t || "").trim();
+  for (const [re, fn] of TASK_RULES){ const m = s.match(re); if (m){ const r = fn(...m.slice(1)); if (r) return {ja: r, ok: true}; } }
+  return {ja: jaMons(s), ok: false};
+}
+
