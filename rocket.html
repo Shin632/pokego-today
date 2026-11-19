@@ -64,7 +64,7 @@ footer a{color:var(--sub)}
 <div class="wrap">
   <nav class="nav"><a href="index.html">📅 イベント</a><a href="raids.html">🐉 レイド</a><a href="rocket.html" class="cur">🚀 ロケット団</a><a href="research.html">📋 リサーチ</a><a href="shop.html">🛒 ボックス判定</a><a href="ranks.html">🏆 育成TOP10</a></nav>
   <header class="top">
-    <div><h1>GOロケット団 闘う優先度</h1><p class="lead">倒すと捕まえられるシャドウポケモンの「育てたときの強さ」から、闘う優先度を1〜8位で表示</p></div>
+    <div><h1>GOロケット団 闘う優先度</h1><p class="lead">リーダーとしたっぱを、倒すと捕まえられるシャドウポケモンの「育てたときの強さ」から1〜8位で表示（サカキは除外）</p></div>
     <button class="btn" id="reload" type="button">↻ 更新</button>
   </header>
   <div id="notice"></div>
@@ -78,14 +78,13 @@ footer a{color:var(--sub)}
       <li>伝説は +0.3、野生で少ないポケモン（相棒の距離5km以上）は +0.1 しています。</li>
       <li>したっぱは、倒した後に出てくる候補が複数あり、どれが出るかの確率は公開されていません。<b>候補が同じ確率で出ると仮定して平均</b>しています。🎯 はその中でいちばんの当たりです。</li>
       <li>ランキングに入っていないポケモン（グレー表示）は0点として数えています。</li>
-      <li>ニセモノのしたっぱ（サカキの変装）は、自分で選んで戦えないので除外しています。</li>
+      <li>サカキ（ボス）と、ニセモノのしたっぱ（サカキの変装）は、ランキングから除外しています。</li>
       <li>戦いやすさ（相手の強さ）は入れていません。</li>
     </ul>
   </details>
   <details class="box">
     <summary>闘うための準備</summary>
     <ul class="crit">
-      <li><b>サカキ</b>：スーパーロケットレーダーが必要です（スペシャルリサーチなどで手に入ります）。</li>
       <li><b>リーダー（クリフ・アルロ・シエラ）</b>：ロケットレーダーが必要です（したっぱを倒して集める「ふしぎなパーツ」6個で作れます）。リーダー自身の報酬は弱くても、サカキに挑むリサーチの条件になっていることがあります。</li>
       <li><b>したっぱ</b>：ポケストップや風船に出てきます。どのタイプのしたっぱかは、話しかけたときのセリフで分かります。</li>
       <li>捕まえたシャドウポケモンの技「やつあたり」は、イベント中だけわざマシンで消せることが多いです。</li>
@@ -140,7 +139,8 @@ function render(){
   document.getElementById("lastUpdated").textContent = DATA && DATA.generatedAt ? `計算した日時：${fmtD(new Date(DATA.generatedAt))} ${fmtT(new Date(DATA.generatedAt))}` : "";
   const main = document.getElementById("main");
   if (!DATA) return;
-  const list = DATA.rocket || [];
+  // サカキ（ボス）はランキングから外す。順位は外した後で付け直す
+  const list = (DATA.rocket || []).filter(t => t.kind !== "boss").map((t, i) => ({...t, rank: i + 1}));
   if (!list.length){ main.innerHTML = `<div class="empty">GOロケット団のデータがまだありません。少し時間をおいて「更新」を押してください。</div>`; document.getElementById("more").style.display = "none"; return; }
   const top = list[0].score || 1;
   main.innerHTML = list.slice(0, 8).map(t => card(t, top)).join("");
