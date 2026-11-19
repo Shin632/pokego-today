@@ -36,7 +36,7 @@ GAME_MASTER = "https://raw.githubusercontent.com/PokeMiners/game_masters/master/
 MOVES_CSV = "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/moves.csv"
 MOVE_NAMES_CSV = "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/move_names.csv"
 FRESH_HOURS = 0          # レイドボスが入れ替わるので毎回計算する（計算は1分かからない）
-SCHEMA = 10               # 出力の形式を変えたら上げる（前回分を使い回さず計算し直す）
+SCHEMA = 11               # 出力の形式を変えたら上げる（前回分を使い回さず計算し直す）
 TOP_N = 10
 KEEP = {"raid": 250, "type": 60, "gym": 200, "defense": 30}   # 画面で絞り込んでも10件出せるよう多めに持つ
 ATTACKER_POOL = 150      # ジム防衛の評価に使う攻撃役の候補（レイド上位＋タイプ別上位）
@@ -661,6 +661,82 @@ def build_raids(pokemon, pve, move_ja, move_en, lists, mega):
             "bosses": bosses}
 
 
+ROCKET_URL = "https://raw.githubusercontent.com/bigfoott/ScrapedDuck/data/rocketLineups.json"
+ROCKET_JA = {"Giovanni": "サカキ", "Cliff": "クリフ", "Arlo": "アルロ", "Sierra": "シエラ"}
+
+
+def build_rocket(pokemon, lists):
+    """GOロケット団：倒すと捕まえられるシャドウポケモンの「育てたときの強さ」から、闘う優先度を出す。
+    価値 = 進化後（シャドウ）のランキングでの強さ（リトレーン後は0.8倍）＋伝説 0.3 ＋ 野生で少ない（相棒5km以上）0.1
+    したっぱは捕まえられる候補が複数あり、どれが出るかの確率は不明なので、同じ確率と仮定して平均する。"""
+    raw = json.loads(get(ROCKET_URL))
+    by_id = {p["speciesId"]: p for p in pokemon}
+    all_by_name = {}
+    for p in pokemon:
+        all_by_name.setdefault(p["speciesName"], p)
+    useful = usefulness_index(lists)
+
+    def find(name):
+        for c in raid_name_candidates(name):
+            if c in all_by_name:
+                return all_by_name[c]
+        return None
+
+    def descendants(p):
+        out, todo, seen = [], [p], set()
+        while todo:
+            q = todo.pop()
+            if q["speciesId"] in seen:
+                continue
+            seen.add(q["speciesId"]); out.append(q)
+            for e in (q.get("family") or {}).get("evolutions") or []:
+                if e in by_id:
+                    todo.append(by_id[e])
+        return out
+
+    trainers = []
+    for t in raw:
+        title = t.get("title") or ""
+        kind = "boss" if "Boss" in title else "leader" if "Leader" in title else "grunt"
+        cands, seen = [], set()
+        for slot in ("firstPokemon", "secondPokemon", "thirdPokemon"):
+            for x in t.get(slot) or []:
+                if x.get("isEncounter") and x["name"] not in seen:
+                    seen.add(x["name"]); cands.append(x)
+        if not cands or "Decoy" in (t.get("name") or ""):
+            continue   # ニセモノのしたっぱ（サカキの変装）は自分で選んで戦えないので除外
+        items = []
+        for x in cands:
+            p = find(x["name"])
+            best_u, best_use, best_name = 0.0, None, None
+            legend = False
+            if p:
+                legend = bool({"legendary", "mythical"} & set(p.get("tags", [])))
+                for d in descendants(p):
+                    sh = d["speciesId"] + "_shadow"
+                    if sh in useful and useful[sh][0] > best_u:
+                        best_u, best_use, best_name = useful[sh][0], useful[sh][1], by_id[sh]["speciesName"] if sh in by_id else d["speciesName"] + " (Shadow)"
+                    if d["speciesId"] in useful and useful[d["speciesId"]][0] * 0.8 > best_u:
+                        best_u, best_use, best_name = useful[d["speciesId"]][0] * 0.8, useful[d["speciesId"]][1] + "（リトレーン後）", d["speciesName"]
+            rare = bool(p and (p.get("buddyDistance") or 0) >= 5)
+            v = best_u + (0.3 if legend else 0) + (0.1 if rare else 0)
+            items.append({"name": x["name"], "species": p["speciesName"] if p else x["name"], "image": x.get("image"),
+                          "types": x.get("types") or [], "shiny": bool(x.get("canBeShiny")), "legendary": legend, "rare": rare,
+                          "best": best_name, "use": best_use, "value": round(v, 3)})
+        score = sum(i["value"] for i in items) / len(items)
+        name = t.get("name") or ""
+        trainers.append({"name": name, "nameJa": ROCKET_JA.get(name), "kind": kind, "type": t.get("type") or "",
+                         "female": "Female" in name, "decoy": "Decoy" in name,
+                         "score": round(score, 3), "best": max(items, key=lambda i: i["value"]),
+                         "encounters": sorted(items, key=lambda i: -i["value"]),
+                         "lineup": [[{"name": x["name"], "types": x.get("types") or []} for x in (t.get(sl) or [])]
+                                    for sl in ("firstPokemon", "secondPokemon", "thirdPokemon")]})
+    trainers.sort(key=lambda t: -t["score"])
+    for i, t in enumerate(trainers, 1):
+        t["rank"] = i
+    return trainers
+
+
 def main(prev_path, out_path, prev_megas_path=None, out_megas_path=None, prev_raids_path=None, out_raids_path=None):
     prev_megas = None
     if prev_megas_path:
@@ -793,6 +869,11 @@ def main(prev_path, out_path, prev_megas_path=None, out_megas_path=None, prev_ra
                 lists = [("レイド総合", raid_top, LIST_WEIGHT_MAIN), ("ジム攻撃", gym_top, LIST_WEIGHT_MAIN), ("ジム防衛", defense_top, LIST_WEIGHT_MAIN)] \
                     + [(f"レイド・{type_ja[t]}", type_top[t], LIST_WEIGHT_TYPE) for t in TYPES]
                 raids_data = build_raids(pokemon, pve, move_ja, move_en, lists, MEGA)
+                try:
+                    raids_data["rocket"] = build_rocket(pokemon, lists)
+                    print("rocket:", [(t["name"], t["score"]) for t in raids_data["rocket"][:10]])
+                except Exception as ex:
+                    print(f"::warning::rocket: {ex}")
                 print("raids:", [(b["name"], b["rating"]["stars"], [c["id"] for c in b["counters"][:3]]) for b in raids_data["bosses"]])
             except Exception as ex:
                 print(f"::warning::raids: {ex}")
