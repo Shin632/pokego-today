@@ -18,6 +18,7 @@ GitHub Actions（.github/workflows/bonuses.yml）から定期実行される想�
 """
 import datetime as dt
 import json
+import re
 import sys
 import time
 import urllib.request
@@ -64,6 +65,42 @@ def heading_of(node):
     return clean(h.get_text()) if h else ""
 
 
+SPAWN_HEAD = re.compile(r"spawn|wild|encounter|habitat|biome|appear", re.I)
+
+
+def parse_spawns(root):
+    """「Spawns」「Wild Encounters」などの見出しの下にあるポケモンの一覧を、直前の説明文と一緒に集める"""
+    groups = []
+    for h in root.find_all("h2"):
+        title = clean(h.get_text(" "))
+        if not (SPAWN_HEAD.search(title) or SPAWN_HEAD.search(h.get("id") or "")):
+            continue
+        context = []
+        sib = h.find_next_sibling()
+        while sib is not None and sib.name != "h2":
+            items = sib.select(".pkmn-list-item") if hasattr(sib, "select") else []
+            if sib.get("class") and "pkmn-list-item" in sib.get("class"):
+                items = [sib]
+            if items:
+                mons = []
+                for it in items:
+                    nm = it.select_one(".pkmn-name")
+                    img = it.select_one("img")
+                    name = clean(nm.get_text(" ")) if nm else ""
+                    if name:
+                        mons.append({"name": name, "image": img.get("src") if img else None,
+                                     "shiny": it.select_one(".shiny-icon") is not None})
+                if mons:
+                    groups.append({"section": title, "context": context[-3:], "pokemon": mons})
+                context = []
+            else:
+                t = clean(sib.get_text(" "))
+                if t:
+                    context.append(t[:300])
+            sib = sib.find_next_sibling()
+    return groups
+
+
 def parse_page(html):
     soup = BeautifulSoup(html, "html.parser")
     root = soup.select_one(".page-content") or soup
@@ -98,7 +135,16 @@ def parse_page(html):
                 if sib.get("class") and "bonus-list" in sib.get("class"):
                     break
                 sib = sib.find_next_sibling()
-    return bonuses, notes[:MAX_NOTES]
+    spawns = parse_spawns(root)
+    sample = None
+    if spawns:   # ページの作りを確かめるための見本（最初の見出しまわりのHTMLを少しだけ）
+        h = next((x for x in root.find_all("h2") if SPAWN_HEAD.search(clean(x.get_text(" "))) or SPAWN_HEAD.search(x.get("id") or "")), None)
+        if h is not None:
+            parts, sib = [str(h)], h.find_next_sibling()
+            while sib is not None and sib.name != "h2" and sum(len(x) for x in parts) < 2500:
+                parts.append(str(sib)[:800]); sib = sib.find_next_sibling()
+            sample = "".join(parts)[:2500]
+    return bonuses, notes[:MAX_NOTES], spawns, sample
 
 
 def main(prev_path, out_path):
@@ -126,11 +172,13 @@ def main(prev_path, out_path):
     for i, e in enumerate(targets):
         eid = e["eventID"]
         try:
-            bonuses, notes = parse_page(get(e["link"]))
+            bonuses, notes, spawns, sample = parse_page(get(e["link"]))
             out[eid] = {"fetchedAt": now_utc().isoformat(timespec="seconds").replace("+00:00", "Z"),
-                        "bonuses": bonuses, "notes": notes}
+                        "bonuses": bonuses, "notes": notes, "spawns": spawns}
+            if sample:
+                out[eid]["spawnSample"] = sample
             ok += 1
-            print(f"[ok] {eid}: {len(bonuses)} bonuses")
+            print(f"[ok] {eid}: {len(bonuses)} bonuses, {sum(len(g['pokemon']) for g in spawns)} spawns")
         except Exception as ex:  # 失敗したら前回の内容を残す
             fail += 1
             print(f"::warning::{eid}: {ex}")
