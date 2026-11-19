@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1f6feb">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>育成・逃がす判定｜今日のポケGOイベント</title>
+<style>
+:root{--bg:#f4f6fa;--panel:#ffffff;--text:#14171c;--sub:#5b6472;--line:#e3e7ee;--accent:#1f6feb;--muted:#9aa3b1;--radius:14px}
+@media (prefers-color-scheme: dark){:root{--bg:#0f1115;--panel:#1a1d24;--text:#eceff4;--sub:#a3acba;--line:#2b303a;--muted:#6c7584}}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--bg);color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic UI",Meiryo,sans-serif;
+  font-size:15px;line-height:1.5;-webkit-text-size-adjust:100%;
+  padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+.wrap{max-width:760px;margin:0 auto;padding:12px 14px 40px}
+.nav{display:flex;gap:8px;margin:2px 0 6px;overflow-x:auto;scrollbar-width:none}
+.nav::-webkit-scrollbar{display:none}
+.nav a{flex:0 0 auto;font-size:13px;color:var(--accent);text-decoration:none;border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:5px 12px}
+.nav a.cur{background:var(--accent);border-color:var(--accent);color:#fff}
+@media (min-width: 600px){ .nav{flex-wrap:wrap; overflow-x:visible} }
+h1{font-size:20px;margin:6px 2px 0}
+.lead{font-size:13px;color:var(--sub);margin:2px 2px 10px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:12px}
+label.f{display:block;font-size:12px;color:var(--sub);margin:0 0 3px}
+input[type=search],input[type=number]{font:inherit;font-size:17px;color:var(--text);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:9px 10px;width:100%}
+.sugg{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.sg{appearance:none;font:inherit;font-size:13.5px;border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:999px;padding:4px 11px;cursor:pointer}
+.chosen{font-size:13px;color:var(--sub);margin-top:4px}
+.chosen b{color:var(--text)}
+.opts{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.opt{display:flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--bg);border-radius:999px;padding:6px 12px;font-size:14px;cursor:pointer;user-select:none}
+.opt input{width:18px;height:18px;margin:0}
+.ivs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.ivs input{text-align:center;font-size:20px;font-weight:700}
+.quick{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.qb{appearance:none;font:inherit;font-size:12px;border:1px solid var(--line);background:var(--panel);color:var(--sub);border-radius:999px;padding:3px 10px;cursor:pointer}
+.verdict{margin-top:14px;border-radius:var(--radius);padding:14px;border:2px solid var(--line);background:var(--panel)}
+.verdict .big{font-size:24px;font-weight:800}
+.verdict .sum{font-size:14px;margin-top:2px}
+.v-train{border-color:#16a34a;background:color-mix(in srgb,#16a34a 9%,var(--panel))}.v-train .big{color:#15803d}
+.v-keep{border-color:#d97706;background:color-mix(in srgb,#d97706 9%,var(--panel))}.v-keep .big{color:#b45309}
+.v-release{border-color:#9aa3b1}.v-release .big{color:#6b7280}
+@media (prefers-color-scheme: dark){.v-train .big{color:#4ade80}.v-keep .big{color:#fbbf24}}
+h2{font-size:15.5px;margin:14px 0 6px}
+.row{font-size:13.5px;padding:6px 0;border-top:1px dashed var(--line);line-height:1.45}
+.row:first-of-type{border-top:none}
+.row .s{display:block;font-size:12px;color:var(--sub)}
+.mk{display:inline-block;min-width:1.6em;font-weight:800}
+.mk.g{color:#16a34a}.mk.o{color:#2563eb}.mk.x{color:var(--muted)}
+.none{font-size:13px;color:var(--sub)}
+.notice{background:#fff4d6;color:#6b4b00;border-radius:10px;padding:8px 12px;font-size:13px;margin:8px 0}
+.notice.err{background:#ffe1e1;color:#8a1c1c}
+@media (prefers-color-scheme: dark){.notice{background:#3a2f12;color:#f3d999}.notice.err{background:#3f1a1a;color:#ffb4b4}}
+details.box{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:10px 12px;margin-top:16px}
+details.box>summary{cursor:pointer;font-weight:700}
+.crit{font-size:13px;line-height:1.7;margin:8px 0 0;padding-left:1.2em}
+footer{margin-top:24px;font-size:12px;color:var(--sub);line-height:1.7}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="nav"><a href="index.html">📅 イベント</a><a href="search.html">🔍 検索</a><a href="iv.html" class="cur">⚖️ 育成判定</a><a href="spawns.html">🌿 野生</a><a href="raids.html">🐉 レイド</a><a href="rocket.html">🚀 ロケット団</a><a href="research.html">📋 リサーチ</a><a href="shop.html">🛒 ボックス判定</a><a href="ranks.html">🏆 育成TOP10</a></nav>
+  <h1>育成・逃がす判定</h1>
+  <p class="lead">ポケモンと個体値を入れると、育成すべきか・とっておくか・逃がしてよいかを判定します</p>
+
+  <div class="panel">
+    <label class="f" for="q">ポケモンの名前</label>
+    <input id="q" type="search" placeholder="例：マリル、ダンバル、ワンリキー" autocomplete="off">
+    <div class="sugg" id="sugg"></div>
+    <div class="chosen" id="chosen"></div>
+    <div class="opts">
+      <label class="opt"><input type="checkbox" id="shadow"> シャドウ</label>
+      <label class="opt"><input type="checkbox" id="dmax"> ダイマックス</label>
+      <label class="opt"><input type="checkbox" id="gmax"> キョダイマックス</label>
+    </div>
+    <div class="ivs">
+      <div><label class="f" for="ia">攻撃（0〜15）</label><input id="ia" type="number" inputmode="numeric" min="0" max="15" placeholder="0〜15"></div>
+      <div><label class="f" for="id">防御（0〜15）</label><input id="id" type="number" inputmode="numeric" min="0" max="15" placeholder="0〜15"></div>
+      <div><label class="f" for="ih">HP（0〜15）</label><input id="ih" type="number" inputmode="numeric" min="0" max="15" placeholder="0〜15"></div>
+    </div>
+    <div class="quick"><button class="qb" type="button" data-iv="15,15,15">15/15/15</button><button class="qb" type="button" data-iv="0,15,15">0/15/15</button><button class="qb" type="button" data-iv="clear">個体値を消す</button></div>
+  </div>
+  <div id="notice"></div>
+  <main id="main"></main>
+
+  <details class="box">
+    <summary>判定のしかた</summary>
+    <ul class="crit">
+      <li><b>レイド・ジム</b>：そのポケモン（シャドウにチェックがあればシャドウの姿）と、進化後・メガシンカ後が、育成ランキングに入っているかを見ます（レイド総合・ジム攻撃は50位、タイプ別・ジム防衛は30位まで）。入っていれば、攻撃役は<b>攻撃13以上かつ全体80%以上で◎</b>、攻撃10以上かつ60%以上で○。ジム防衛は防御・HPがともに12以上で◎です。</li>
+      <li><b>PvP</b>：進化後も含めて PvPoke のランキング上位（スーパー・ハイパーリーグ100位、マスターリーグ50位以内）にいるポケモンについて、<b>その個体値が4,096通りの中で何位か</b>を計算します（CP上限の中でいちばん高いレベル、最大レベル50。能力値の積で順位づけ）。<b>64位以内で◎、300位以内で○</b>。マスターリーグは個体値が高いほど強いので、全体93%以上で◎、85%以上で○です。</li>
+      <li><b>判定</b>：どれかで◎なら「育成すべき」。◎はないが○がある、または伝説・幻・ウルトラビースト、ダイマックス・キョダイマックス、個体値100%なら「とっておく」。どれにも当てはまらなければ「逃がしてOK（アメにしてよい）」です。</li>
+      <li>色違い・キラ・特別な背景・コスチューム・思い出のポケモンかどうかは判定に入っていません。</li>
+      <li>ダイマックス・キョダイマックスは、マックスバトルでの強さのデータがまだ無いので、強さではなく「手に入りにくさ」で「とっておく」以上にしています。</li>
+    </ul>
+  </details>
+  <footer>
+    <div>※ 非公式のファンツールです。種族値・CP補正値はゲームデータ、PvPの順位は PvPoke、レイド・ジムの順位はこのアプリの育成ランキングを使っています。</div>
+  </footer>
+</div>
+
+<script src="names-ja.js"></script>
+<script src="common.js"></script>
+<script>
+"use strict";
+const D = "https://raw.githubusercontent.com/Shin632/pokego-today/data/";
+const SUFFIX = /_(shadow|mega|mega_x|mega_y|primal)$/;
+const LEAGUE_CAP = {"スーパーリーグ": 1500, "ハイパーリーグ": 2500, "マスターリーグ": Infinity};
+let PD = null, RK = null, SPECIES = [], BY_ID = {}, LEVELS = [];
+let chosen = null;
+
+// ===== 名前の候補 =====
+const toKata = (s) => String(s).replace(/[ぁ-ゖ]/g, c => String.fromCharCode(c.charCodeAt(0) + 0x60));
+const norm = (s) => toKata(String(s || "").toLowerCase()).replace(/[\s・（）()]/g, "");
+function search(q){
+  const n = norm(q); if (!n) return [];
+  const hits = [];
+  for (const sp of SPECIES){
+    if (SUFFIX.test(sp.id) || (sp.tags || []).includes("mega")) continue;   // シャドウ・メガはチェックで選ぶ
+    const ja = norm(sp.ja), en = norm(sp.name);
+    const sc = ja === n || en === n ? 0 : ja.startsWith(n) || en.startsWith(n) ? 1 : ja.includes(n) || en.includes(n) ? 2 : 9;
+    if (sc < 9) hits.push([sc, sp]);
+  }
+  hits.sort((a, b) => a[0] - b[0] || a[1].dex - b[1].dex || a[1].id.length - b[1].id.length);
+  return hits.map(h => h[1]).slice(0, 20);
+}
+
+// ===== CP・能力値 =====
+function buildLevels(cpm){
+  const out = [];
+  for (let i = 0; i < cpm.length; i++){
+    out.push([1 + i, cpm[i]]);
+    if (i + 1 < cpm.length) out.push([1.5 + i, Math.sqrt((cpm[i] ** 2 + cpm[i + 1] ** 2) / 2)]);
+  }
+  return out.sort((a, b) => a[0] - b[0]);
+}
+const cpOf = (st, iv, c) => Math.max(10, Math.floor((st[0] + iv[0]) * Math.sqrt(st[1] + iv[1]) * Math.sqrt(st[2] + iv[2]) * c * c / 10));
+function bestLevel(st, iv, cap, maxLv = 50){
+  let best = null;
+  for (const [lv, c] of LEVELS){ if (lv > maxLv) break; if (cpOf(st, iv, c) <= cap) best = [lv, c]; else break; }
+  return best;
+}
+/** CP上限の中での能力値の積（ステータス積）の順位（4096通り中） */
+function pvpRank(st, iv, cap, shadow){
+  const ma = shadow ? 1.2 : 1, md = shadow ? 1 / 1.2 : 1;
+  const sp = (v) => { const b = bestLevel(st, v, cap); if (!b) return null; const c = b[1]; return {sp: (st[0] + v[0]) * c * ma * (st[1] + v[1]) * c * md * Math.floor((st[2] + v[2]) * c), lv: b[0], cp: cpOf(st, v, c)}; };
+  const mine = sp(iv); if (!mine) return null;
+  let better = 0, total = 0;
+  for (let a = 0; a < 16; a++) for (let d = 0; d < 16; d++) for (let h = 0; h < 16; h++){
+    const r = sp([a, d, h]); if (!r) continue; total++; if (r.sp > mine.sp + 1e-9) better++;
+  }
+  return {rank: better + 1, total, lv: mine.lv, cp: mine.cp};
+}
+
+// ===== 判定 =====
+function family(sp){
+  const out = [sp], seen = new Set([sp.id]);
+  for (let i = 0; i < out.length; i++) for (const e of out[i].evo || []) if (BY_ID[e] && !seen.has(e)){ seen.add(e); out.push(BY_ID[e]); }
+  return out;
+}
+function rankingUses(forms){
+  const rows = [];
+  if (!RK) return rows;
+  const ids = new Set(forms);
+  const add = (label, list, limit, role) => (list || []).slice(0, limit).forEach((x, i) => { if (ids.has(x.id)) rows.push({label, rank: i + 1, x, role}); });
+  add("レイド総合", RK.raid, 50, "atk"); add("ジム攻撃", RK.gymAttack, 50, "atk"); add("ジム防衛", RK.gymDefense, 30, "def");
+  for (const [t, l] of Object.entries(RK.raidByType || {})) add(`レイド・${TYPES_JA[t[0].toUpperCase() + t.slice(1)] || t}`, l, 30, "atk");
+  rows.sort((a, b) => a.rank - b.rank);
+  return rows;
+}
+function evaluate(){
+  const main = document.getElementById("main");
+  if (!chosen){ main.innerHTML = ""; return; }
+  const ivs = ["ia", "id", "ih"].map(k => document.getElementById(k).value.trim());
+  if (ivs.some(v => v === "" || isNaN(+v) || +v < 0 || +v > 15 || !Number.isInteger(+v))){
+    main.innerHTML = `<div class="notice">攻撃・防御・HPの個体値を、それぞれ0〜15の整数で入れてください。</div>`; return;
+  }
+  const [a, d, h] = ivs.map(Number);
+  const shadow = document.getElementById("shadow").checked, dmax = document.getElementById("dmax").checked, gmax = document.getElementById("gmax").checked;
+  const total = a + d + h, pct = total / 45;
+  const stars = total === 45 ? 4 : total >= 37 ? 3 : total >= 30 ? 2 : total >= 23 ? 1 : 0;
+  const fam = family(chosen);
+  const sfx = shadow ? "_shadow" : "";
+  // レイド・ジム
+  const forms = [];
+  for (const f of fam){ forms.push(f.id + sfx); if (!shadow) ["_mega", "_mega_x", "_mega_y", "_primal"].forEach(m => forms.push(f.id + m)); }
+  const uses = rankingUses(forms).filter((r, i, arr) => arr.findIndex(y => y.label === r.label) === i).slice(0, 6);
+  const peMarks = uses.map(u => {
+    if (u.role === "def"){
+      const m = d >= 12 && h >= 12 ? "◎" : d >= 10 && h >= 10 ? "○" : "△";
+      return {u, m, why: `防御${d}・HP${h}`};
+    }
+    const m = a >= 13 && pct >= 0.8 ? "◎" : a >= 10 && pct >= 0.6 ? "○" : "△";
+    return {u, m, why: `攻撃${a}・全体${Math.round(pct * 100)}%`};
+  });
+  // PvP
+  const pvp = [];
+  for (const f of fam){
+    const v = BY_ID[f.id + sfx]; if (!v || !v.pvpAll) continue;
+    for (const [league, prank] of Object.entries(v.pvpAll)){
+      const cap = LEAGUE_CAP[league];
+      if (cap === Infinity){
+        const m = pct >= 0.93 ? "◎" : pct >= 0.85 ? "○" : "△";
+        pvp.push({league, prank, v, m, text: `個体値 ${Math.round(pct * 100)}%（マスターリーグは高いほど良い）`});
+      } else {
+        const r = pvpRank(v.stats, [a, d, h], cap, shadow);
+        if (!r){ pvp.push({league, prank, v, m: "×", text: "レベル1でもCP上限を超えるため出せません"}); continue; }
+        const m = r.rank <= 64 ? "◎" : r.rank <= 300 ? "○" : "△";
+        pvp.push({league, prank, v, m, text: `この個体は ${r.total.toLocaleString()}通り中 <b>${r.rank.toLocaleString()}位</b>（レベル${r.lv}でCP${r.cp}）`});
+      }
+    }
+  }
+  const tags = new Set(chosen.tags || []);
+  const rare = tags.has("legendary") || tags.has("mythical") || tags.has("ultrabeast");
+  const any = (m) => peMarks.some(x => x.m === m) || pvp.some(x => x.m === m);
+  const keepReasons = [];
+  if (rare) keepReasons.push("伝説・幻・ウルトラビーストは手に入る機会が少ない");
+  if (gmax) keepReasons.push("キョダイマックスはマックスバトルでしか手に入らず、とても貴重");
+  else if (dmax) keepReasons.push("ダイマックスはマックスバトルでしか手に入らない");
+  if (total === 45) keepReasons.push("個体値100%");
+  let verdict, cls, sum;
+  if (any("◎")){ verdict = "🟢 育成すべき"; cls = "v-train"; sum = "使い道があり、個体値もその用途に向いています。"; }
+  else if (any("○") || keepReasons.length){ verdict = "🟡 とっておく"; cls = "v-keep"; sum = any("○") ? "使い道はありますが、もっと良い個体が手に入ったら入れ替えを。" : keepReasons.join("。") + "。"; }
+  else { verdict = "⚪ 逃がしてOK"; cls = "v-release"; sum = uses.length || pvp.length ? "使い道はありますが、この個体値では向いていません。博士に送ってアメにしてよいでしょう。" : "レイド・ジム・PvPの上位に入る使い道が見つかりません。博士に送ってアメにしてよいでしょう。"; }
+  const mk = (m) => `<span class="mk ${m === "◎" ? "g" : m === "○" ? "o" : "x"}">${m}</span>`;
+  const peHtml = peMarks.length ? peMarks.map(({u, m, why}) => `<div class="row">${mk(m)}<b>${esc(nameJa(u.x.name))}</b>：${esc(u.label)} ${u.rank}位
+      <span class="s">${u.role === "def" ? "ジム防衛は防御・HPが大事" : "レイド・ジム攻撃は攻撃が大事"}（この個体：${why}）${u.x.id.match(/_mega|_primal/) ? " ・ メガシンカ・ゲンシカイキ後の姿" : ""}</span></div>`).join("")
+    : `<div class="none">${esc(nameJa(chosen.name))}${shadow ? "（シャドウ）" : ""}と進化後は、レイド・ジムのランキング上位に入っていません</div>`;
+  const pvpHtml = pvp.length ? pvp.map(p => `<div class="row">${mk(p.m)}<b>${esc(p.league)}</b>：${esc(nameJa(p.v.name))}（PvPoke ${p.prank}位）<span class="s">${p.text}</span></div>`).join("")
+    : `<div class="none">進化後も含めて、PvPのランキング上位には入っていません</div>`;
+  const notes = [];
+  notes.push(`個体値 ${a}/${d}/${h}（${Math.round(pct * 100)}%・評価の星 ${"★".repeat(stars)}${"☆".repeat(4 - stars)}）`);
+  if (fam.length > 1) notes.push(`進化先も含めて判定しました：${fam.slice(1).map(f => esc(nameJa(f.name))).join("、")}`);
+  if (shadow){
+    const pa = Math.min(15, a + 2), pd = Math.min(15, d + 2), ph = Math.min(15, h + 2);
+    notes.push(`シャドウ：攻撃が1.2倍になる代わりに防御が下がります。リトレーンすると個体値が ${pa}/${pd}/${ph} になり、ジムに置けるようになります（技の「やつあたり」はイベント中に消せることが多いです）`);
+  }
+  if (dmax || gmax) notes.push("マックスバトル向けの強さはデータが無いため評価に入っていません。");
+  keepReasons.forEach(r => notes.push(r));
+  main.innerHTML = `<div class="verdict ${cls}"><div class="big">${verdict}</div><div class="sum">${esc(sum)}</div></div>
+    <h2>⚔️ レイド・ジム</h2>${peHtml}
+    <h2>🥊 PvP（トレーナーバトル）</h2>${pvpHtml}
+    <h2>📝 メモ</h2>${notes.map(n => `<div class="row">${n}</div>`).join("")}`;
+}
+
+// ===== 入力 =====
+function choose(id){
+  chosen = BY_ID[id] || null;
+  document.getElementById("sugg").innerHTML = "";
+  if (chosen){
+    document.getElementById("q").value = chosen.ja;
+    const hasShadow = !!BY_ID[chosen.id + "_shadow"];
+    document.getElementById("chosen").innerHTML = `選択中：<b>${esc(chosen.ja)}</b>${hasShadow ? "" : "（シャドウの姿は未実装）"}`;
+  }
+  evaluate();
+}
+let tm = null;
+document.getElementById("q").addEventListener("input", e => {
+  clearTimeout(tm);
+  tm = setTimeout(() => {
+    const hits = search(e.target.value);
+    document.getElementById("sugg").innerHTML = hits.map(sp => `<button type="button" class="sg" data-id="${esc(sp.id)}">${esc(sp.ja)}</button>`).join("")
+      || (e.target.value.trim() ? `<span class="none">見つかりませんでした</span>` : "");
+    if (hits.length && (norm(hits[0].ja) === norm(e.target.value) || norm(hits[0].name) === norm(e.target.value))) choose(hits[0].id);
+  }, 120);
+});
+document.getElementById("sugg").addEventListener("click", e => { const b = e.target.closest("[data-id]"); if (b) choose(b.dataset.id); });
+["ia", "id", "ih", "shadow", "dmax", "gmax"].forEach(k => document.getElementById(k).addEventListener("input", evaluate));
+document.getElementById("gmax").addEventListener("change", e => { if (e.target.checked) document.getElementById("dmax").checked = false; evaluate(); });
+document.getElementById("dmax").addEventListener("change", e => { if (e.target.checked) document.getElementById("gmax").checked = false; evaluate(); });
+document.querySelector(".quick").addEventListener("click", e => {
+  const b = e.target.closest("[data-iv]"); if (!b) return;
+  const v = b.dataset.iv === "clear" ? ["", "", ""] : b.dataset.iv.split(",");
+  ["ia", "id", "ih"].forEach((k, i) => document.getElementById(k).value = v[i]);
+  evaluate();
+});
+
+async function getJson(url){
+  const ctl = new AbortController(); const timer = setTimeout(() => ctl.abort(), 20000);
+  try { const r = await fetch(url, {cache: "no-cache", signal: ctl.signal}); if (!r.ok) throw new Error("HTTP " + r.status); return await r.json(); }
+  finally { clearTimeout(timer); }
+}
+(async () => {
+  [PD, RK] = await Promise.all([getJson(D + "pokedex.json").catch(() => null), getJson(D + "rankings.json").catch(() => null)]);
+  if (!PD || !PD.cpm){ document.getElementById("notice").innerHTML = `<div class="notice err">データを読み込めませんでした。時間をおいて開き直してください。</div>`; return; }
+  if (!RK) document.getElementById("notice").innerHTML = `<div class="notice">育成ランキングを読み込めなかったため、レイド・ジムの判定は省略されます。</div>`;
+  LEVELS = buildLevels(PD.cpm);
+  SPECIES = PD.species.map(s => ({...s, ja: nameJa(s.name)}));
+  BY_ID = Object.fromEntries(SPECIES.map(s => [s.id, s]));
+  const q = document.getElementById("q").value; if (q) document.getElementById("q").dispatchEvent(new Event("input"));
+})();
+</script>
+</body>
+</html>

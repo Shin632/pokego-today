@@ -37,7 +37,7 @@ GAME_MASTER = "https://raw.githubusercontent.com/PokeMiners/game_masters/master/
 MOVES_CSV = "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/moves.csv"
 MOVE_NAMES_CSV = "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/move_names.csv"
 FRESH_HOURS = 0          # レイドボスが入れ替わるので毎回計算する（計算は1分かからない）
-SCHEMA = 15               # 出力の形式を変えたら上げる（前回分を使い回さず計算し直す）
+SCHEMA = 16               # 出力の形式を変えたら上げる（前回分を使い回さず計算し直す）
 TOP_N = 10
 KEEP = {"raid": 250, "type": 60, "gym": 200, "defense": 30}   # 画面で絞り込んでも10件出せるよう多めに持つ
 ATTACKER_POOL = 150      # ジム防衛の評価に使う攻撃役の候補（レイド上位＋タイプ別上位）
@@ -709,6 +709,9 @@ PVP_URL = "https://raw.githubusercontent.com/pvpoke/pvpoke/master/src/data/ranki
 PVP_LEAGUES = [(1500, "スーパーリーグ", 100), (2500, "ハイパーリーグ", 100), (10000, "マスターリーグ", 50)]   # (CP上限, 名前, 何位までを「使える」とするか)
 
 
+PVP_ALL = {}   # speciesId → {リーグ名: 順位}（基準以内）。load_pvp_ranks() が埋める
+
+
 def load_pvp_ranks():
     """speciesId → (リーグ名, 順位, 順位/基準) のうち、いちばん良いもの（基準以内のものだけ）"""
     out = {}
@@ -719,10 +722,21 @@ def load_pvp_ranks():
             print(f"::warning::PvPランキング（{name}）を取得できませんでした: {ex}")
             continue
         for rank, x in enumerate(data[:limit], 1):
+            PVP_ALL.setdefault(x["speciesId"], {})[name] = rank
             r = (name, rank, rank / limit)
             if x["speciesId"] not in out or r[2] < out[x["speciesId"]][2]:
                 out[x["speciesId"]] = r
     return out
+
+
+CPM_TABLE = []   # レベル1〜のCP補正値（ゲームデータの PLAYER_LEVEL_SETTINGS）
+
+
+def load_cpm(gm):
+    for x in gm:
+        if x.get("templateId") == "PLAYER_LEVEL_SETTINGS":
+            return list(x["data"]["playerLevel"].get("cpMultiplier") or [])
+    return []
 
 
 def build_pokedex(pokemon, pvp):
@@ -731,8 +745,14 @@ def build_pokedex(pokemon, pvp):
     for p in pokemon:
         tags = p.get("tags", [])
         fam = (p.get("family") or {}).get("id") or ("FAMILY_" + base_id(p["speciesId"]).upper())
+        b = p["baseStats"]
         item = {"id": p["speciesId"], "name": p["speciesName"], "dex": p["dex"], "types": [t for t in p["types"] if t != "none"],
-                "family": fam, "buddy": p.get("buddyDistance")}
+                "family": fam, "buddy": p.get("buddyDistance"), "stats": [b["atk"], b["def"], b["hp"]]}
+        evo = (p.get("family") or {}).get("evolutions")
+        if evo:
+            item["evo"] = evo
+        if PVP_ALL.get(p["speciesId"]):
+            item["pvpAll"] = PVP_ALL[p["speciesId"]]
         flags = [t for t in ("legendary", "mythical", "ultrabeast", "mega", "shadow", "regional") if t in tags]
         if flags:
             item["tags"] = flags
@@ -741,7 +761,7 @@ def build_pokedex(pokemon, pvp):
             item["pvp"] = [pr[0], pr[1]]
         species.append(item)
     return {"schema": SCHEMA, "generatedAt": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z"),
-            "species": species}
+            "cpm": CPM_TABLE[:51], "species": species}
 
 
 def build_evo_use(pokemon, lists, pvp=None):
@@ -899,6 +919,7 @@ def main(prev_path, out_path, prev_megas_path=None, out_megas_path=None, prev_ra
         MEGA_LEVELS = load_mega_levels(gm)
         TYPE_BOOSTS = load_type_boosts(gm)
         CATCH_DUST = load_catch_dust(gm)
+        CPM_TABLE[:] = load_cpm(gm)
         del gm
         try:
             move_ja = load_move_names()
