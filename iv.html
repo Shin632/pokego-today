@@ -100,6 +100,7 @@ footer{margin-top:24px;font-size:12px;color:var(--sub);line-height:1.7}
       <li><b>レイド・ジム</b>：そのポケモン（シャドウにチェックがあればシャドウの姿）と、進化後・メガシンカ後が、育成ランキングに入っているかを見ます（レイド総合・ジム攻撃は50位、タイプ別・ジム防衛は30位まで）。入っていれば、攻撃役は<b>攻撃13以上かつ全体80%以上で◎</b>、攻撃10以上かつ60%以上で○。ジム防衛は防御・HPがともに12以上で◎です。</li>
       <li><b>PvP</b>：進化後も含めて PvPoke のランキング上位（スーパー・ハイパーリーグ100位、マスターリーグ50位以内）にいるポケモンについて、<b>その個体値が4,096通りの中で何位か</b>を計算します（CP上限の中でいちばん高いレベル、最大レベル50。能力値の積で順位づけ）。<b>64位以内で◎、300位以内で○</b>。マスターリーグは個体値が高いほど強いので、全体93%以上で◎、85%以上で○です。</li>
       <li><b>判定</b>：どれかで◎なら「育成すべき」。◎はないが○がある、または伝説・幻・ウルトラビースト、ダイマックス・キョダイマックス、個体値100%なら「とっておく」。どれにも当てはまらなければ「逃がしてOK（アメにしてよい）」です。</li>
+      <li><b>技構成</b>：レイド・ジムは育成TOP10と同じ計算でいちばん良い技1・技2、PvPは PvPoke のおすすめ（技1と技2を2つ）です。★は今は普通には覚えられない技（すごいわざマシンやイベントが必要）です。</li>
       <li><b>シャドウのリトレーン</b>：シャドウのままの評価と、リトレーンした場合（個体値が各+2、通常の姿。ジムに置ける・メガシンカできる）の評価を比べ、良いほうをすすめます。同じくらいなら、レイド用ならシャドウのまま（攻撃1.2倍）をすすめます。</li>
       <li>色違い・キラ・特別な背景・コスチューム・思い出のポケモンかどうかは判定に入っていません。</li>
       <li>ダイマックス・キョダイマックスは、マックスバトルでの強さのデータがまだ無いので、強さではなく「手に入りにくさ」で「とっておく」以上にしています。</li>
@@ -215,6 +216,13 @@ function assess(fam, ivs, shadow){
   const best = Math.max(0, ...pe.map(x => MARK_VAL[x.m]), ...pvp.map(x => MARK_VAL[x.m]));
   return {pe, pvp, best, ivs};
 }
+/** PvPoke のおすすめ技構成（技1／技2・技2） */
+function pvpMovesText(v, league){
+  const ms = v && v.pvpMoves && v.pvpMoves[league];
+  if (!ms || !ms.length) return "";
+  const nm = (m) => esc(m.ja || m.en) + (m.elite ? "★" : "");
+  return `技1 ${nm(ms[0])}／技2 ${ms.slice(1).map(nm).join("・")}`;
+}
 /** 使い道を、ふだんの言葉で */
 function useText(u){
   const nm = esc(nameJa(u.x.name));
@@ -281,7 +289,8 @@ function evaluate(){
     usePath.pe.filter(x => MARK_VAL[x.m] >= 1).sort((p, q) => MARK_VAL[q.m] - MARK_VAL[p.m] || p.u.rank - q.u.rank).slice(0, 4)
       .forEach(x => useRows.push(`${x.m} ${useText(x.u)}${label}`));
     usePath.pvp.filter(x => MARK_VAL[x.m] >= 1).sort((p, q) => MARK_VAL[q.m] - MARK_VAL[p.m]).slice(0, 3)
-      .forEach(x => useRows.push(`${x.m} <b>PvPの${esc(x.league)}</b>：${esc(nameJa(x.v.name))}として（PvPokeで${x.prank}位）${label}`));
+      .forEach(x => { const mv = pvpMovesText(x.v, x.league);
+        useRows.push(`${x.m} <b>PvPの${esc(x.league)}</b>：${esc(nameJa(x.v.name))}として（PvPokeで${x.prank}位）${mv ? `。${mv}${x.v.pvpMoves[x.league].length > 2 ? "（2つ目の技2は「わざを追加」で覚えさせる）" : ""}` : ""}${label}`); });
   }
   if (!useRows.length && keepReasons.length){
     if (gmax || dmax) useRows.push("<b>マックスバトル</b>：ダイマックス・キョダイマックスはマックスバトル専用の戦力（このアプリでは強さを評価できていません）");
@@ -289,10 +298,11 @@ function evaluate(){
     if (total === 45) useRows.push("<b>記念・コレクション</b>：個体値100%は貴重です");
   }
   const mk = (m) => `<span class="mk ${m === "◎" ? "g" : m === "○" ? "o" : "x"}">${m}</span>`;
-  const peHtml = (r, who) => r.pe.length ? r.pe.map(({u, m, why}) => `<div class="row">${mk(m)}<b>${esc(nameJa(u.x.name))}</b>：${esc(u.label)} ${u.rank}位
+  const mvTxt = (x) => `技1 ${esc(x.fast.ja || x.fast.en)}${x.fast.elite ? "★" : ""}／技2 ${esc(x.charged.ja || x.charged.en)}${x.charged.elite ? "★" : ""}`;
+  const peHtml = (r, who) => r.pe.length ? r.pe.map(({u, m, why}) => `<div class="row">${mk(m)}<b>${esc(nameJa(u.x.name))}</b>：${esc(u.label)} ${u.rank}位<span class="s">おすすめ技：${mvTxt(u.x)}</span>
       <span class="s">${u.role === "def" ? "ジム防衛は防御・HPが大事" : "レイド・ジム攻撃は攻撃が大事"}（${who}：${why}）${/_mega|_primal/.test(u.x.id) ? " ・ メガシンカ・ゲンシカイキ後の姿" : ""}</span></div>`).join("")
     : `<div class="none">レイド・ジムのランキング上位には入っていません</div>`;
-  const pvpHtml = (r) => r.pvp.length ? r.pvp.map(p => `<div class="row">${mk(p.m)}<b>${esc(p.league)}</b>：${esc(nameJa(p.v.name))}（PvPoke ${p.prank}位）<span class="s">${p.text}</span></div>`).join("")
+  const pvpHtml = (r) => r.pvp.length ? r.pvp.map(p => `<div class="row">${mk(p.m)}<b>${esc(p.league)}</b>：${esc(nameJa(p.v.name))}（PvPoke ${p.prank}位）<span class="s">${p.text}</span>${pvpMovesText(p.v, p.league) ? `<span class="s">おすすめ技：${pvpMovesText(p.v, p.league)}</span>` : ""}</div>`).join("")
     : `<div class="none">進化後も含めて、PvPのランキング上位には入っていません</div>`;
   const notes = [`個体値 ${a}/${d}/${h}（${Math.round(pct * 100)}%・評価の星 ${"★".repeat(stars)}${"☆".repeat(4 - stars)}）`];
   if (fam.length > 1) notes.push(`進化先も含めて判定しました：${fam.slice(1).map(f => esc(nameJa(f.name))).join("、")}`);

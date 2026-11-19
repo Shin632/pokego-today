@@ -37,7 +37,7 @@ GAME_MASTER = "https://raw.githubusercontent.com/PokeMiners/game_masters/master/
 MOVES_CSV = "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/moves.csv"
 MOVE_NAMES_CSV = "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/move_names.csv"
 FRESH_HOURS = 0          # レイドボスが入れ替わるので毎回計算する（計算は1分かからない）
-SCHEMA = 16               # 出力の形式を変えたら上げる（前回分を使い回さず計算し直す）
+SCHEMA = 17               # 出力の形式を変えたら上げる（前回分を使い回さず計算し直す）
 TOP_N = 10
 KEEP = {"raid": 250, "type": 60, "gym": 200, "defense": 30}   # 画面で絞り込んでも10件出せるよう多めに持つ
 ATTACKER_POOL = 150      # ジム防衛の評価に使う攻撃役の候補（レイド上位＋タイプ別上位）
@@ -710,6 +710,7 @@ PVP_LEAGUES = [(1500, "スーパーリーグ", 100), (2500, "ハイパーリー�
 
 
 PVP_ALL = {}   # speciesId → {リーグ名: 順位}（基準以内）。load_pvp_ranks() が埋める
+PVP_MOVES = {}  # speciesId → {リーグ名: [技1, 技2, 技2]}（PvPoke のおすすめ技構成）
 
 
 def load_pvp_ranks():
@@ -723,6 +724,8 @@ def load_pvp_ranks():
             continue
         for rank, x in enumerate(data[:limit], 1):
             PVP_ALL.setdefault(x["speciesId"], {})[name] = rank
+            if x.get("moveset"):
+                PVP_MOVES.setdefault(x["speciesId"], {})[name] = list(x["moveset"])
             r = (name, rank, rank / limit)
             if x["speciesId"] not in out or r[2] < out[x["speciesId"]][2]:
                 out[x["speciesId"]] = r
@@ -739,7 +742,7 @@ def load_cpm(gm):
     return []
 
 
-def build_pokedex(pokemon, pvp):
+def build_pokedex(pokemon, pvp, move_ja=None, move_en=None):
     """ポケモン検索ページ用：実装済みのポケモンの名前・タイプ・進化系統・相棒の距離・PvPの順位"""
     species = []
     for p in pokemon:
@@ -753,6 +756,10 @@ def build_pokedex(pokemon, pvp):
             item["evo"] = evo
         if PVP_ALL.get(p["speciesId"]):
             item["pvpAll"] = PVP_ALL[p["speciesId"]]
+        if PVP_MOVES.get(p["speciesId"]):
+            elite = set(p.get("eliteMoves", []))
+            item["pvpMoves"] = {lg: [{"id": m, "ja": (move_ja or {}).get(m), "en": (move_en or {}).get(m, m), "elite": m in elite} for m in ms]
+                                for lg, ms in PVP_MOVES[p["speciesId"]].items()}
         flags = [t for t in ("legendary", "mythical", "ultrabeast", "mega", "shadow", "regional") if t in tags]
         if flags:
             item["tags"] = flags
@@ -1011,7 +1018,7 @@ def main(prev_path, out_path, prev_megas_path=None, out_megas_path=None, prev_ra
             + [(f"レイド・{type_ja[t]}", type_top[t], LIST_WEIGHT_TYPE) for t in TYPES]
         PVP = load_pvp_ranks()
         megas_data["evoUse"] = build_evo_use(pokemon, lists_all, PVP)
-        pokedex_data = build_pokedex(pokemon, PVP)
+        pokedex_data = build_pokedex(pokemon, PVP, move_ja, move_en)
         # 技名（英語 → 日本語）。イベントページの「レガシー技」の説明を訳すのに使う
         megas_data["moveJa"] = {move_en[mid]: move_ja[mid] for mid in move_en if mid in move_ja and move_ja[mid]}
         if out_raids_path:
