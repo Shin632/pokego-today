@@ -81,6 +81,8 @@ footer{margin-top:24px;font-size:12px;color:var(--sub);line-height:1.7}
     <div class="chosen" id="chosen"></div>
     <div class="opts">
       <label class="opt"><input type="checkbox" id="shiny"> ✨ 色違い</label>
+      <label class="opt"><input type="checkbox" id="bg"> 🖼 特別な背景</label>
+      <label class="opt"><input type="checkbox" id="costume"> 🎩 コスチューム</label>
       <label class="opt"><input type="checkbox" id="shadow"> シャドウ</label>
       <label class="opt"><input type="checkbox" id="dmax"> ダイマックス</label>
       <label class="opt"><input type="checkbox" id="gmax"> キョダイマックス</label>
@@ -100,10 +102,10 @@ footer{margin-top:24px;font-size:12px;color:var(--sub);line-height:1.7}
     <ul class="crit">
       <li><b>レイド・ジム</b>：そのポケモン（シャドウにチェックがあればシャドウの姿）と、進化後・メガシンカ後が、育成ランキングに入っているかを見ます（レイド総合・ジム攻撃は50位、タイプ別・ジム防衛は30位まで）。入っていれば、攻撃役は<b>攻撃13以上かつ全体80%以上で◎</b>、攻撃10以上かつ60%以上で○。ジム防衛は防御・HPがともに12以上で◎です。</li>
       <li><b>PvP</b>：進化後も含めて PvPoke のランキング上位（スーパー・ハイパーリーグ100位、マスターリーグ50位以内）にいるポケモンについて、<b>その個体値が4,096通りの中で何位か</b>を計算します（CP上限の中でいちばん高いレベル、最大レベル50。能力値の積で順位づけ）。<b>64位以内で◎、300位以内で○</b>。マスターリーグは個体値が高いほど強いので、全体93%以上で◎、85%以上で○です。</li>
-      <li><b>判定</b>：どれかで◎なら「育成すべき」。◎はないが○がある、または伝説・幻・ウルトラビースト、ダイマックス・キョダイマックス、個体値100%、色違いなら「とっておく」。どれにも当てはまらなければ「逃がしてOK（アメにしてよい）」です。</li>
+      <li><b>判定</b>：どれかで◎なら「育成すべき」。◎はないが○がある、または伝説・幻・ウルトラビースト、ダイマックス・キョダイマックス、個体値100%、色違い・特別な背景・コスチュームなら「とっておく」。どれにも当てはまらなければ「逃がしてOK（アメにしてよい）」です。</li>
       <li><b>技構成</b>：レイド・ジムは育成TOP10と同じ計算でいちばん良い技1・技2、PvPは PvPoke のおすすめ（技1と技2を2つ）です。★は今は普通には覚えられない技（すごいわざマシンやイベントが必要）です。</li>
       <li><b>シャドウのリトレーン</b>：シャドウのままの評価と、リトレーンした場合（個体値が各+2、通常の姿。ジムに置ける・メガシンカできる）の評価を比べ、良いほうをすすめます。同じくらいなら、レイド用ならシャドウのまま（攻撃1.2倍）をすすめます。</li>
-      <li>色違いは、強さは通常の色と同じなので「育成すべき」かどうかの判定には影響しませんが、「逃がしてOK」にはならず「とっておく」以上になります。キラ・特別な背景・コスチューム・思い出のポケモンかどうかは判定に入っていません。</li>
+      <li>色違い・特別な背景・コスチュームは、強さは通常と同じなので「育成すべき」かどうかの判定には影響しませんが、「逃がしてOK」にはならず「とっておく」以上になります。コスチュームのポケモンは進化できないものが多いので注意してください。キラ・思い出のポケモンかどうかは判定に入っていません。</li>
       <li>ダイマックス・キョダイマックスは、マックスバトルでの強さのデータがまだ無いので、強さではなく「手に入りにくさ」で「とっておく」以上にしています。</li>
     </ul>
   </details>
@@ -254,6 +256,7 @@ function evaluate(){
   let shadow = document.getElementById("shadow").checked;
   const dmax = document.getElementById("dmax").checked, gmax = document.getElementById("gmax").checked;
   const shiny = document.getElementById("shiny").checked;
+  const bg = document.getElementById("bg").checked, costume = document.getElementById("costume").checked;
   const total = a + d + h, pct = total / 45;
   const stars = total === 45 ? 4 : total >= 37 ? 3 : total >= 30 ? 2 : total >= 23 ? 1 : 0;
   const fam = family(chosen);
@@ -279,6 +282,8 @@ function evaluate(){
   else if (dmax) keepReasons.push("ダイマックスはマックスバトルでしか手に入らない");
   if (total === 45) keepReasons.push("個体値100%");
   if (shiny) keepReasons.push("色違いは見た目が特別で、コレクションや交換で人気");
+  if (bg) keepReasons.push("特別な背景はイベントや場所でしか手に入らない");
+  if (costume) keepReasons.push("コスチュームはイベント限定で、あとから手に入れにくい");
   let verdict, cls, sum;
   if (best >= 2){ verdict = "🟢 育成すべき"; cls = "v-train"; sum = "使い道があり、個体値もその用途に向いています。"; }
   else if (best >= 1 || keepReasons.length){ verdict = "🟡 とっておく"; cls = "v-keep"; sum = best >= 1 ? "使い道はありますが、もっと良い個体が手に入ったら入れ替えを。" : keepReasons.join("。") + "。"; }
@@ -300,6 +305,8 @@ function evaluate(){
     if (rare) useRows.push("<b>将来に備えて</b>：今の上位ランキングには入っていませんが、入手機会が少ないので残しておく価値があります");
     if (total === 45) useRows.push("<b>記念・コレクション</b>：個体値100%は貴重です");
     if (shiny) useRows.push("<b>コレクション・交換</b>：色違いは見た目が特別です（強さは通常の色と同じ）");
+    if (bg) useRows.push("<b>コレクション</b>：特別な背景つきの個体は、イベントや場所限定で貴重です（強さは同じ）");
+    if (costume) useRows.push("<b>コレクション</b>：コスチュームはイベント限定の見た目です（強さは同じ）");
   }
   const mk = (m) => `<span class="mk ${m === "◎" ? "g" : m === "○" ? "o" : "x"}">${m}</span>`;
   const mvTxt = (x) => `技1 ${esc(x.fast.ja || x.fast.en)}${x.fast.elite ? "★" : ""}／技2 ${esc(x.charged.ja || x.charged.en)}${x.charged.elite ? "★" : ""}`;
@@ -312,7 +319,9 @@ function evaluate(){
   if (fam.length > 1) notes.push(`進化先も含めて判定しました：${fam.slice(1).map(f => esc(nameJa(f.name))).join("、")}`);
   if (document.getElementById("shadow").checked && !hasShadowForm) notes.push("このポケモンはシャドウの姿が未実装のため、通常の姿として判定しました。");
   if (dmax || gmax) notes.push("マックスバトル向けの強さはデータが無いため評価に入っていません。");
-  if (shiny) notes.push("色違いでも強さ（種族値・技）は通常の色と同じです。" + (best >= 1 ? "" : "使い道はありませんが、色違いなので「逃がしてOK」にはしていません。"));
+  const looks = [shiny && "色違い", bg && "特別な背景", costume && "コスチューム"].filter(Boolean);
+  if (looks.length) notes.push(`${looks.join("・")}でも強さ（種族値・技）は通常と同じです。` + (best >= 1 ? "" : `使い道はありませんが、${looks.join("・")}なので「逃がしてOK」にはしていません。`));
+  if (costume && fam.length > 1) notes.push("コスチュームのポケモンは進化できないものが多いです。上の判定は進化後も含めているので、進化できない場合は進化前の姿のまま使うことになります。");
   keepReasons.forEach(r => notes.push(r));
 
   let html = `<div class="verdict ${cls}"><div class="big">${verdict}</div><div class="sum">${esc(sum)}</div></div>`;
@@ -352,7 +361,7 @@ document.getElementById("q").addEventListener("input", e => {
   }, 120);
 });
 document.getElementById("sugg").addEventListener("click", e => { const b = e.target.closest("[data-id]"); if (b) choose(b.dataset.id); });
-["ia", "id", "ih", "shiny", "shadow", "dmax", "gmax"].forEach(k => document.getElementById(k).addEventListener("input", evaluate));
+["ia", "id", "ih", "shiny", "bg", "costume", "shadow", "dmax", "gmax"].forEach(k => document.getElementById(k).addEventListener("input", evaluate));
 document.getElementById("gmax").addEventListener("change", e => { if (e.target.checked) document.getElementById("dmax").checked = false; evaluate(); });
 document.getElementById("dmax").addEventListener("change", e => { if (e.target.checked) document.getElementById("gmax").checked = false; evaluate(); });
 document.querySelector(".quick").addEventListener("click", e => {
