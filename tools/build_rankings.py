@@ -35,7 +35,7 @@ GAME_MASTER = "https://raw.githubusercontent.com/PokeMiners/game_masters/master/
 MOVES_CSV = "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/moves.csv"
 MOVE_NAMES_CSV = "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/move_names.csv"
 FRESH_HOURS = 24
-SCHEMA = 8               # 出力の形式を変えたら上げる（前回分を使い回さず計算し直す）
+SCHEMA = 9               # 出力の形式を変えたら上げる（前回分を使い回さず計算し直す）
 TOP_N = 10
 KEEP = {"raid": 250, "type": 60, "gym": 200, "defense": 30}   # 画面で絞り込んでも10件出せるよう多めに持つ
 ATTACKER_POOL = 150      # ジム防衛の評価に使う攻撃役の候補（レイド上位＋タイプ別上位）
@@ -322,8 +322,25 @@ def load_buddy_extra(gm):
     レベル20→40の強化に必要なアメ"""
     mega = {}
     upgrade = None
+    level4, lv3_cooldown = {}, None
     for x in gm:
         d = x.get("data", {})
+        ml = d.get("megaEvoLevelSettings")
+        if ml:
+            tid = x["templateId"]
+            if tid == "MEGA_EVOLUTION_LEVEL_3":
+                lv3_cooldown = int(ml.get("cooldown", {}).get("durationMs", 0)) / 3.6e6
+            if tid.startswith("MEGA_EVOLUTION_LEVEL_4_V"):
+                try:
+                    ldex = int(tid[len("MEGA_EVOLUTION_LEVEL_4_V"):][:4])
+                except ValueError:
+                    ldex = None
+                if ldex:
+                    e = ml.get("effects", {})
+                    level4[ldex] = {"unlock": ml.get("megaEnergyCostToUnlock"), "candy": e.get("sameTypeExtraCatchCandy"),
+                                    "xl": e.get("sameTypeExtraCatchCandyXlChance"), "xp": e.get("sameTypeExtraCatchXp"),
+                                    "cpLevels": e.get("selfCpBoostAdditionalLevel"),
+                                    "cooldownH": int(ml.get("cooldown", {}).get("durationMs", 0)) / 3.6e6}
         if "pokemonUpgrades" in d:
             u = d["pokemonUpgrades"]
             per = u.get("upgradesPerLevel", 2)
@@ -347,6 +364,9 @@ def load_buddy_extra(gm):
             mega[dex] = {"award": award,
                          "initial": min(b.get("temporaryEvolutionEnergyCost") or 0 for b in temps),
                          "subsequent": min(b.get("temporaryEvolutionEnergyCostSubsequent") or 0 for b in temps)}
+    for dex, l4 in level4.items():
+        if dex in mega:
+            mega[dex]["level4"] = {**l4, "cooldownH3": lv3_cooldown}
     return mega, upgrade
 
 
@@ -366,7 +386,9 @@ def base_id(sid):
 # 連れ歩きの点数づけ（目安）
 LIST_WEIGHT_MAIN, LIST_WEIGHT_TYPE = 1.0, 0.7          # 総合・ジム系のランキング / タイプ別のランキング
 WALK_VALUE = {1: 0.4, 3: 0.8, 5: 1.0, 20: 0.5}          # 相棒の距離ごとの「歩いて集める価値」
-MEGA_BONUS = 1.3
+MEGA_BONUS = 1.3            # メガシンカできる（歩くとメガエナジー。メガ中は同じタイプのアメが増える）
+MEGA_L4_BONUS = 1.6         # メガレベル4に対応（解放に5000エナジー。アメ+3・XL30%・待ち時間24時間）
+MEGA_BASE_U = 0.5           # ランキング外のメガでも「アメを増やす役」として役立つ分
 
 
 def walk_value(km):
@@ -377,7 +399,8 @@ def walk_value(km):
 
 def buddy_ranking(lists, by_id, mega, upgrade, n=40):
     """連れ歩きランキング。lists は [(表示名, ランキング, 重み)]。
-    点数 = 役立ち度 × 歩いて集める価値（相棒の距離） × 距離の現実性 ×（メガシンカできてメガが上位なら 1.3）
+    点数 = 役立ち度 × 歩いて集める価値（相棒の距離） × 距離の現実性 × メガ（メガシンカできれば1.3、メガレベル4対応なら1.6）
+      メガシンカできるポケモンは、ランキング外でも役立ち度 0.5 で候補に入れる（メガ中は同じタイプのアメが増えるため）
       役立ち度 = ランキング各TOP10での「1位を100とした評価」/100 × リストの重み の最大値
       歩いて集める価値 = 1km 0.4（野生に多く、捕まえて集める方が早いことが多い）、3km 0.8、5km 1.0、20km 0.5（遅すぎる）
       距離の現実性 = 1 /（1 + 全部歩いて集める距離 / 1000km）"""
@@ -396,6 +419,17 @@ def buddy_ranking(lists, by_id, mega, upgrade, n=40):
                 cur["megaUsed"] = True
             if u > cur["u"]:
                 cur.update(u=u, variant=x["name"], shadow=x["shadow"])
+    # ランキングに入っていなくても、メガシンカできるポケモンは「アメを増やす役」として候補に入れる
+    by_dex = {}
+    for p in by_id.values():
+        if p["speciesId"] == base_id(p["speciesId"]) and "shadow" not in p.get("tags", []):
+            by_dex.setdefault(p["dex"], p)
+    for dex in mega:
+        if dex not in best and dex in by_dex:
+            best[dex] = {"base": by_dex[dex], "u": MEGA_BASE_U, "uses": [], "variant": by_dex[dex]["speciesName"],
+                         "shadow": False, "megaUsed": False}
+        elif dex in best and best[dex]["u"] < MEGA_BASE_U:
+            best[dex]["u"] = MEGA_BASE_U
     out = []
     for dex, c in best.items():
         bp = c["base"]
@@ -406,8 +440,8 @@ def buddy_ranking(lists, by_id, mega, upgrade, n=40):
         need = evo_candy + upgrade * (1.2 if c["shadow"] else 1)
         km_all = need * km
         m = mega.get(dex)
-        has_mega = bool(m) and c["megaUsed"]
-        score = c["u"] * walk_value(km) / (1 + km_all / 1000) * (MEGA_BONUS if has_mega else 1)
+        mega_f = (MEGA_L4_BONUS if m.get("level4") else MEGA_BONUS) if m else 1
+        score = c["u"] * walk_value(km) / (1 + km_all / 1000) * mega_f
         uses = sorted(c["uses"], key=lambda u: (-u["w"], u["rank"]))[:4]
         item = {
             "id": bp["speciesId"], "name": bp["speciesName"], "dex": dex, "types": [t for t in bp["types"] if t != "none"],
@@ -419,6 +453,9 @@ def buddy_ranking(lists, by_id, mega, upgrade, n=40):
             per_km = m["award"] / km
             item["mega"] = {"perKm": per_km, "initial": m["initial"], "subsequent": m["subsequent"],
                             "kmFirst": round(m["initial"] / per_km), "kmNext": round(m["subsequent"] / per_km), "used": c["megaUsed"]}
+            if m.get("level4"):
+                l4 = m["level4"]
+                item["mega"]["level4"] = {**l4, "kmUnlock": round((l4.get("unlock") or 0) / per_km)}
         out.append(item)
     out.sort(key=lambda x: -x["score"])
     return {"list": out[:n], "upgradeCandy": upgrade}
@@ -475,6 +512,7 @@ def build_megas(pokemon, mega_cost, levels, boosts=None):
         types = [t for t in p["types"] if t != "none"]
         boost = (boosts or {}).get(base_id(p["speciesId"]))
         megas.append({"id": p["speciesId"], "name": p["speciesName"], "types": types, "boostTypes": boost or types,
+                      "level4": bool(c.get("level4")),
                       "legendary": "legendary" in tags or "mythical" in tags,
                       "initial": c.get("initial"), "subsequent": c.get("subsequent")})
     types, buddy = {}, {}

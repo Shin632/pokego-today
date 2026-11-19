@@ -61,6 +61,7 @@ h1{font-size:20px;margin:0}
 .df.d4 .ds,.df.d5 .ds{color:#dc2626}
 .dw{color:var(--sub);font-size:11.5px}
 .dnote{font-size:11.5px;color:#b45309;margin:0 2px 8px}
+.mv.l4{background:color-mix(in srgb,#d97706 10%,transparent);border-radius:6px;padding:3px 6px;margin-top:4px}
 .tg.easy.on{background:#16a34a;border-color:#16a34a;color:#fff}
 .empty{color:var(--sub);font-size:14px;background:var(--panel);border:1px dashed var(--line);border-radius:var(--radius);padding:14px;text-align:center}
 details.box{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:10px 12px;margin-top:16px}
@@ -99,7 +100,7 @@ footer a{color:var(--sub)}
       <li><b>ジム防衛</b>：ジムに置けるポケモン（伝説・幻・ウルトラビースト・メガ・シャドウは置けないので除外）について、<b>相性の良い強い攻撃役5匹で倒すのに何秒かかるか</b>で比べます（ジムの防衛側はHPが2倍）。長くかかるほど上位です。やる気（ハート）の減り方やきのみは考えていません。</li>
       <li>★ の付いた技は、今は普通には覚えられない技（すごいわざマシンやイベントが必要）です。</li>
       <li><b>育成難易度</b>（5段階）：手に入れやすさと育てる手間の目安です。点数の付け方は、幻 +3、伝説・ウルトラビースト +2、メガシンカ（メガエナジーが必要）+1、合体（ブラックキュレム・ネクロズマの合体した姿など。合体相手と合体エネルギーが必要）+1.5、シャドウ（入手がGOロケット団など・やつあたりを消すのにイベントが必要）+1、★技（すごいわざマシン）+1、進化に必要なアメ（100個以上 +0.5、200個以上 +1、400個以上 +1.5）、進化アイテム +0.5、地域限定 +1、相棒で歩いてアメ1個もらう距離（5km +0.5、20km +1。伝説・幻はすでに数えているので足さない）。合計0点＝かんたん、1点まで＝ふつう、2点まで＝やや大変、3.5点まで＝大変、それより上＝とても大変。強化に使うほしのすなは、どのポケモンもほぼ同じなので入れていません（シャドウは1.2倍かかります）。<b>出現率・捕獲率は入っていません</b>（公開されているゲームデータに含まれていないため）。良い個体（個体値）の取りやすさは、ポケモンごとではなく入手方法で決まるので入れていません（レイド・タマゴ・リサーチは個体値の下限が10で、野生より高い個体が出やすい）。</li>
-      <li><b>連れ歩き</b>：上の各TOP10（レイド総合・タイプ別、ジム攻撃、ジム防衛）に出るポケモンを、元のポケモン（シャドウ・メガは同じアメ）ごとにまとめて、<b>役立ち度 × 歩いて集める価値 × 距離の現実性</b>で並べています。役立ち度は「1位を100とした評価」の最大値（タイプ別ランキングは0.7倍）。歩いて集める価値は相棒の距離で、1km＝0.4（野生に多く、捕まえて集める方が早いことが多いため）、3km＝0.8、5km＝1.0、20km＝0.5（1個に20kmは遅すぎるため）。距離の現実性は「必要なアメ（進化＋レベル20→40の強化）× 相棒の距離」が長いほど下げています（1 ÷（1＋距離/1000km））。メガシンカでき、メガがランキングに入っていれば、歩くとメガエナジーももらえるので1.3倍。数字の重みはこのアプリの目安です。</li>
+      <li><b>連れ歩き</b>：上の各TOP10（レイド総合・タイプ別、ジム攻撃、ジム防衛）に出るポケモンを、元のポケモン（シャドウ・メガは同じアメ）ごとにまとめて、<b>役立ち度 × 歩いて集める価値 × 距離の現実性</b>で並べています。役立ち度は「1位を100とした評価」の最大値（タイプ別ランキングは0.7倍）。歩いて集める価値は相棒の距離で、1km＝0.4（野生に多く、捕まえて集める方が早いことが多いため）、3km＝0.8、5km＝1.0、20km＝0.5（1個に20kmは遅すぎるため）。距離の現実性は「必要なアメ（進化＋レベル20→40の強化）× 相棒の距離」が長いほど下げています（1 ÷（1＋距離/1000km））。メガシンカできれば1.3倍（歩くとメガエナジーももらえ、メガ中は同じタイプのポケモンを捕まえたときのアメが増えるため）、<b>メガレベル4に対応</b>していれば1.6倍（ゲームデータ上、解放に5000エナジー。アメ+3・アメXL30%・次のメガシンカまで24時間）。メガシンカできるポケモンは、攻撃のランキングに入っていなくても「アメを増やす役」として役立ち度50で候補に入れています。数字の重みはこのアプリの目安です。</li>
       <li>天候ブースト、フレンドの攻撃ボーナス、メガシンカによる仲間への攻撃ボーナス、回避などは計算に入れていません。あくまで目安です。</li>
     </ul>
   </details>
@@ -217,10 +218,13 @@ function renderBuddy(main){
   const top = list.length ? list[0].score : 1;
   main.innerHTML = list.map((x, i) => {
     const types = x.types.map(t => `<span class="tp" style="background:${(TYPE_INFO[t] || ["", "#888"])[1]}">${(TYPE_INFO[t] || [t])[0]}</span>`).join("");
-    const uses = x.uses.map(u => `${esc(u.list)} ${u.rank}位${nameJa(u.name) !== nameJa(x.name) ? `（${esc(nameJa(u.name))}）` : ""}`).join("、");
+    const uses = x.uses.length ? x.uses.map(u => `${esc(u.list)} ${u.rank}位${nameJa(u.name) !== nameJa(x.name) ? `（${esc(nameJa(u.name))}）` : ""}`).join("、")
+      : "メガシンカして、同じタイプのポケモンのアメを増やす役";
     const evo = x.evoCandy ? `進化${x.evoCandy}＋` : "";
     const candy = `相棒でアメ1個に<b>${x.km}km</b> ・ 必要なアメ 約${x.candyNeed}個（${evo}Lv20→40の強化${x.candyNeed - x.evoCandy}${x.shadowBuild ? "・シャドウは1.2倍" : ""}）→ 全部歩くと<b>約${x.kmAll.toLocaleString()}km</b>`;
-    const mega = x.mega ? `<div class="mv">⚡ メガエナジー 1kmで${x.mega.perKm} ・ 2回目以降のメガシンカ（${x.mega.subsequent}）は<b>約${x.mega.kmNext}km</b>${x.mega.used ? "" : "（メガはランキング外）"}</div>` : "";
+    const l4 = x.mega && x.mega.level4;
+    const mega = x.mega ? `<div class="mv">⚡ メガエナジー 1kmで${x.mega.perKm} ・ 2回目以降のメガシンカ（${x.mega.subsequent}）は<b>約${x.mega.kmNext}km</b></div>` +
+      (l4 ? `<div class="mv l4">🌟 <b>メガレベル4対応</b>：解放に${Number(l4.unlock).toLocaleString()}エナジー（歩くと約${l4.kmUnlock.toLocaleString()}km）→ 同じタイプのアメ+${l4.candy}・アメXL ${Math.round(l4.xl * 100)}%・次のメガシンカまで${l4.cooldownH}時間（レベル3は${l4.cooldownH3}時間）</div>` : "") : "";
     return `<div class="rk${i < 3 ? " top" + (i + 1) : ""}"><div class="no">${i + 1}</div><div>
       <div class="nm">${esc(nameJa(x.name))}${types}</div>
       <div class="mv">使い道：${uses}</div>

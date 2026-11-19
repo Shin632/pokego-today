@@ -667,7 +667,7 @@ function megaSuggest(ev){
     }
     if (!hit) continue;
     // 対象のポケモンに多く効くもの → タイプが2つとも同じもの → 攻撃も有利なもの → 伝説でない・メガエナジーが少なくて済むもの
-    const score = hit * 10 + both * 2 + (strong ? 4 : 0) - (m.legendary ? 3 : 0) - (m.initial || 200) / 200;
+    const score = hit * 10 + both * 2 + (strong ? 4 : 0) + (m.level4 ? 1 : 0) - (m.legendary ? 3 : 0) - (m.initial || 200) / 200;
     cands.push({m, hit, shared: [...shared], strong, score});
   }
   cands.sort((a, b) => b.score - a.score);
@@ -681,8 +681,9 @@ function megaSuggestHtml(ev){
   if (!r) return "";
   const lv = MEGAS.levels || {};
   const extra = (lv["1"] && lv["1"].extraCandy) || 1, extra3 = (lv["3"] && lv["3"].extraCandy) || 2;
-  const items = r.list.map(c => `<b>${esc(jaMegaName(c.m.name))}</b>（${c.shared.map(t => TYPE_JA_S[t] || t).join("・")}${r.total > 1 ? `・${c.hit}/${r.total}匹に有効` : ""}${c.strong ? "・攻撃も有利" : ""}）`).join("、");
-  return `<div class="megasug">⚡ アメを増やすメガ・ゲンシ：${items}<span class="mhint">同じタイプのポケモンを捕まえるとアメ+${extra}（メガレベル3なら+${extra3}）</span></div>`;
+  const items = r.list.map(c => `<b>${esc(jaMegaName(c.m.name))}</b>（${c.shared.map(t => TYPE_JA_S[t] || t).join("・")}${r.total > 1 ? `・${c.hit}/${r.total}匹に有効` : ""}${c.strong ? "・攻撃も有利" : ""}${c.m.level4 ? "・Lv4対応" : ""}）`).join("、");
+  const any4 = r.list.some(c => c.m.level4);
+  return `<div class="megasug">⚡ アメを増やすメガ・ゲンシ：${items}<span class="mhint">同じタイプのポケモンを捕まえるとアメ+${extra}（メガレベル3なら+${extra3}${any4 ? "、Lv4対応のものはメガレベル4で+3" : ""}）</span></div>`;
 }
 function jaMegaName(en){
   const m = String(en).match(/^(.+?) \((Mega(?: ([XY]))?|Primal)\)$/);
