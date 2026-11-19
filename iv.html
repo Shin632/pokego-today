@@ -56,6 +56,12 @@ h2{font-size:15.5px;margin:14px 0 6px}
 .notice{background:#fff4d6;color:#6b4b00;border-radius:10px;padding:8px 12px;font-size:13px;margin:8px 0}
 .notice.err{background:#ffe1e1;color:#8a1c1c}
 @media (prefers-color-scheme: dark){.notice{background:#3a2f12;color:#f3d999}.notice.err{background:#3f1a1a;color:#ffb4b4}}
+.purify{margin-top:10px;border-radius:12px;padding:10px 12px;border:1px solid var(--line);background:var(--panel)}
+.purify .pt{font-size:17px;font-weight:800}
+.purify .ps{font-size:12.5px;color:var(--sub);margin-top:2px}
+.p-purify{border-color:#8b5cf6;background:color-mix(in srgb,#8b5cf6 9%,var(--panel))}.p-purify .pt{color:#6d28d9}
+.p-keep{border-color:#6b21a8;background:color-mix(in srgb,#6b21a8 7%,var(--panel))}.p-keep .pt{color:#6b21a8}
+@media (prefers-color-scheme: dark){.p-purify .pt{color:#c4b5fd}.p-keep .pt{color:#d8b4fe}}
 details.box{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:10px 12px;margin-top:16px}
 details.box>summary{cursor:pointer;font-weight:700}
 .crit{font-size:13px;line-height:1.7;margin:8px 0 0;padding-left:1.2em}
@@ -94,6 +100,7 @@ footer{margin-top:24px;font-size:12px;color:var(--sub);line-height:1.7}
       <li><b>レイド・ジム</b>：そのポケモン（シャドウにチェックがあればシャドウの姿）と、進化後・メガシンカ後が、育成ランキングに入っているかを見ます（レイド総合・ジム攻撃は50位、タイプ別・ジム防衛は30位まで）。入っていれば、攻撃役は<b>攻撃13以上かつ全体80%以上で◎</b>、攻撃10以上かつ60%以上で○。ジム防衛は防御・HPがともに12以上で◎です。</li>
       <li><b>PvP</b>：進化後も含めて PvPoke のランキング上位（スーパー・ハイパーリーグ100位、マスターリーグ50位以内）にいるポケモンについて、<b>その個体値が4,096通りの中で何位か</b>を計算します（CP上限の中でいちばん高いレベル、最大レベル50。能力値の積で順位づけ）。<b>64位以内で◎、300位以内で○</b>。マスターリーグは個体値が高いほど強いので、全体93%以上で◎、85%以上で○です。</li>
       <li><b>判定</b>：どれかで◎なら「育成すべき」。◎はないが○がある、または伝説・幻・ウルトラビースト、ダイマックス・キョダイマックス、個体値100%なら「とっておく」。どれにも当てはまらなければ「逃がしてOK（アメにしてよい）」です。</li>
+      <li><b>シャドウのリトレーン</b>：シャドウのままの評価と、リトレーンした場合（個体値が各+2、通常の姿。ジムに置ける・メガシンカできる）の評価を比べ、良いほうをすすめます。同じくらいなら、レイド用ならシャドウのまま（攻撃1.2倍）をすすめます。</li>
       <li>色違い・キラ・特別な背景・コスチューム・思い出のポケモンかどうかは判定に入っていません。</li>
       <li>ダイマックス・キョダイマックスは、マックスバトルでの強さのデータがまだ無いので、強さではなく「手に入りにくさ」で「とっておく」以上にしています。</li>
     </ul>
@@ -172,32 +179,23 @@ function rankingUses(forms){
   rows.sort((a, b) => a.rank - b.rank);
   return rows;
 }
-function evaluate(){
-  const main = document.getElementById("main");
-  if (!chosen){ main.innerHTML = ""; return; }
-  const ivs = ["ia", "id", "ih"].map(k => document.getElementById(k).value.trim());
-  if (ivs.some(v => v === "" || isNaN(+v) || +v < 0 || +v > 15 || !Number.isInteger(+v))){
-    main.innerHTML = `<div class="notice">攻撃・防御・HPの個体値を、それぞれ0〜15の整数で入れてください。</div>`; return;
-  }
-  const [a, d, h] = ivs.map(Number);
-  const shadow = document.getElementById("shadow").checked, dmax = document.getElementById("dmax").checked, gmax = document.getElementById("gmax").checked;
-  const total = a + d + h, pct = total / 45;
-  const stars = total === 45 ? 4 : total >= 37 ? 3 : total >= 30 ? 2 : total >= 23 ? 1 : 0;
-  const fam = family(chosen);
+const MARK_VAL = {"◎": 2, "○": 1, "△": 0, "×": 0};
+const TYPE_KEY = Object.fromEntries(Object.entries(TYPES_JA).map(([k, v]) => [v, k.toLowerCase()]));
+/** 1つの姿の組（シャドウのまま／リトレーン後など）について、レイド・ジムとPvPの向き不向きを調べる */
+function assess(fam, ivs, shadow){
+  const [a, d, h] = ivs, pct = (a + d + h) / 45;
   const sfx = shadow ? "_shadow" : "";
-  // レイド・ジム
   const forms = [];
   for (const f of fam){ forms.push(f.id + sfx); if (!shadow) ["_mega", "_mega_x", "_mega_y", "_primal"].forEach(m => forms.push(f.id + m)); }
   const uses = rankingUses(forms).filter((r, i, arr) => arr.findIndex(y => y.label === r.label) === i).slice(0, 6);
-  const peMarks = uses.map(u => {
+  const pe = uses.map(u => {
     if (u.role === "def"){
-      const m = d >= 12 && h >= 12 ? "◎" : d >= 10 && h >= 10 ? "○" : "△";
-      return {u, m, why: `防御${d}・HP${h}`};
+      const m = shadow ? "×" : d >= 12 && h >= 12 ? "◎" : d >= 10 && h >= 10 ? "○" : "△";
+      return {u, m, why: shadow ? "シャドウはジムに置けません" : `防御${d}・HP${h}`};
     }
     const m = a >= 13 && pct >= 0.8 ? "◎" : a >= 10 && pct >= 0.6 ? "○" : "△";
     return {u, m, why: `攻撃${a}・全体${Math.round(pct * 100)}%`};
   });
-  // PvP
   const pvp = [];
   for (const f of fam){
     const v = BY_ID[f.id + sfx]; if (!v || !v.pvpAll) continue;
@@ -207,44 +205,114 @@ function evaluate(){
         const m = pct >= 0.93 ? "◎" : pct >= 0.85 ? "○" : "△";
         pvp.push({league, prank, v, m, text: `個体値 ${Math.round(pct * 100)}%（マスターリーグは高いほど良い）`});
       } else {
-        const r = pvpRank(v.stats, [a, d, h], cap, shadow);
+        const r = pvpRank(v.stats, ivs, cap, shadow);
         if (!r){ pvp.push({league, prank, v, m: "×", text: "レベル1でもCP上限を超えるため出せません"}); continue; }
         const m = r.rank <= 64 ? "◎" : r.rank <= 300 ? "○" : "△";
         pvp.push({league, prank, v, m, text: `この個体は ${r.total.toLocaleString()}通り中 <b>${r.rank.toLocaleString()}位</b>（レベル${r.lv}でCP${r.cp}）`});
       }
     }
   }
+  const best = Math.max(0, ...pe.map(x => MARK_VAL[x.m]), ...pvp.map(x => MARK_VAL[x.m]));
+  return {pe, pvp, best, ivs};
+}
+/** 使い道を、ふだんの言葉で */
+function useText(u){
+  const nm = esc(nameJa(u.x.name));
+  const mv = `技1 ${esc(u.x.fast.ja || u.x.fast.en)}${u.x.fast.elite ? "★" : ""}／技2 ${esc(u.x.charged.ja || u.x.charged.en)}${u.x.charged.elite ? "★" : ""}`;
+  if (u.label === "レイド総合") return `<b>レイド全般のアタッカー</b>：${nm}（${mv}）。相手のタイプを問わず強い`;
+  if (u.label === "ジム攻撃") return `<b>ジム攻撃</b>：${nm}で、ハピナスなどジムの防衛役を倒す（${mv}）`;
+  if (u.label === "ジム防衛") return `<b>ジム防衛</b>：${nm}をジムに置く（${mv}）`;
+  const t = u.label.replace("レイド・", "");
+  const key = TYPE_KEY[t];
+  // そのタイプの技が「効果ばつぐん」になる相手タイプ（＝そのタイプが弱点のボス）
+  const weakTo = key ? (CHART_W[key] || []).map(def => TYPES_JA[def[0].toUpperCase() + def.slice(1)]) : [];
+  return `<b>レイドの${esc(t)}アタッカー</b>：${nm}（${mv}）。${weakTo.length ? `${weakTo.slice(0, 5).join("・")}タイプのボスに` : `${esc(t)}が弱点のボスに`}`;
+}
+// 攻撃タイプ → 効果ばつぐんの相手タイプ（使い道の説明用）
+const CHART_W = {normal:[],fire:["grass","ice","bug","steel"],water:["fire","ground","rock"],electric:["water","flying"],grass:["water","ground","rock"],
+  ice:["grass","ground","flying","dragon"],fighting:["normal","ice","rock","dark","steel"],poison:["grass","fairy"],ground:["fire","electric","poison","rock","steel"],
+  flying:["grass","fighting","bug"],psychic:["fighting","poison"],bug:["grass","psychic","dark"],rock:["fire","ice","flying","bug"],ghost:["psychic","ghost"],
+  dragon:["dragon"],dark:["psychic","ghost"],steel:["ice","rock","fairy"],fairy:["fighting","dragon","dark"]};
+
+function evaluate(){
+  const main = document.getElementById("main");
+  if (!chosen){ main.innerHTML = ""; return; }
+  const raw = ["ia", "id", "ih"].map(k => document.getElementById(k).value.trim());
+  if (raw.some(v => v === "" || isNaN(+v) || +v < 0 || +v > 15 || !Number.isInteger(+v))){
+    main.innerHTML = `<div class="notice">攻撃・防御・HPの個体値を、それぞれ0〜15の整数で入れてください。</div>`; return;
+  }
+  const ivs = raw.map(Number), [a, d, h] = ivs;
+  let shadow = document.getElementById("shadow").checked;
+  const dmax = document.getElementById("dmax").checked, gmax = document.getElementById("gmax").checked;
+  const total = a + d + h, pct = total / 45;
+  const stars = total === 45 ? 4 : total >= 37 ? 3 : total >= 30 ? 2 : total >= 23 ? 1 : 0;
+  const fam = family(chosen);
+  const hasShadowForm = fam.some(f => BY_ID[f.id + "_shadow"]);
+  if (shadow && !hasShadowForm) shadow = false;   // シャドウの姿が未実装のポケモン
+  // 今の姿で評価。シャドウなら、リトレーンした場合（個体値+2、通常の姿）も評価して比べる
+  const cur = assess(fam, ivs, shadow);
+  const purIvs = ivs.map(v => Math.min(15, v + 2));
+  const pur = shadow ? assess(fam, purIvs, false) : null;
+  let purify = null;
+  if (shadow){
+    if (cur.best > pur.best) purify = {rec: "keep", title: "リトレーンしない（シャドウのまま）", why: "シャドウの姿のほうが使い道に合っています（シャドウは攻撃が1.2倍）。"};
+    else if (pur.best > cur.best) purify = {rec: "purify", title: "リトレーン推奨", why: `リトレーンすると個体値が ${purIvs.join("/")} になり、${pur.pe.some(x => x.u.role === "def" && x.m !== "△") ? "ジムに置けるようになり、" : ""}${pur.pe.some(x => /_mega|_primal/.test(x.u.x.id) && x.m !== "△") ? "メガシンカもできるようになり、" : ""}使い道が広がります。`};
+    else if (cur.best > 0) purify = {rec: "either", title: "どちらでも（基本はシャドウのまま）", why: "シャドウのままでもリトレーンしても同じくらい使えます。レイドで使うならシャドウのまま（攻撃1.2倍）、ジムに置く・メガシンカさせるならリトレーン。"};
+    else purify = {rec: "none", title: "リトレーンは不要", why: "どちらでも上位の使い道がありません。リトレーンにはほしのすなとアメがかかるので、急いでしなくてよいです。"};
+  }
+  const best = Math.max(cur.best, pur ? pur.best : 0);
   const tags = new Set(chosen.tags || []);
   const rare = tags.has("legendary") || tags.has("mythical") || tags.has("ultrabeast");
-  const any = (m) => peMarks.some(x => x.m === m) || pvp.some(x => x.m === m);
   const keepReasons = [];
   if (rare) keepReasons.push("伝説・幻・ウルトラビーストは手に入る機会が少ない");
   if (gmax) keepReasons.push("キョダイマックスはマックスバトルでしか手に入らず、とても貴重");
   else if (dmax) keepReasons.push("ダイマックスはマックスバトルでしか手に入らない");
   if (total === 45) keepReasons.push("個体値100%");
   let verdict, cls, sum;
-  if (any("◎")){ verdict = "🟢 育成すべき"; cls = "v-train"; sum = "使い道があり、個体値もその用途に向いています。"; }
-  else if (any("○") || keepReasons.length){ verdict = "🟡 とっておく"; cls = "v-keep"; sum = any("○") ? "使い道はありますが、もっと良い個体が手に入ったら入れ替えを。" : keepReasons.join("。") + "。"; }
-  else { verdict = "⚪ 逃がしてOK"; cls = "v-release"; sum = uses.length || pvp.length ? "使い道はありますが、この個体値では向いていません。博士に送ってアメにしてよいでしょう。" : "レイド・ジム・PvPの上位に入る使い道が見つかりません。博士に送ってアメにしてよいでしょう。"; }
-  const mk = (m) => `<span class="mk ${m === "◎" ? "g" : m === "○" ? "o" : "x"}">${m}</span>`;
-  const peHtml = peMarks.length ? peMarks.map(({u, m, why}) => `<div class="row">${mk(m)}<b>${esc(nameJa(u.x.name))}</b>：${esc(u.label)} ${u.rank}位
-      <span class="s">${u.role === "def" ? "ジム防衛は防御・HPが大事" : "レイド・ジム攻撃は攻撃が大事"}（この個体：${why}）${u.x.id.match(/_mega|_primal/) ? " ・ メガシンカ・ゲンシカイキ後の姿" : ""}</span></div>`).join("")
-    : `<div class="none">${esc(nameJa(chosen.name))}${shadow ? "（シャドウ）" : ""}と進化後は、レイド・ジムのランキング上位に入っていません</div>`;
-  const pvpHtml = pvp.length ? pvp.map(p => `<div class="row">${mk(p.m)}<b>${esc(p.league)}</b>：${esc(nameJa(p.v.name))}（PvPoke ${p.prank}位）<span class="s">${p.text}</span></div>`).join("")
-    : `<div class="none">進化後も含めて、PvPのランキング上位には入っていません</div>`;
-  const notes = [];
-  notes.push(`個体値 ${a}/${d}/${h}（${Math.round(pct * 100)}%・評価の星 ${"★".repeat(stars)}${"☆".repeat(4 - stars)}）`);
-  if (fam.length > 1) notes.push(`進化先も含めて判定しました：${fam.slice(1).map(f => esc(nameJa(f.name))).join("、")}`);
-  if (shadow){
-    const pa = Math.min(15, a + 2), pd = Math.min(15, d + 2), ph = Math.min(15, h + 2);
-    notes.push(`シャドウ：攻撃が1.2倍になる代わりに防御が下がります。リトレーンすると個体値が ${pa}/${pd}/${ph} になり、ジムに置けるようになります（技の「やつあたり」はイベント中に消せることが多いです）`);
+  if (best >= 2){ verdict = "🟢 育成すべき"; cls = "v-train"; sum = "使い道があり、個体値もその用途に向いています。"; }
+  else if (best >= 1 || keepReasons.length){ verdict = "🟡 とっておく"; cls = "v-keep"; sum = best >= 1 ? "使い道はありますが、もっと良い個体が手に入ったら入れ替えを。" : keepReasons.join("。") + "。"; }
+  else { verdict = "⚪ 逃がしてOK"; cls = "v-release"; sum = cur.pe.length || cur.pvp.length ? "使い道はありますが、この個体値では向いていません。博士に送ってアメにしてよいでしょう。" : "レイド・ジム・PvPの上位に入る使い道が見つかりません。博士に送ってアメにしてよいでしょう。"; }
+
+  // 使い道（育成・とっておくのとき）
+  const usePath = shadow && purify && purify.rec === "purify" ? pur : cur;
+  const useRows = [];
+  if (best >= 1){
+    const label = shadow ? (purify.rec === "purify" ? "（リトレーン後）" : "（シャドウのまま）") : "";
+    usePath.pe.filter(x => MARK_VAL[x.m] >= 1).sort((p, q) => MARK_VAL[q.m] - MARK_VAL[p.m] || p.u.rank - q.u.rank).slice(0, 4)
+      .forEach(x => useRows.push(`${x.m} ${useText(x.u)}${label}`));
+    usePath.pvp.filter(x => MARK_VAL[x.m] >= 1).sort((p, q) => MARK_VAL[q.m] - MARK_VAL[p.m]).slice(0, 3)
+      .forEach(x => useRows.push(`${x.m} <b>PvPの${esc(x.league)}</b>：${esc(nameJa(x.v.name))}として（PvPokeで${x.prank}位）${label}`));
   }
+  if (!useRows.length && keepReasons.length){
+    if (gmax || dmax) useRows.push("<b>マックスバトル</b>：ダイマックス・キョダイマックスはマックスバトル専用の戦力（このアプリでは強さを評価できていません）");
+    if (rare) useRows.push("<b>将来に備えて</b>：今の上位ランキングには入っていませんが、入手機会が少ないので残しておく価値があります");
+    if (total === 45) useRows.push("<b>記念・コレクション</b>：個体値100%は貴重です");
+  }
+  const mk = (m) => `<span class="mk ${m === "◎" ? "g" : m === "○" ? "o" : "x"}">${m}</span>`;
+  const peHtml = (r, who) => r.pe.length ? r.pe.map(({u, m, why}) => `<div class="row">${mk(m)}<b>${esc(nameJa(u.x.name))}</b>：${esc(u.label)} ${u.rank}位
+      <span class="s">${u.role === "def" ? "ジム防衛は防御・HPが大事" : "レイド・ジム攻撃は攻撃が大事"}（${who}：${why}）${/_mega|_primal/.test(u.x.id) ? " ・ メガシンカ・ゲンシカイキ後の姿" : ""}</span></div>`).join("")
+    : `<div class="none">レイド・ジムのランキング上位には入っていません</div>`;
+  const pvpHtml = (r) => r.pvp.length ? r.pvp.map(p => `<div class="row">${mk(p.m)}<b>${esc(p.league)}</b>：${esc(nameJa(p.v.name))}（PvPoke ${p.prank}位）<span class="s">${p.text}</span></div>`).join("")
+    : `<div class="none">進化後も含めて、PvPのランキング上位には入っていません</div>`;
+  const notes = [`個体値 ${a}/${d}/${h}（${Math.round(pct * 100)}%・評価の星 ${"★".repeat(stars)}${"☆".repeat(4 - stars)}）`];
+  if (fam.length > 1) notes.push(`進化先も含めて判定しました：${fam.slice(1).map(f => esc(nameJa(f.name))).join("、")}`);
+  if (document.getElementById("shadow").checked && !hasShadowForm) notes.push("このポケモンはシャドウの姿が未実装のため、通常の姿として判定しました。");
   if (dmax || gmax) notes.push("マックスバトル向けの強さはデータが無いため評価に入っていません。");
   keepReasons.forEach(r => notes.push(r));
-  main.innerHTML = `<div class="verdict ${cls}"><div class="big">${verdict}</div><div class="sum">${esc(sum)}</div></div>
-    <h2>⚔️ レイド・ジム</h2>${peHtml}
-    <h2>🥊 PvP（トレーナーバトル）</h2>${pvpHtml}
-    <h2>📝 メモ</h2>${notes.map(n => `<div class="row">${n}</div>`).join("")}`;
+
+  let html = `<div class="verdict ${cls}"><div class="big">${verdict}</div><div class="sum">${esc(sum)}</div></div>`;
+  if (purify){
+    html += `<div class="purify p-${purify.rec}"><div class="pt">🔁 ${esc(purify.title)}</div><div class="ps">${esc(purify.why)}</div>
+      <div class="ps">リトレーン後の個体値：${purIvs.join("/")}（ほしのすな・アメが必要。リトレーン後は強化が少し安くなります。技「やつあたり」はイベント中に消せることが多いです）</div></div>`;
+  }
+  if (useRows.length) html += `<h2>🎯 使い道</h2>${useRows.map(r => `<div class="row">${r}</div>`).join("")}`;
+  html += `<h2>⚔️ レイド・ジム${shadow ? "（シャドウのまま）" : ""}</h2>${peHtml(cur, "この個体")}`;
+  html += `<h2>🥊 PvP（トレーナーバトル）${shadow ? "（シャドウのまま）" : ""}</h2>${pvpHtml(cur)}`;
+  if (shadow){
+    html += `<h2>🔁 リトレーンした場合（個体値 ${purIvs.join("/")}）</h2>${peHtml(pur, "リトレーン後")}${pvpHtml(pur)}`;
+  }
+  html += `<h2>📝 メモ</h2>${notes.map(n => `<div class="row">${n}</div>`).join("")}`;
+  main.innerHTML = html;
 }
 
 // ===== 入力 =====
