@@ -35,7 +35,7 @@ GAME_MASTER = "https://raw.githubusercontent.com/PokeMiners/game_masters/master/
 MOVES_CSV = "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/moves.csv"
 MOVE_NAMES_CSV = "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/move_names.csv"
 FRESH_HOURS = 24
-SCHEMA = 6               # 出力の形式を変えたら上げる（前回分を使い回さず計算し直す）
+SCHEMA = 7               # 出力の形式を変えたら上げる（前回分を使い回さず計算し直す）
 TOP_N = 10
 KEEP = {"raid": 250, "type": 60, "gym": 200, "defense": 30}   # 画面で絞り込んでも10件出せるよう多めに持つ
 ATTACKER_POOL = 150      # ジム防衛の評価に使う攻撃役の候補（レイド上位＋タイプ別上位）
@@ -453,15 +453,28 @@ def load_mega_levels(gm):
     return out
 
 
-def build_megas(pokemon, mega_cost, levels):
+def load_type_boosts(gm):
+    """ゲンシカイキ・メガレックウザなど、効果のあるタイプが別に決められているもの（PRIMAL_EVO_SETTINGS.typeBoosts）"""
+    out = {}
+    for x in gm:
+        pe = x.get("data", {}).get("primalEvoSettings")
+        if pe:
+            for b in pe.get("typeBoosts", []):
+                out[b["pokemonId"].lower()] = [t.replace("POKEMON_TYPE_", "").lower() for t in b.get("boostType", [])]
+    return out
+
+
+def build_megas(pokemon, mega_cost, levels, boosts=None):
     """イベント画面用：メガシンカできるポケモンの一覧と、ポケモン名（英語）→タイプの表"""
     megas = []
     for p in pokemon:
         tags = p.get("tags", [])
-        if "mega" not in tags or "_primal" in p["speciesId"] or "shadow" in tags:
+        if "mega" not in tags or "shadow" in tags:
             continue
         c = mega_cost.get(p["dex"], {})
-        megas.append({"id": p["speciesId"], "name": p["speciesName"], "types": [t for t in p["types"] if t != "none"],
+        types = [t for t in p["types"] if t != "none"]
+        boost = (boosts or {}).get(base_id(p["speciesId"]))
+        megas.append({"id": p["speciesId"], "name": p["speciesName"], "types": types, "boostTypes": boost or types,
                       "legendary": "legendary" in tags or "mythical" in tags,
                       "initial": c.get("initial"), "subsequent": c.get("subsequent")})
     types = {}
@@ -515,6 +528,7 @@ def main(prev_path, out_path, prev_megas_path=None, out_megas_path=None):
         EVO.update(load_evolutions(gm))
         MEGA, UPGRADE = load_buddy_extra(gm)
         MEGA_LEVELS = load_mega_levels(gm)
+        TYPE_BOOSTS = load_type_boosts(gm)
         del gm
         try:
             move_ja = load_move_names()
@@ -601,7 +615,7 @@ def main(prev_path, out_path, prev_megas_path=None, out_megas_path=None):
             "gymAttackTargets": [d["id"] for d in defense_top[:GYM_TARGETS]],
             "gymDefense": defense_top,
         }
-        megas_data = build_megas(pokemon, MEGA, MEGA_LEVELS)
+        megas_data = build_megas(pokemon, MEGA, MEGA_LEVELS, TYPE_BOOSTS)
         print("megas:", len(megas_data["megas"]), "types:", len(megas_data["types"]), "levels:", megas_data["levels"])
         print("raid:", [x["id"] for x in data["raid"][:15]])
         print("gymAttack:", [x["id"] for x in data["gymAttack"][:15]])
