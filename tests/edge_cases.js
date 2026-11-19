@@ -85,6 +85,15 @@ const info = (p) => p.evaluate(() => ({
     check(`${page} データ${label}: undefined 等が出ない`, !/undefined|NaN|\[object Object\]/.test(r.text), (r.text.match(/.{0,20}(undefined|NaN|\[object Object\]).{0,20}/) || [''])[0]);
     await p.ctx.close();
   }
+  // 3b) データが古い（取ってきたイベントが全部終わった後）・まだ始まっていない日時
+  for (const [label, time] of [['半年後', new Date(Date.now() + 180 * 86400000)], ['半年前', new Date(Date.now() - 180 * 86400000)]]) for (const page of PAGES) {
+    const p = await open(b, page, { time });
+    const r = await info(p);
+    check(`${page} ${label}: エラーで止まらない`, !p.errors.length, p.errors.join(' / ').slice(0, 200));
+    check(`${page} ${label}: undefined 等が出ない`, !/undefined|NaN|\[object Object\]|-\d+日/.test(r.text), (r.text.match(/.{0,20}(undefined|NaN|\[object Object\]|-\d+日).{0,20}/) || [''])[0]);
+    if (page === 'index.html') console.log(`  [${label}] index: ${r.text.replace(/\n+/g, ' | ').slice(0, 300)}`);
+    await p.ctx.close();
+  }
   // 4) おかしなURL
   for (const page of ['search.html#zzz', 'search.html#%E3%81%82', 'search.html#__proto__', 'ranks.html#zzz', 'ranks.html#buddy', 'iv.html#zzz', 'research.html#zzz', 'raids.html#zzz']) {
     const p = await open(b, page);
