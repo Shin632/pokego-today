@@ -30,6 +30,10 @@ def main(csv_path, html_path):
         names["Nidoran (Female)"] = names["Nidoran♀"]
     if "Nidoran♂" in names:
         names["Nidoran (Male)"] = names["Nidoran♂"]
+    # PvPoke での書き方
+    for k, v in {"Nidoran Female": "Nidoran♀", "Nidoran Male": "Nidoran♂", "Flabebe": "Flabébé", "Mime Jr": "Mime Jr."}.items():
+        if v in names:
+            names[k] = names[v]
     blob = json.dumps(names, ensure_ascii=False, separators=(",", ":"), sort_keys=True)
 
     with open(html_path, encoding="utf-8") as f:

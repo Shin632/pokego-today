@@ -37,7 +37,7 @@ GAME_MASTER = "https://raw.githubusercontent.com/PokeMiners/game_masters/master/
 MOVES_CSV = "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/moves.csv"
 MOVE_NAMES_CSV = "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/move_names.csv"
 FRESH_HOURS = 0          # レイドボスが入れ替わるので毎回計算する（計算は1分かからない）
-SCHEMA = 17               # 出力の形式を変えたら上げる（前回分を使い回さず計算し直す）
+SCHEMA = 18               # 出力の形式を変えたら上げる（前回分を使い回さず計算し直す）
 TOP_N = 10
 KEEP = {"raid": 250, "type": 60, "gym": 200, "defense": 30}   # 画面で絞り込んでも10件出せるよう多めに持つ
 ATTACKER_POOL = 150      # ジム防衛の評価に使う攻撃役の候補（レイド上位＋タイプ別上位）
@@ -645,7 +645,16 @@ def build_raids(pokemon, pve, move_ja, move_en, lists, mega):
             b = best_attack(a, pve, boss_def, boss_types)
             if b:
                 counters.append(entry(a, b, move_ja, move_en))
-        counters = ranking(counters, 30)
+        # 画面で「メガ・シャドウ・伝説を含めない」にしても3匹出せるよう、上位30匹に加えて
+        # メガ・伝説以外の上位15匹、メガ・シャドウ・伝説以外の上位10匹も持っておく
+        allc = ranking(counters, 400)
+        plain1 = [x for x in allc if not x["mega"] and not (x["legendary"] or x["mythical"] or x["ultrabeast"])][:15]
+        plain2 = [x for x in plain1 + allc if not x["mega"] and not x["shadow"] and not (x["legendary"] or x["mythical"] or x["ultrabeast"])][:10]
+        keep, seen_ids = [], set()
+        for x in allc[:30] + plain1 + plain2:
+            if x["id"] not in seen_ids:
+                seen_ids.add(x["id"]); keep.append(x)
+        counters = sorted(keep, key=lambda x: -x["score"])
         # 周回おすすめ度
         legend = bool({"legendary", "mythical", "ultrabeast"} & tags)
         base = by_name.get(p["speciesName"].split(" (")[0])

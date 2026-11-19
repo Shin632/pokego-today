@@ -126,7 +126,7 @@ let chosen = null;
 
 // ===== 名前の候補 =====
 const toKata = (s) => String(s).replace(/[ぁ-ゖ]/g, c => String.fromCharCode(c.charCodeAt(0) + 0x60));
-const norm = (s) => toKata(String(s || "").toLowerCase()).replace(/[\s・（）()]/g, "");
+const norm = (s) => toKata(String(s || "").normalize("NFKC").toLowerCase()).replace(/[\s・（）()]/g, "");
 function search(q){
   const n = norm(q); if (!n) return [];
   const hits = [];

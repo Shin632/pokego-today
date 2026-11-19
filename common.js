@@ -74,9 +74,31 @@ const FORMS = {
   "Burn": ["suf", "ブレイズカセット"], "Chill": ["suf", "フリーズカセット"], "Douse": ["suf", "アクアカセット"], "Shock": ["suf", "イナズマカセット"],
   "Unbound": ["suf", "ときはなたれし"], "Land": ["suf", "ランドフォルム"], "Sky": ["suf", "スカイフォルム"], "Aria": ["suf", "ボイスフォルム"],
   "Rapid Strike": ["suf", "れんげきのかた"], "Single Strike": ["suf", "いちげきのかた"],
+  // ポワルン・デオキシス・ミノムッチ／ミノマダム・チェリム・ロトムなど
+  "Rainy": ["suf", "あまみずのすがた"], "Snowy": ["suf", "ゆきぐものすがた"], "Sunny": ["suf", "たいようのすがた"],
+  "Attack": ["suf", "アタックフォルム"], "Defense": ["suf", "ディフェンスフォルム"], "Speed": ["suf", "スピードフォルム"], "Normal": ["suf", "ノーマルフォルム"],
+  "Plant": ["suf", "くさきのミノ"], "Sandy": ["suf", "すなちのミノ"], "Trash": ["suf", "ゴミのミノ"],
+  "Overcast": ["suf", "ネガフォルム"], "Sunshine": ["suf", "ポジフォルム"],
+  "Fan": ["pre", "スピン"], "Frost": ["pre", "フロスト"], "Heat": ["pre", "ヒート"], "Mow": ["pre", "カット"], "Wash": ["pre", "ウォッシュ"],
+  "Female": ["suf", "メスのすがた"], "Male": ["suf", "オスのすがた"],
+  "Shield": ["suf", "シールドフォルム"], "Blade": ["suf", "ブレードフォルム"],
+  "Super": ["suf", "とくだいサイズ"], "Large": ["suf", "おおきいサイズ"], "Small": ["suf", "ちいさいサイズ"], "Average": ["suf", "ふつうのサイズ"],
+  "10% Forme": ["suf", "10%フォルム"], "50% Forme": ["suf", "50%フォルム"], "Complete Forme": ["suf", "パーフェクトフォルム"],
+  "Baile": ["suf", "めらめらスタイル"], "Pa'u": ["suf", "ふらふらスタイル"], "Pom-Pom": ["suf", "ぱちぱちスタイル"], "Sensu": ["suf", "まいまいスタイル"],
+  "Dusk": ["suf", "たそがれのすがた"], "Midday": ["suf", "まひるのすがた"], "Midnight": ["suf", "まよなかのすがた"],
+  "Core": ["suf", "コアのすがた"], "Meteor": ["suf", "りゅうせいのすがた"], "Full Belly": ["suf", "まんぷくもよう"], "Hangry": ["suf", "はらぺこもよう"],
+  "Hero": ["suf", "れきせんのゆうしゃ"], "Armored": ["pre", "アーマード"],
+  "Aqua": ["suf", "ウォーター種"], "Blaze": ["suf", "ブレイズ種"], "Combat": ["suf", "コンバット種"],
+  "Curly": ["suf", "そったすがた"], "Droopy": ["suf", "たれたすがた"], "Stretchy": ["suf", "のびたすがた"],
+  // ピカチュウのコスチューム
+  "Libre": ["suf", "マスクド"], "Pop Star": ["suf", "ポップスター"], "Rock Star": ["suf", "ハードロック"], "Flying": ["suf", "そらとぶピカチュウ"],
+  "5th Anniversary": ["suf", "5周年"], "Horizons": ["suf", "ホライズン"], "Kariyushi": ["suf", "かりゆし"], "Shaymin Scarf": ["suf", "シェイミのスカーフ"],
 };
+// 名前全体で置き換えるもの
+const NAME_ALIAS = {"Mime (Jr)": "マネネ"};
 /** PvPoke の名前（"Charizard (Mega X)" "Tornadus (Incarnate) (Shadow)" など）を日本語に */
 function nameJa(en){
+  if (NAME_ALIAS[en]) return NAME_ALIAS[en];
   const m = String(en).match(/^([^(]+?)\s*((?:\([^)]*\)\s*)*)$/);
   if (!m) return jaMons(en);
   const base = m[1].trim();
