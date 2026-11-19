@@ -168,9 +168,14 @@ function pvpRank(st, iv, cap, shadow){
 }
 
 // ===== 判定 =====
+// 進化ではないが、同じ個体値のまま姿が変わるもの（王の姿・合体）
+const FORM_TO = {
+  zacian_hero: ["zacian_crowned_sword"], zamazenta_hero: ["zamazenta_crowned_shield"],
+  necrozma: ["necrozma_dawn_wings", "necrozma_dusk_mane"], kyurem: ["kyurem_black", "kyurem_white"],
+};
 function family(sp){
   const out = [sp], seen = new Set([sp.id]);
-  for (let i = 0; i < out.length; i++) for (const e of out[i].evo || []) if (BY_ID[e] && !seen.has(e)){ seen.add(e); out.push(BY_ID[e]); }
+  for (let i = 0; i < out.length; i++) for (const e of [...(out[i].evo || []), ...(FORM_TO[out[i].id] || [])]) if (BY_ID[e] && !seen.has(e)){ seen.add(e); out.push(BY_ID[e]); }
   return out;
 }
 function rankingUses(forms){
@@ -275,7 +280,8 @@ function evaluate(){
   }
   const best = Math.max(cur.best, pur ? pur.best : 0);
   const tags = new Set(chosen.tags || []);
-  const rare = tags.has("legendary") || tags.has("mythical") || tags.has("ultrabeast");
+  // 進化すると伝説になるもの（コスモッグなど）も、手に入る機会が少ないので同じ扱い
+  const rare = fam.some(f => (f.tags || []).some(t => t === "legendary" || t === "mythical" || t === "ultrabeast"));
   const keepReasons = [];
   if (rare) keepReasons.push("伝説・幻・ウルトラビーストは手に入る機会が少ない");
   if (gmax) keepReasons.push("キョダイマックスはマックスバトルでしか手に入らず、とても貴重");
@@ -302,7 +308,7 @@ function evaluate(){
   }
   if (!useRows.length && keepReasons.length){
     if (gmax || dmax) useRows.push("<b>マックスバトル</b>：ダイマックス・キョダイマックスはマックスバトル専用の戦力（このアプリでは強さを評価できていません）");
-    if (rare) useRows.push("<b>将来に備えて</b>：今の上位ランキングには入っていませんが、入手機会が少ないので残しておく価値があります");
+    if (rare) useRows.push("<b>将来に備えて</b>：この個体値では上位の使い道に向いていない（またはランキング外）ですが、入手機会が少ないので残しておく価値があります");
     if (total === 45) useRows.push("<b>記念・コレクション</b>：個体値100%は貴重です");
     if (shiny) useRows.push("<b>コレクション・交換</b>：色違いは見た目が特別です（強さは通常の色と同じ）");
     if (bg) useRows.push("<b>コレクション</b>：特別な背景つきの個体は、イベントや場所限定で貴重です（強さは同じ）");
@@ -316,7 +322,7 @@ function evaluate(){
   const pvpHtml = (r) => r.pvp.length ? r.pvp.map(p => `<div class="row">${mk(p.m)}<b>${esc(p.league)}</b>：${esc(nameJa(p.v.name))}（PvPoke ${p.prank}位）<span class="s">${p.text}</span>${pvpMovesText(p.v, p.league) ? `<span class="s">おすすめ技：${pvpMovesText(p.v, p.league)}</span>` : ""}</div>`).join("")
     : `<div class="none">進化後も含めて、PvPのランキング上位には入っていません</div>`;
   const notes = [`個体値 ${a}/${d}/${h}（${Math.round(pct * 100)}%・評価の星 ${"★".repeat(stars)}${"☆".repeat(4 - stars)}）`];
-  if (fam.length > 1) notes.push(`進化先も含めて判定しました：${fam.slice(1).map(f => esc(nameJa(f.name))).join("、")}`);
+  if (fam.length > 1) notes.push(`${fam.some(f => FORM_TO[f.id]) ? "姿を変えた後（王の姿・合体）" : "進化先"}も含めて判定しました：${fam.slice(1).map(f => esc(nameJa(f.name))).join("、")}`);
   if (document.getElementById("shadow").checked && !hasShadowForm) notes.push("このポケモンはシャドウの姿が未実装のため、通常の姿として判定しました。");
   if (dmax || gmax) notes.push("マックスバトル向けの強さはデータが無いため評価に入っていません。");
   const looks = [shiny && "色違い", bg && "特別な背景", costume && "コスチューム"].filter(Boolean);
@@ -357,6 +363,10 @@ document.getElementById("q").addEventListener("input", e => {
     const hits = search(e.target.value);
     document.getElementById("sugg").innerHTML = hits.map(sp => `<button type="button" class="sg" data-id="${esc(sp.id)}">${esc(sp.ja)}</button>`).join("")
       || (e.target.value.trim() ? `<span class="none">見つかりませんでした</span>` : "");
+    // 名前を書き換えたら、前に選んでいたポケモンの結果は消す（別のポケモンの判定が残らないように）
+    if (chosen && norm(chosen.ja) !== norm(e.target.value) && norm(chosen.name) !== norm(e.target.value)){
+      chosen = null; document.getElementById("chosen").innerHTML = ""; evaluate();
+    }
     if (hits.length && (norm(hits[0].ja) === norm(e.target.value) || norm(hits[0].name) === norm(e.target.value))) choose(hits[0].id);
   }, 120);
 });

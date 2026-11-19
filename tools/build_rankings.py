@@ -146,6 +146,11 @@ def total_candy(dex, evo, depth=0):
     return c + cost, items + ([item] if item else [])
 
 
+# ポケモンGOに実装済みだが、バトルに出られない（出しても意味がない）ため PvPoke では released: false のポケモン
+# （検索・育成判定で名前が出るように pokedex.json にだけ入れる）
+NON_BATTLE_RELEASED = {"ditto", "shedinja", "spewpa", "cosmog", "cosmoem"}
+
+
 # 専用の素材で姿を変えるポケモン（ゲームデータの formChange：素材1000個とアメ30個）
 FORM_ITEMS = {
     "zacian_crowned_sword": "王の姿になるには専用の素材1000個とアメ30個が必要",
@@ -1043,7 +1048,9 @@ def main(prev_path, out_path, prev_megas_path=None, out_megas_path=None, prev_ra
             + [(f"レイド・{type_ja[t]}", type_top[t], LIST_WEIGHT_TYPE) for t in TYPES]
         PVP = load_pvp_ranks()
         megas_data["evoUse"] = build_evo_use(pokemon, lists_all, PVP)
-        pokedex_data = build_pokedex(pokemon, PVP, move_ja, move_en)
+        # PvPoke はバトルに出られないポケモンを「未実装」としているので、ポケモンGOに実装済みのものは足す
+        extra = [q for q in pv["pokemon"] if q["speciesId"] in NON_BATTLE_RELEASED]
+        pokedex_data = build_pokedex(pokemon + extra, PVP, move_ja, move_en)
         # 技名（英語 → 日本語）。イベントページの「レガシー技」の説明を訳すのに使う
         megas_data["moveJa"] = {move_en[mid]: move_ja[mid] for mid in move_en if mid in move_ja and move_ja[mid]}
         if out_raids_path:

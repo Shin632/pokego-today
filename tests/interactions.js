@@ -126,6 +126,16 @@ const close = async (p, label) => { check(`${label}: JavaScriptエラーなし`,
     // ダイマックスとキョダイマックスは同時に選べない
     await p.check('#dmax'); await p.check('#gmax'); await p.waitForTimeout(100);
     check('iv: ダイマックスとキョダイマックスは片方だけ', !(await p.isChecked('#dmax')) && (await p.isChecked('#gmax')), '');
+    // 名前を書き換えたら前のポケモンの結果が残らない（2回目で修正）
+    await p.uncheck('#gmax'); await p.fill('#q', 'ケッキング'); await p.waitForTimeout(350); await setIv(15, 15, 15);
+    await p.fill('#q', 'ヌケ'); await p.waitForTimeout(350);
+    check('iv: 名前を書き換えると前の結果が消える', !(await p.$eval('#main', e => e.innerText)).includes('ケッキング'), '');
+    // バトルに出ないが実装済みのポケモンも選べる・進化すると伝説になるポケモンは逃がしてOKにしない
+    for (const [n, want, ng] of [['メタモン', '個体値', null], ['ヌケニン', '個体値', null], ['コスモッグ', 'とっておく', '逃がしてOK']]) {
+      await p.fill('#q', ''); await p.fill('#q', n); await p.waitForTimeout(350); await setIv(1, 2, 3);
+      const t = await p.$eval('#main', e => e.innerText);
+      check(`iv: ${n} を判定できる`, t.includes(want) && (!ng || !t.includes(ng)), t.slice(0, 40));
+    }
     await close(p, 'iv');
   }
 
