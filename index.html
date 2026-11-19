@@ -158,6 +158,11 @@ footer a{color:var(--sub)}
 .cat-raid{--cat:var(--c-raid)} .cat-max{--cat:var(--c-max)} .cat-cd{--cat:var(--c-cd)}
 .cat-spot{--cat:var(--c-spot)} .cat-event{--cat:var(--c-event)} .cat-gbl{--cat:var(--c-gbl)}
 .cat-bg{--cat:var(--c-bg)} .cat-tour{--cat:var(--c-tour)}
+
+/* PCなど画面が広いときは、横スクロールではなく折り返して全部見せる（マウスでは横スクロールしにくいため） */
+@media (min-width: 600px){
+  .nav, .chips, .days{flex-wrap:wrap; overflow-x:visible}
+}
 </style>
 </head>
 <body>
