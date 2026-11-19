@@ -36,7 +36,7 @@ GAME_MASTER = "https://raw.githubusercontent.com/PokeMiners/game_masters/master/
 MOVES_CSV = "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/moves.csv"
 MOVE_NAMES_CSV = "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/move_names.csv"
 FRESH_HOURS = 0          # レイドボスが入れ替わるので毎回計算する（計算は1分かからない）
-SCHEMA = 13               # 出力の形式を変えたら上げる（前回分を使い回さず計算し直す）
+SCHEMA = 14               # 出力の形式を変えたら上げる（前回分を使い回さず計算し直す）
 TOP_N = 10
 KEEP = {"raid": 250, "type": 60, "gym": 200, "defense": 30}   # 画面で絞り込んでも10件出せるよう多めに持つ
 ATTACKER_POOL = 150      # ジム防衛の評価に使う攻撃役の候補（レイド上位＋タイプ別上位）
@@ -502,7 +502,34 @@ def load_type_boosts(gm):
     return out
 
 
-def build_megas(pokemon, mega_cost, levels, boosts=None):
+REGION_FORM = {"ALOLA": "Alolan", "GALARIAN": "Galarian", "HISUIAN": "Hisuian", "PALDEA": "Paldean"}
+
+
+def load_catch_dust(gm):
+    """捕まえたときに追加でもらえるほしのすな（encounter.bonusStardustCaptureReward）。
+    (図鑑番号, リージョン名 or None) → 量"""
+    out = {}
+    for x in gm:
+        ps = x.get("data", {}).get("pokemonSettings")
+        if not ps:
+            continue
+        v = (ps.get("encounter") or {}).get("bonusStardustCaptureReward")
+        if not v:
+            continue
+        try:
+            dex = int(x["templateId"][1:5])
+        except ValueError:
+            continue
+        form = str(ps.get("form") or "")
+        region = None
+        for k, name in REGION_FORM.items():
+            if form.endswith("_" + k):
+                region = name
+        out.setdefault((dex, region), v)
+    return out
+
+
+def build_megas(pokemon, mega_cost, levels, boosts=None, catch_dust=None):
     """イベント画面用：メガシンカできるポケモンの一覧と、ポケモン名（英語）→タイプの表"""
     megas = []
     for p in pokemon:
@@ -534,8 +561,20 @@ def build_megas(pokemon, mega_cost, levels, boosts=None):
                 buddy.setdefault(f"{form} {base}", p.get("buddyDistance"))
             types.setdefault(base, t)   # フォルム違いは最初に見つかったものを代表に
             buddy.setdefault(base, p.get("buddyDistance"))
+    # 捕まえたときに追加でもらえるほしのすな（英語名 → 量）
+    dust = {}
+    for p in pokemon:
+        tags = p.get("tags", [])
+        if "shadow" in tags or "mega" in tags:
+            continue
+        name = p["speciesName"]
+        m = re.match(r"^(.+?) \((Alolan|Galarian|Hisuian|Paldean)\)$", name)
+        key, region = (f"{m.group(2)} {m.group(1)}", m.group(2)) if m else (name.split(" (")[0], None)
+        v = (catch_dust or {}).get((p["dex"], region)) or (None if region else (catch_dust or {}).get((p["dex"], None)))
+        if v and key not in dust:
+            dust[key] = v
     return {"schema": SCHEMA, "generatedAt": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z"),
-            "levels": levels, "megas": megas, "types": types, "buddyKm": buddy}
+            "levels": levels, "megas": megas, "types": types, "buddyKm": buddy, "catchDust": dust}
 
 
 RAIDS_URL = "https://raw.githubusercontent.com/bigfoott/ScrapedDuck/data/raids.json"
@@ -838,6 +877,7 @@ def main(prev_path, out_path, prev_megas_path=None, out_megas_path=None, prev_ra
         MEGA, UPGRADE = load_buddy_extra(gm)
         MEGA_LEVELS = load_mega_levels(gm)
         TYPE_BOOSTS = load_type_boosts(gm)
+        CATCH_DUST = load_catch_dust(gm)
         del gm
         try:
             move_ja = load_move_names()
@@ -924,7 +964,7 @@ def main(prev_path, out_path, prev_megas_path=None, out_megas_path=None, prev_ra
             "gymAttackTargets": [d["id"] for d in defense_top[:GYM_TARGETS]],
             "gymDefense": defense_top,
         }
-        megas_data = build_megas(pokemon, MEGA, MEGA_LEVELS, TYPE_BOOSTS)
+        megas_data = build_megas(pokemon, MEGA, MEGA_LEVELS, TYPE_BOOSTS, CATCH_DUST)
         lists_all = [("レイド総合", raid_top, LIST_WEIGHT_MAIN), ("ジム攻撃", gym_top, LIST_WEIGHT_MAIN), ("ジム防衛", defense_top, LIST_WEIGHT_MAIN)] \
             + [(f"レイド・{type_ja[t]}", type_top[t], LIST_WEIGHT_TYPE) for t in TYPES]
         megas_data["evoUse"] = build_evo_use(pokemon, lists_all, load_pvp_ranks())

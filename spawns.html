@@ -91,6 +91,7 @@ footer a{color:var(--sub)}
       <li><b>🎯 捕まえるべき</b>：人気・貴重なポケモン（ミニリュウ・ダンバルなどの進化前、化石、ラプラスなど）、または進化・メガシンカ後が育成ランキング（レイド・ジムの上位30位）で強いポケモンです。フィールドリサーチの「当たり」と同じ基準です。イベントで「捕まえるとほしのすながもらえる」などの特典があるポケモンも入れています。</li>
       <li><b>💎 出現しにくい</b>：イベントの説明に「運が良ければ（If you're lucky）」「まれに（rare）」などと書かれているポケモンです。捕まえるべきポケモンでもあれば 🎯 も付けます。</li>
       <li><b>🕒 時間の注釈</b>：コミュニティ・デイやスポットライトアワーなど短いイベントは、その時間だけ出やすくなります。説明に「毎日◯時〜◯時」「夜」などがあるポケモンにも付けます。</li>
+      <li><b>ほしのすな稼ぎ</b>：捕まえたときに追加でもらえるほしのすなが+600以上のポケモン（ゲームデータの値。ミツハニー・ヤブクロン・ヒトデマン・タブンネなど）も捕まえるべきに入れています。</li>
       <li><b>グレー（スルーしてよい）</b>：人気・貴重ではなく、進化・メガシンカしても育成ランキング上位30位に入らず、PvPでも上位（スーパー・ハイパー100位、マスター50位）に入らないポケモンです。図鑑埋めや色違い集めが目的なら捕まえてください。</li>
     </ul>
   </details>
@@ -109,6 +110,7 @@ const EVENTS_URL = "https://raw.githubusercontent.com/bigfoott/ScrapedDuck/data/
 const BONUS_URL = "https://raw.githubusercontent.com/Shin632/pokego-today/data/bonuses.json";
 const MEGAS_URL = "https://raw.githubusercontent.com/Shin632/pokego-today/data/megas.json";
 const HIT_U = 0.55;
+const DUST_HIT = 600;   // 捕まえたときの追加のほしのすながこれ以上なら「ほしのすな稼ぎ」として捕まえるべき
 const DAY_MS = 86400000;
 let EVENTS = null, BONUS = null, MEGAS = null;
 
@@ -128,8 +130,10 @@ function judge(name){
   const k = monKey(name), base = k.replace(/^(Alolan|Galarian|Hisuian|Paldean) /, "");
   const ev = MEGAS && MEGAS.evoUse ? MEGAS.evoUse[k] || null : null;
   const prize = PRIZE_MONS.has(base), u = ev ? ev.u : 0, pvp = ev && ev.pvp;
-  const cls = prize || u >= HIT_U ? "hit" : (MEGAS && MEGAS.evoUse && !prize && u === 0 && !pvp ? "miss" : "");
+  const dust = MEGAS && MEGAS.catchDust ? MEGAS.catchDust[k] || 0 : 0;
+  const cls = prize || u >= HIT_U || dust >= DUST_HIT ? "hit" : (MEGAS && MEGAS.evoUse && !prize && u === 0 && !pvp ? "miss" : "");
   const why = [];
+  if (dust >= DUST_HIT) why.push(`ほしのすな稼ぎ：捕まえると +${dust}（通常より多い）`);
   if (ev && ev.use) why.push(`${nameJa(ev.best)}：${ev.use}`);
   if (prize) why.unshift("人気・貴重なポケモン");
   if (pvp) why.push(`PvP：${nameJa(pvp.best)}（${pvp.league} ${pvp.rank}位）`);
