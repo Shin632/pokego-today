@@ -199,8 +199,10 @@ function weaknesses(types){
 // ===== 描画 =====
 const typeBadges = (ts) => ts.map(t => `<span class="tp" style="background:${(TYPE_INFO[t] || ["", "#888"])[1]}">${(TYPE_INFO[t] || [t])[0]}</span>`).join("");
 const mv = (m) => m ? `${esc(m.ja || m.en)}${m.elite ? `<span class="el">★</span>` : ""}` : "";
+let shownId = null;
 function show(id){
   const sp = BY_ID[id];
+  shownId = sp ? sp.id : null;
   const main = document.getElementById("main");
   if (!sp){ main.innerHTML = ""; return; }
   try { history.replaceState(null, "", "#" + sp.id); } catch {}
@@ -264,6 +266,11 @@ function suggest(q){
   document.getElementById("sugg").innerHTML = hits.map(sp => `<button type="button" class="sg" data-id="${esc(sp.id)}">${esc(sp.ja)}</button>`).join("")
     || (q.trim() ? `<span class="none">見つかりませんでした（実装済みのポケモンだけ探せます）</span>` : "");
   if (hits.length && (norm(hits[0].ja) === norm(q) || norm(hits[0].name) === norm(q))) show(hits[0].id);
+  else if (shownId && BY_ID[shownId] && !norm(BY_ID[shownId].ja).startsWith(norm(q)) && !norm(BY_ID[shownId].name).startsWith(norm(q))){
+    // 別の名前を入力し始めたら（今の名前の書きかけ・消しかけは除く）、前のポケモンの詳しい情報は消す（違うポケモンの情報が残って見えないように）
+    document.getElementById("main").innerHTML = ""; shownId = null;
+    try { history.replaceState(null, "", location.pathname + location.search); } catch {}
+  }
 }
 
 async function getJson(url){

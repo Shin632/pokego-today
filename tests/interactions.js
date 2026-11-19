@@ -93,6 +93,12 @@ const close = async (p, label) => { check(`${label}: JavaScriptエラーなし`,
     check('search: 系統ボタンで切り替えできる', (await p.$$('.vb.cur')).length === 1, '');
     await p.fill('#q', 'あいうえおかきくけこ'); await p.waitForTimeout(350);
     check('search: 見つからないときに案内が出る', (await p.$eval('#sugg', e => e.textContent)).includes('見つかりません'), '');
+    // 見つからない名前を入れたら前のポケモンの情報が消える（2回目で修正）
+    await p.fill('#q', ''); await p.fill('#q', 'リザードン'); await p.waitForTimeout(500);
+    await p.fill('#q', 'ミライドン'); await p.waitForTimeout(500);
+    check('search: 別の名前を入れると前のポケモンの情報が消える', !(await p.$eval('#main', e => e.innerText)).includes('リザードン'), '');
+    await p.fill('#q', 'メタモン'); await p.waitForTimeout(500);
+    check('search: メタモンが見つかる', (await p.$eval('#main', e => e.innerText)).includes('Ditto'), '');
     await close(p, 'search');
     // ハッシュ付きで開く
     const p2 = await open(b, 'search.html#metagross');
