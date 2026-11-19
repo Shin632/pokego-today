@@ -35,7 +35,7 @@ GAME_MASTER = "https://raw.githubusercontent.com/PokeMiners/game_masters/master/
 MOVES_CSV = "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/moves.csv"
 MOVE_NAMES_CSV = "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/move_names.csv"
 FRESH_HOURS = 24
-SCHEMA = 7               # 出力の形式を変えたら上げる（前回分を使い回さず計算し直す）
+SCHEMA = 8               # 出力の形式を変えたら上げる（前回分を使い回さず計算し直す）
 TOP_N = 10
 KEEP = {"raid": 250, "type": 60, "gym": 200, "defense": 30}   # 画面で絞り込んでも10件出せるよう多めに持つ
 ATTACKER_POOL = 150      # ジム防衛の評価に使う攻撃役の候補（レイド上位＋タイプ別上位）
@@ -477,7 +477,7 @@ def build_megas(pokemon, mega_cost, levels, boosts=None):
         megas.append({"id": p["speciesId"], "name": p["speciesName"], "types": types, "boostTypes": boost or types,
                       "legendary": "legendary" in tags or "mythical" in tags,
                       "initial": c.get("initial"), "subsequent": c.get("subsequent")})
-    types = {}
+    types, buddy = {}, {}
     regional = {"Alolan": "Alolan", "Galarian": "Galarian", "Hisuian": "Hisuian", "Paldean": "Paldean"}
     for p in pokemon:
         if "shadow" in p.get("tags", []) or "mega" in p.get("tags", []):
@@ -486,14 +486,17 @@ def build_megas(pokemon, mega_cost, levels, boosts=None):
         t = [x for x in p["types"] if x != "none"]
         if "(" not in name:
             types.setdefault(name, t)
+            buddy.setdefault(name, p.get("buddyDistance"))
         else:
             base, form = name.split(" (", 1)
             form = form.rstrip(")")
             if form in regional:
                 types.setdefault(f"{form} {base}", t)
+                buddy.setdefault(f"{form} {base}", p.get("buddyDistance"))
             types.setdefault(base, t)   # フォルム違いは最初に見つかったものを代表に
+            buddy.setdefault(base, p.get("buddyDistance"))
     return {"schema": SCHEMA, "generatedAt": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z"),
-            "levels": levels, "megas": megas, "types": types}
+            "levels": levels, "megas": megas, "types": types, "buddyKm": buddy}
 
 
 def main(prev_path, out_path, prev_megas_path=None, out_megas_path=None):

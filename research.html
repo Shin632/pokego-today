@@ -63,6 +63,8 @@ section.cat.event .task{border-left:5px solid var(--event)}
 .rw .q{font-weight:700}
 .rw.item{border-style:dashed}
 .rw.hit{outline:2px solid var(--accent);outline-offset:-1px}
+.rw.low{opacity:.45;filter:grayscale(1)}
+.rw.low.hit{opacity:.8}
 .sh{font-size:11px}
 .empty{color:var(--sub);font-size:14px;background:var(--panel);border:1px dashed var(--line);border-radius:var(--radius);padding:14px;text-align:center}
 .meta{font-size:12px;color:var(--sub);margin-top:3px}
@@ -130,6 +132,10 @@ const SOURCE = "https://raw.githubusercontent.com/Shin632/pokego-today/data/rese
 // 予備：ScrapedDuck（ポケモン報酬のみ）
 const FALLBACK = "https://raw.githubusercontent.com/bigfoott/ScrapedDuck/data/research.json";
 const CACHE_KEY = "pogo-research-cache-v1";
+// ポケモンごとの相棒の距離（よく出るポケモンの目安に使う。tools/build_rankings.py が作る）
+const MEGAS_URL = "https://raw.githubusercontent.com/Shin632/pokego-today/data/megas.json";
+let BUDDY_KM = null;
+try { const m = JSON.parse(localStorage.getItem("pogo-megas-cache-v1") || "null"); if (m && m.buddyKm) BUDDY_KM = m.buddyKm; } catch {}
 
 // ===== カテゴリ =====
 const CATS = {
@@ -370,8 +376,12 @@ let loading = false;
 async function refresh(){
   if (loading) return; loading = true;
   const btn = document.getElementById("reload"); btn.disabled = true; btn.textContent = "更新中…";
+  const kmP = getJson(MEGAS_URL).then(m => {
+    if (m && m.buddyKm){ BUDDY_KM = m.buddyKm; try { localStorage.setItem("pogo-megas-cache-v1", JSON.stringify(m)); } catch {} }
+  }, () => {});
   try {
     try {
+      await kmP;
       const d = await getJson(SOURCE);
       CATS_DATA = prepare(fromOwn(d)); updatedAt = d.updatedAt ? new Date(d.updatedAt) : new Date(); isFallback = false;
       try { localStorage.setItem(CACHE_KEY, JSON.stringify(d)); } catch {}
@@ -393,9 +403,19 @@ function setNotice(html, isErr){
 }
 
 // ===== 描画 =====
-function rewardHtml(r, hit){
+/** 価値の低い報酬：ボール、よく出るポケモン（相棒の距離1km＝野生で多いものが多い。人気・貴重なポケモンは除く） */
+function isLowValue(r){
+  if (r.type !== "encounter") return /^(Poké|Great|Ultra) Ball$/.test(r.name);
+  if (!BUDDY_KM) return false;
+  const n = String(r.name || "").replace(/ \(.*\)$/, "");
+  const base = n.replace(/^(Alolan|Galarian|Hisuian|Paldean) /, "");
+  if (PRIZE_MONS.has(base)) return false;
+  const km = BUDDY_KM[n] ?? BUDDY_KM[base];
+  return km != null && km <= 1;
+}
+function rewardHtml(r, hit, low){
   const img = r.image ? `<img src="${esc(r.image)}" alt="" loading="lazy" onerror="this.parentNode.classList.add('noimg');this.remove()">` : "";
-  const cls = ["rw", r.type === "encounter" ? "mon" : "item"]; if (!img) cls.push("noimg"); if (hit) cls.push("hit");
+  const cls = ["rw", r.type === "encounter" ? "mon" : "item"]; if (!img) cls.push("noimg"); if (hit) cls.push("hit"); if (low) cls.push("low");
   if (r.type === "encounter"){
     const cp = r.cpMax ? `<span class="cp">CP ${esc(r.cpMin)}〜${esc(r.cpMax)}</span>` : "";
     return `<span class="${cls.join(" ")}">${img}<span>${esc(r.ja)}${r.shiny ? `<span class="sh" title="色違いあり">✨</span>` : ""}${cp}</span></span>`;
@@ -416,6 +436,7 @@ function goodSummary(){
   return `<section class="cat goodsum"><details class="gfold"${goodOpen ? " open" : ""}>
     <summary><span class="garrow" aria-hidden="true">▶</span>👍 割に合うタスク <span class="count">${list.length}件</span><span class="ghint">${goodOpen ? "タップでたたむ" : "タップで表示"}</span></summary>
     <div class="gbox">${rows || `<div class="gsub">今は目立って割に合うタスクはありません</div>`}
+    <div class="gsub" style="margin-top:6px">※ 割に合うタスクの報酬のうち、<b>ボール</b>と<b>よく出るポケモン</b>（目安：相棒の距離1km。ミニリュウなど人気のものは除く）はグレーで表示しています。</div>
     <details class="how"><summary>判定のしかた</summary>
       <p>データ元には「手間」も「報酬の価値」も無いため、このアプリ独自の目安で点数を付けています。</p>
       <p>・<b>手間</b>：タスクの内容から5段階（例：写真を撮る・ポケストップ3回＝かんたん、レイド＝レイドパスが必要なので大変、タマゴ・km＝歩くので大変）。</p>
@@ -443,12 +464,14 @@ function render(){
     for (const t of tasks){
       const hitOf = (r) => (f[2] && filter !== "all" && f[2](r)) || (q && (r.ja + " " + r.name).toLowerCase().includes(q));
       // 絞り込みに当たる報酬を前に
-      const rs = [...t.rewards].sort((a, b) => hitOf(b) - hitOf(a));
       const sc = t.score;
+      // 割に合うタスクでは、ボールやよく出るポケモンをグレーにして後ろへ
+      const lowOf = (r) => sc.good && isLowValue(r);
+      const rs = [...t.rewards].sort((a, b) => (hitOf(b) - hitOf(a)) || (lowOf(a) - lowOf(b)));
       const badge = sc.great ? `<span class="good-b">👍👍 とても割に合う</span>` : sc.good ? `<span class="good-b">👍 割に合う</span>` : "";
       const meta = sc.effort.known ? `<div class="meta">手間：<b>${effortLabel(sc.effort.lv)}</b>${sc.effort.why ? `（${esc(sc.effort.why)}）` : ""} ・ 見返り：<b>${valueLabel(sc.value)}</b></div>` : "";
       html += `<article class="task${sc.great ? " good great" : sc.good ? " good" : ""}" id="${t.anchor}">${badge}<div class="tt">${esc(t.ja)}</div>${t.ja !== t.text ? `<div class="te">${esc(t.text)}</div>` : ""}
-        ${meta}<div class="rewards">${rs.map(r => rewardHtml(r, hitOf(r))).join("") || `<span class="te">報酬の情報なし</span>`}</div></article>`;
+        ${meta}<div class="rewards">${rs.map(r => rewardHtml(r, hitOf(r), lowOf(r))).join("") || `<span class="te">報酬の情報なし</span>`}</div></article>`;
     }
     html += `</div></section>`;
   }
