@@ -141,7 +141,7 @@ function render(){
   if (!DATA) return;
   if (!DATA.bosses.length){ main.innerHTML = `<div class="empty">今は高ランクのレイドボスの情報がありません</div>`; return; }
   main.innerHTML = DATA.bosses.map(b => {
-    const r = b.rating;
+    const r = b.rating && b.rating.stars >= 1 && b.rating.stars <= 5 ? {reasons: [], ...b.rating} : {stars: 1, reasons: ["周回おすすめ度のデータがありません"]};
     const cp = b.cp && b.cp.max > 0 ? `捕獲CP ${b.cp.min}〜<b>${b.cp.max}</b>${b.cpBoosted && b.cpBoosted.max > 0 ? `（天候ブースト ${b.cpBoosted.min}〜<b>${b.cpBoosted.max}</b>）` : ""}` : "";
     const weather = b.weather && b.weather.length ? `ブーストする天候：${b.weather.map(esc).join("・")}` : "";
     const counters = b.counters.filter(x => (show.mega || !x.mega) && (show.shadow || !x.shadow) && (show.legendary || !(x.legendary || x.mythical || x.ultrabeast))).slice(0, 3);

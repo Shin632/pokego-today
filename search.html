@@ -281,12 +281,12 @@ async function getJson(url){
 async function load(){
   const entries = await Promise.all(Object.entries(URLS).map(([k, u]) => getJson(u).then(v => [k, v], () => [k, null])));
   DATA = Object.fromEntries(entries);
-  if (!DATA.pokedex){ document.getElementById("notice").innerHTML = `<div class="notice err">ポケモンの一覧を読み込めませんでした。時間をおいて開き直してください。</div>`; return; }
+  if (!DATA.pokedex || !Array.isArray(DATA.pokedex.species) || !DATA.pokedex.species.length){ document.getElementById("notice").innerHTML = `<div class="notice err">ポケモンの一覧を読み込めませんでした。時間をおいて開き直してください。</div>`; return; }
   const missing = Object.entries(DATA).filter(([k, v]) => !v && k !== "pokedex").map(([k]) => k);
   if (missing.length) document.getElementById("notice").innerHTML = `<div class="notice">一部のデータ（${missing.join("、")}）を読み込めませんでした。表示できる情報だけ出しています。</div>`;
   SPECIES = DATA.pokedex.species.map(s => ({...s, ja: nameJa(s.name)}));
-  BY_ID = Object.fromEntries(SPECIES.map(s => [s.id, s]));
-  BY_NAME = {}; SPECIES.forEach(s => { if (!BY_NAME[s.name]) BY_NAME[s.name] = s; });
+  BY_ID = Object.assign(Object.create(null), Object.fromEntries(SPECIES.map(s => [s.id, s])));
+  BY_NAME = Object.create(null); SPECIES.forEach(s => { if (!BY_NAME[s.name]) BY_NAME[s.name] = s; });
   const h = location.hash.slice(1);
   if (h && BY_ID[h]){ document.getElementById("q").value = BY_ID[h].ja; show(h); }
   else if (document.getElementById("q").value) suggest(document.getElementById("q").value);

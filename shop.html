@@ -215,17 +215,26 @@ const TEMPLATES = [
   {name: "ステッカーボックス", price: 72, rows: [["sticker", 24]]},
 ];
 const PRICE_KEY = "pogo-shop-prices-v2", LEVEL_KEY = "pogo-shop-levels-v2", SAVED_KEY = "pogo-shop-saved-v1", DRAFT_KEY = "pogo-shop-draft-v1";
-const itemById = Object.fromEntries(ITEMS.map(i => [i[0], i]));
+const itemById = Object.assign(Object.create(null), Object.fromEntries(ITEMS.map(i => [i[0], i])));
 const load = (k, d) => { try { const v = JSON.parse(localStorage.getItem(k) || "null"); return v ?? d; } catch { return d; } };
 const store = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} };
 const defPrices = () => Object.fromEntries(ITEMS.map(i => [i[0], i[2]]));
 const defLevels = () => Object.fromEntries(ITEMS.map(i => [i[0], i[4]]));
-let prices = Object.assign(defPrices(), load(PRICE_KEY, {}));
-let levels = Object.assign(defLevels(), load(LEVEL_KEY, {}));
+// 保存データが壊れていても開けるように、形の合うものだけ使う
+const numMap = (v) => (v && typeof v === "object" && !Array.isArray(v))
+  ? Object.fromEntries(Object.entries(v).filter(([k, x]) => itemById[k] && typeof x === "number" && isFinite(x) && x >= 0)) : {};
+let prices = Object.assign(defPrices(), numMap(load(PRICE_KEY, {})));
+let levels = Object.assign(defLevels(), numMap(load(LEVEL_KEY, {})));
 let saved = load(SAVED_KEY, []);
+saved = (Array.isArray(saved) ? saved : [])
+  .filter(x => x && typeof x === "object" && Array.isArray(x.rows))
+  .map(x => ({...x, name: String(x.name ?? "ボックス"), price: Number(x.price) || 0,
+    rows: x.rows.filter(r => r && itemById[r.id] && Number(r.qty) > 0).map(r => ({id: r.id, qty: Number(r.qty)}))}))
+  .filter(x => x.rows.length);
 const blankDraft = () => ({name: "", price: "", rows: [{id: "raid_pass", qty: ""}]});
 let draft = load(DRAFT_KEY, blankDraft());
-if (!Array.isArray(draft.rows) || !draft.rows.length) draft = blankDraft();
+if (!draft || typeof draft !== "object" || !Array.isArray(draft.rows) || !draft.rows.length) draft = blankDraft();
+draft.rows = draft.rows.filter(r => r && typeof r === "object");
 draft.rows = draft.rows.filter(r => itemById[r.id]);
 if (!draft.rows.length) draft.rows.push({id: "raid_pass", qty: ""});
 

@@ -388,11 +388,11 @@ async function getJson(url){
 }
 (async () => {
   [PD, RK] = await Promise.all([getJson(D + "pokedex.json").catch(() => null), getJson(D + "rankings.json").catch(() => null)]);
-  if (!PD || !PD.cpm){ document.getElementById("notice").innerHTML = `<div class="notice err">データを読み込めませんでした。時間をおいて開き直してください。</div>`; return; }
+  if (!PD || !PD.cpm || !Array.isArray(PD.species)){ document.getElementById("notice").innerHTML = `<div class="notice err">データを読み込めませんでした。時間をおいて開き直してください。</div>`; return; }
   if (!RK) document.getElementById("notice").innerHTML = `<div class="notice">育成ランキングを読み込めなかったため、レイド・ジムの判定は省略されます。</div>`;
   LEVELS = buildLevels(PD.cpm);
   SPECIES = PD.species.map(s => ({...s, ja: nameJa(s.name)}));
-  BY_ID = Object.fromEntries(SPECIES.map(s => [s.id, s]));
+  BY_ID = Object.assign(Object.create(null), Object.fromEntries(SPECIES.map(s => [s.id, s])));
   const q = document.getElementById("q").value; if (q) document.getElementById("q").dispatchEvent(new Event("input"));
 })();
 </script>
