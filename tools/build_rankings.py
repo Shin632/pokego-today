@@ -649,7 +649,7 @@ def build_raids(pokemon, pve, move_ja, move_en, lists, mega):
         # メガ・伝説以外の上位15匹、メガ・シャドウ・伝説以外の上位10匹も持っておく
         allc = ranking(counters, 400)
         plain1 = [x for x in allc if not x["mega"] and not (x["legendary"] or x["mythical"] or x["ultrabeast"])][:15]
-        plain2 = [x for x in plain1 + allc if not x["mega"] and not x["shadow"] and not (x["legendary"] or x["mythical"] or x["ultrabeast"])][:10]
+        plain2 = [x for x in allc if not x["mega"] and not x["shadow"] and not (x["legendary"] or x["mythical"] or x["ultrabeast"])][:10]
         keep, seen_ids = [], set()
         for x in allc[:30] + plain1 + plain2:
             if x["id"] not in seen_ids:
