@@ -58,7 +58,7 @@ function safeUrl(u){
 const WD = ["日","月","火","水","木","金","土"];
 const pad = (n)=>String(n).padStart(2,"0");
 const fmtT = (d)=>`${d.getHours()}:${pad(d.getMinutes())}`;
-const fmtD = (d)=>`${d.getMonth()+1}/${d.getDate()}(${WD[d.getDay()]})`;
+const fmtD = (d)=>`${d.getMonth()+1}/${d.getDate()}(${WD[d.getDay()]}${jpHoliday(d) ? "・祝" : ""})`;
 
 // フォルム名（英語の括弧書き → 日本語）
 const FORMS = {
@@ -295,4 +295,46 @@ function showStale(msgs){
   const el = document.getElementById("stale"); if (!el) return;
   const list = (Array.isArray(msgs) ? msgs : [msgs]).filter(Boolean);
   el.innerHTML = list.length ? `<div class="notice">⚠️ ${list.join("<br>⚠️ ")}</div>` : "";
+}
+
+// ===== 日本の祝日（振替休日・国民の休日を含む）。春分・秋分の日は計算式（1980〜2099年で使える近似式） =====
+function jpHolidayBase(y, m, d){
+  const dow = new Date(y, m - 1, d).getDay();
+  const nthMon = (n) => dow === 1 && Math.ceil(d / 7) === n;
+  const k = y - 1980;
+  const spring = Math.floor(20.8431 + 0.242194 * k - Math.floor(k / 4));
+  const autumn = Math.floor(23.2488 + 0.242194 * k - Math.floor(k / 4));
+  if (m === 1 && d === 1) return "元日";
+  if (m === 1 && nthMon(2)) return "成人の日";
+  if (m === 2 && d === 11) return "建国記念の日";
+  if (m === 2 && d === 23) return "天皇誕生日";
+  if (m === 3 && d === spring) return "春分の日";
+  if (m === 4 && d === 29) return "昭和の日";
+  if (m === 5 && d === 3) return "憲法記念日";
+  if (m === 5 && d === 4) return "みどりの日";
+  if (m === 5 && d === 5) return "こどもの日";
+  if (m === 7 && nthMon(3)) return "海の日";
+  if (m === 8 && d === 11) return "山の日";
+  if (m === 9 && nthMon(3)) return "敬老の日";
+  if (m === 9 && d === autumn) return "秋分の日";
+  if (m === 10 && nthMon(2)) return "スポーツの日";
+  if (m === 11 && d === 3) return "文化の日";
+  if (m === 11 && d === 23) return "勤労感謝の日";
+  return "";
+}
+/** Date → 祝日名（祝日でなければ ""） */
+function jpHoliday(date){
+  const y = date.getFullYear(), m = date.getMonth() + 1, d = date.getDate();
+  const base = jpHolidayBase(y, m, d);
+  if (base) return base;
+  // 振替休日：日曜の祝日のあと、祝日でない最初の日
+  for (let i = 1; i <= 7; i++){
+    const p = new Date(y, m - 1, d - i);
+    if (!jpHolidayBase(p.getFullYear(), p.getMonth() + 1, p.getDate())) break;
+    if (p.getDay() === 0) return "振替休日";
+  }
+  // 国民の休日：前の日と次の日が祝日にはさまれた平日
+  const prev = new Date(y, m - 1, d - 1), next = new Date(y, m - 1, d + 1);
+  if (date.getDay() !== 0 && jpHolidayBase(prev.getFullYear(), prev.getMonth() + 1, prev.getDate()) && jpHolidayBase(next.getFullYear(), next.getMonth() + 1, next.getDate())) return "国民の休日";
+  return "";
 }

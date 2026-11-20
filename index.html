@@ -829,10 +829,11 @@ function renderDays(now){
   for (let i = 0; i < STRIP_DAYS; i++){
     const d = addDays(today, i), dEnd = addDays(d, 1);
     const n = EVENTS.filter(ev => ev.isShort && !ev.canceled && overlaps(ev, d, dEnd)).length;
-    const cls = ["day"]; if (d.getDay() === 0) cls.push("sun"); if (d.getDay() === 6) cls.push("sat");
+    const hol = jpHoliday(d);
+    const cls = ["day"]; if (d.getDay() === 0 || hol) cls.push("sun"); else if (d.getDay() === 6) cls.push("sat");
     if (sameDay(d, selDay)) cls.push("sel");
-    const dw = i === 0 ? "今日" : i === 1 ? "明日" : WD[d.getDay()];
-    html.push(`<button class="${cls.join(" ")}" type="button" data-day="${i}" aria-pressed="${sameDay(d, selDay)}">
+    const dw = i === 0 ? "今日" : i === 1 ? "明日" : hol ? "祝" : WD[d.getDay()];
+    html.push(`<button class="${cls.join(" ")}" type="button" data-day="${i}" aria-pressed="${sameDay(d, selDay)}"${hol ? ` title="${esc(hol)}" aria-label="${d.getMonth() + 1}月${d.getDate()}日 ${esc(hol)}"` : ""}>
       <div class="dw">${dw}</div><div class="dd">${d.getDate()}</div>
       <div class="dots">${"<i></i>".repeat(Math.min(n, 4))}</div></button>`);
   }
@@ -844,7 +845,8 @@ function render(){
   const today = startOfDay(now);
   // 日付が変わったら「今日」に追従
   if (!sameDay(today, lastRenderDay)){ if (sameDay(selDay, lastRenderDay) || selDay < today) selDay = today; lastRenderDay = today; }
-  document.getElementById("todayLabel").textContent = `${now.getMonth()+1}月${now.getDate()}日(${WD[now.getDay()]})`;
+  const holToday = jpHoliday(now);
+  document.getElementById("todayLabel").textContent = `${now.getMonth()+1}月${now.getDate()}日(${WD[now.getDay()]}${holToday ? "・" + holToday : ""})`;
   document.getElementById("clock").textContent = `${now.getHours()}:${pad(now.getMinutes())} 現在`;
   document.getElementById("lastUpdated").textContent = fetchedAt ? `データ取得：${fmtD(fetchedAt)} ${fmtT(fetchedAt)}` : "";
   // データが古いときの注意：取得元に「まだ終わっていないイベント」が1件もない、またはボーナス情報が12時間以上前のもの
