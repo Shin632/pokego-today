@@ -74,6 +74,8 @@ footer a{color:var(--sub)}
 @media (min-width: 600px){
   .nav, .chips, .days{flex-wrap:wrap; overflow-x:visible}
 }
+/* 押しやすさ：開閉ボタン・リンクの押せる範囲を広げる（高さ40px前後） */
+details.box>summary{padding:10px 0}
 </style>
 </head>
 <body>
@@ -168,7 +170,7 @@ function render(){
   if (!list.length){ main.innerHTML = `<div class="empty">条件に合うポケモンがいません</div>`; return; }
   const top = list[0].score;
   main.innerHTML = list.map((x, i) => {
-    const types = x.types.map(t => `<span class="tp" style="background:${(TYPE_INFO[t] || ["", "#888"])[1]}">${(TYPE_INFO[t] || [t])[0]}</span>`).join("");
+    const types = x.types.map(t => `<span class="tp" style="background:${(TYPE_INFO[t] || ["", "#888"])[1]};color:${typeFg((TYPE_INFO[t] || ["", "#888"])[1])}">${(TYPE_INFO[t] || [t])[0]}</span>`).join("");
     const tags = (x.mega ? `<span class="tag mega">メガ</span>` : "") + (x.shadow ? `<span class="tag shadow">シャドウ</span>` : "") +
       (x.legendary || x.mythical || x.ultrabeast ? `<span class="tag leg">${x.mythical ? "幻" : x.ultrabeast && !/^necrozma/.test(x.id) ? "UB" : "伝説"}</span>` : "");
     const mv = (m) => `${esc(m.ja || m.en)}${m.elite ? `<span class="el">★</span>` : ""}`;
@@ -191,7 +193,7 @@ function renderBuddy(main){
   const list = b.list.slice(0, 10);
   const top = list.length ? list[0].score : 1;
   main.innerHTML = list.map((x, i) => {
-    const types = x.types.map(t => `<span class="tp" style="background:${(TYPE_INFO[t] || ["", "#888"])[1]}">${(TYPE_INFO[t] || [t])[0]}</span>`).join("");
+    const types = x.types.map(t => `<span class="tp" style="background:${(TYPE_INFO[t] || ["", "#888"])[1]};color:${typeFg((TYPE_INFO[t] || ["", "#888"])[1])}">${(TYPE_INFO[t] || [t])[0]}</span>`).join("");
     const uses = x.uses.length ? x.uses.map(u => `${esc(u.list)} ${u.rank}位${nameJa(u.name) !== nameJa(x.name) ? `（${esc(nameJa(u.name))}）` : ""}`).join("、")
       : "メガシンカして、同じタイプのポケモンのアメを増やす役";
     const evo = x.evoCandy ? `進化${x.evoCandy}＋` : "";

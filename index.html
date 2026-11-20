@@ -14,13 +14,15 @@
 <style>
 :root{
   --bg:#f4f6fa; --panel:#ffffff; --text:#14171c; --sub:#5b6472; --line:#e3e7ee;
-  --accent:#1f6feb; --live:#e5484d; --ok:#2f9e5b; --muted:#9aa3b1;
-  --c-raid:#e5484d; --c-max:#8e4ec6; --c-cd:#2f9e5b; --c-spot:#d98a00; --c-event:#1f6feb;
-  --c-gbl:#4655d4; --c-bg:#6b7280; --c-tour:#d6409f;
+  --accent:#1f6feb; --live:#d42a35; --ok:#25854b; --muted:#9aa3b1;
+  --c-raid:#d42a35; --c-max:#8e4ec6; --c-cd:#25854b; --c-spot:#9c6200; --c-event:#1f6feb;
+  --c-gbl:#4655d4; --c-bg:#6b7280; --c-tour:#c4318a;
   --radius:14px;
 }
 @media (prefers-color-scheme: dark){
-  :root{ --bg:#0f1115; --panel:#1a1d24; --text:#eceff4; --sub:#a3acba; --line:#2b303a; --muted:#6c7584; }
+  :root{ --bg:#0f1115; --panel:#1a1d24; --text:#eceff4; --sub:#a3acba; --line:#2b303a; --muted:#6c7584;
+    /* 暗い背景の上の文字は、明るい赤・緑のほうが読みやすい */
+    --live:#ff6b6b; --ok:#3fbf72; }
 }
 *{box-sizing:border-box}
 html,body{margin:0;padding:0}
@@ -58,7 +60,7 @@ header.top .clock{font-variant-numeric:tabular-nums}
 .day .dd{font-size:17px;font-weight:700;line-height:1.2}
 .day .dots{height:8px;display:flex;gap:2px;justify-content:center;margin-top:2px}
 .day .dots i{width:6px;height:6px;border-radius:50%;background:var(--accent);display:block}
-.day.sun .dw{color:#e5484d}.day.sat .dw{color:#1f6feb}
+.day.sun .dw{color:var(--live)}.day.sat .dw{color:#1f6feb}
 .day.sel{background:var(--accent);border-color:var(--accent);color:#fff}
 .day.sel .dw{color:#dfe9ff}.day.sel .dots i{background:#fff}
 
@@ -166,6 +168,9 @@ footer a{color:var(--sub)}
 @media (min-width: 600px){
   .nav, .chips, .days{flex-wrap:wrap; overflow-x:visible}
 }
+/* 押しやすさ：開閉ボタン・リンクの押せる範囲を広げる（高さ40px前後） */
+details.small>summary,details.fold>summary{padding:10px 0}
+.links a{display:inline-block;padding:10px 0}
 </style>
 </head>
 <body>

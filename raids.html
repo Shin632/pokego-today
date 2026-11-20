@@ -69,6 +69,8 @@ footer a{color:var(--sub)}
 @media (min-width: 600px){
   .nav, .chips, .days{flex-wrap:wrap; overflow-x:visible}
 }
+/* 押しやすさ：開閉ボタン・リンクの押せる範囲を広げる（高さ40px前後） */
+details.box>summary{padding:10px 0}
 </style>
 </head>
 <body>
@@ -126,7 +128,7 @@ const RATE_LABEL = ["", "見送りでOK", "余裕があれば", "おすすめ", 
 let DATA = null;
 let show = {mega: true, shadow: true, legendary: true};
 
-const typeBadges = (ts) => ts.map(t => `<span class="tp" style="background:${(TYPE_INFO[t] || ["", "#888"])[1]}">${(TYPE_INFO[t] || [t])[0]}</span>`).join("");
+const typeBadges = (ts) => ts.map(t => `<span class="tp" style="background:${(TYPE_INFO[t] || ["", "#888"])[1]};color:${typeFg((TYPE_INFO[t] || ["", "#888"])[1])}">${(TYPE_INFO[t] || [t])[0]}</span>`).join("");
 function tierBadge(b){
   if (/Elite/i.test(b.tier)) return `<span class="tier te">エリート</span>`;
   if (b.mega) return `<span class="tier tm">${/Primal/i.test(b.speciesName) ? "ゲンシ" : "メガ"}</span>`;

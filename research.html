@@ -11,7 +11,7 @@
 <style>
 :root{
   --bg:#f4f6fa; --panel:#ffffff; --text:#14171c; --sub:#5b6472; --line:#e3e7ee;
-  --accent:#1f6feb; --muted:#9aa3b1; --event:#d6409f; --radius:14px;
+  --accent:#1f6feb; --muted:#9aa3b1; --event:#c4318a; --radius:14px;
 }
 @media (prefers-color-scheme: dark){
   :root{ --bg:#0f1115; --panel:#1a1d24; --text:#eceff4; --sub:#a3acba; --line:#2b303a; --muted:#6c7584; }
@@ -83,7 +83,7 @@ section.cat.event .task.good{border-left:5px solid var(--event)}
   background:var(--panel);border:2px solid #f5b83d;border-radius:var(--radius);padding:10px 12px;-webkit-user-select:none;user-select:none}
 .gfold>summary::-webkit-details-marker{display:none}
 .gfold[open]>summary{border-bottom-left-radius:0;border-bottom-right-radius:0;border-bottom-style:dashed}
-.garrow{display:inline-block;font-size:12px;color:#c27a00;transition:transform .15s}
+.garrow{display:inline-block;font-size:12px;color:#a86a00;transition:transform .15s}
 .gfold[open] .garrow{transform:rotate(90deg)}
 .ghint{margin-left:auto;font-size:12px;font-weight:500;color:var(--sub)}
 .gfold[open]>.gbox{border-top:none;border-top-left-radius:0;border-top-right-radius:0}
@@ -108,6 +108,8 @@ footer a{color:var(--sub)}
 @media (min-width: 600px){
   .nav, .chips, .days{flex-wrap:wrap; overflow-x:visible}
 }
+/* 押しやすさ：開閉ボタン・リンクの押せる範囲を広げる（高さ40px前後） */
+.how>summary{padding:10px 0}
 </style>
 </head>
 <body>

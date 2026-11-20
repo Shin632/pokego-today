@@ -258,3 +258,16 @@ async function fetchWithCache(key, fetcher, valid, unwrap = (x) => x, wrap = (x)
   const c = unwrap(cacheGet(key));
   return c && valid(c) ? {data: c, cached: true} : {data: null, cached: false};
 }
+
+// ===== タイプの札の文字色：背景色に対して読みやすいほう（白か黒）を選ぶ =====
+function luminance(hex){
+  const m = String(hex || "").match(/^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i);
+  if (!m) return 0.2;
+  const v = m.slice(1).map(x => { const c = parseInt(x, 16) / 255; return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); });
+  return 0.2126 * v[0] + 0.7152 * v[1] + 0.0722 * v[2];
+}
+/** 背景色 hex に対して、白と黒（#1a1a1a）のうちコントラスト比が高いほう */
+function typeFg(hex){
+  const l = luminance(hex);
+  return 1.05 / (l + 0.05) >= (l + 0.05) / (0.0103 + 0.05) ? "#fff" : "#1a1a1a";
+}

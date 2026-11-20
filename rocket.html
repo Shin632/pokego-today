@@ -63,6 +63,9 @@ footer a{color:var(--sub)}
 @media (min-width: 600px){
   .nav, .chips, .days{flex-wrap:wrap; overflow-x:visible}
 }
+/* 押しやすさ：開閉ボタン・リンクの押せる範囲を広げる（高さ40px前後） */
+details.lu>summary{padding:10px 0}
+details.box>summary{padding:10px 0}
 </style>
 </head>
 <body>
@@ -114,7 +117,7 @@ const TYPE_INFO = {
   dark:["あく","#624d4e"], steel:["はがね","#60a1b8"], fairy:["フェアリー","#ef70ef"],
 };
 let DATA = null;
-const typeBadge = (t) => t && TYPE_INFO[t] ? `<span class="tp" style="background:${TYPE_INFO[t][1]}">${TYPE_INFO[t][0]}</span>` : "";
+const typeBadge = (t) => t && TYPE_INFO[t] ? `<span class="tp" style="background:${TYPE_INFO[t][1]};color:${typeFg(TYPE_INFO[t][1])}">${TYPE_INFO[t][0]}</span>` : "";
 function trainerName(t){
   if (t.nameJa) return t.nameJa;
   const sex = t.female ? "女性" : "男性";
