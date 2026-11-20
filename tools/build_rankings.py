@@ -775,9 +775,15 @@ def load_cpm(gm):
 def build_pokedex(pokemon, pvp, move_ja=None, move_en=None):
     """ポケモン検索ページ用：実装済みのポケモンの名前・タイプ・進化系統・相棒の距離・PvPの順位"""
     species = []
+    # 系統（family）が無いフォルム違い（ロトム・デオキシス・オドリドリなど）は、同じ図鑑番号でまとめる
+    fam_by_dex = {}
+    for p in pokemon:
+        f = (p.get("family") or {}).get("id")
+        if f:
+            fam_by_dex.setdefault(p["dex"], f)
     for p in pokemon:
         tags = p.get("tags", [])
-        fam = (p.get("family") or {}).get("id") or ("FAMILY_" + base_id(p["speciesId"]).upper())
+        fam = (p.get("family") or {}).get("id") or fam_by_dex.get(p["dex"]) or f"FAMILY_DEX_{p['dex']}"
         b = p["baseStats"]
         item = {"id": p["speciesId"], "name": p["speciesName"], "dex": p["dex"], "types": [t for t in p["types"] if t != "none"],
                 "family": fam, "buddy": p.get("buddyDistance"), "stats": [b["atk"], b["def"], b["hp"]]}

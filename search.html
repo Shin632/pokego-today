@@ -141,7 +141,7 @@ function parseTime(s){
 }
 function sources(sp){
   const out = [];
-  const rel = (other) => !other ? null : other.id === sp.id || baseId(other.id) === baseId(sp.id) ? "このポケモン" : other.family === sp.family ? `同じ系統の${nameJa(other.name)}` : null;
+  const rel = (other) => !other ? null : other.id === sp.id || baseId(other.id) === baseId(sp.id) ? "このポケモン" : (other.family === sp.family || other.dex === sp.dex) ? `同じ系統の${nameJa(other.name)}` : null;
   const now = new Date(), todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
   // 野生（開催中・今日このあと始まるイベント）
   const evById = {}; (DATA.events || []).forEach(e => evById[e.eventID] = e);
@@ -208,7 +208,8 @@ function show(id){
   if (!sp){ main.innerHTML = ""; return; }
   try { history.replaceState(null, "", "#" + sp.id); } catch {}
   document.getElementById("sugg").innerHTML = "";
-  const variants = SPECIES.filter(x => baseId(x.id) === baseId(sp.id) || (x.family === sp.family && !SUFFIX.test(x.id)));
+  // 同じ系統・同じ図鑑番号（ロトムのフォルム違いなど）をまとめて出す
+  const variants = SPECIES.filter(x => baseId(x.id) === baseId(sp.id) || ((x.family === sp.family || x.dex === sp.dex) && !SUFFIX.test(x.id)));
   const tags = (sp.tags || []).map(t => ({legendary: "伝説", mythical: "幻", ultrabeast: "UB", mega: "メガ", shadow: "シャドウ", regional: "地域限定"}[t])).filter(Boolean)
     .map(t => `<span class="tag">${t}</span>`).join("");
   // 入手方法

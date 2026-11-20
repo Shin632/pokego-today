@@ -99,6 +99,9 @@ const close = async (p, label) => { check(`${label}: JavaScriptエラーなし`,
     check('search: 別の名前を入れると前のポケモンの情報が消える', !(await p.$eval('#main', e => e.innerText)).includes('リザードン'), '');
     await p.fill('#q', 'メタモン'); await p.waitForTimeout(500);
     check('search: メタモンが見つかる', (await p.$eval('#main', e => e.innerText)).includes('Ditto'), '');
+    // フォルム違いを同じ系統として出す（改善K）
+    await p.fill('#q', 'ロトム'); await p.waitForTimeout(500);
+    check('search: ロトムでウォッシュロトムなどのフォルムも出る', /ウォッシュロトム/.test(await p.$eval('#main', e => e.innerText)), '');
     await close(p, 'search');
     // ハッシュ付きで開く
     const p2 = await open(b, 'search.html#metagross');
