@@ -262,6 +262,24 @@ const close = async (p, label) => { check(`${label}: JavaScriptエラーなし`,
     check('offline: JavaScriptエラーなし', !errs.length, errs.join(' / '));
     await ctx.close();
   }
+  // 前日のうちにレガシー技を予告する（改善E）
+  {
+    const ev = (JSON.parse(fs.readFileSync(path.join(CACHE, 'sd_events.json'), 'utf8')) || [])
+      .find(e => e.eventType === 'community-day' && e.start && new Date(e.start.replace(/\.\d+$/, '') + '+09:00') > new Date());
+    if (ev) {
+      const st = new Date(ev.start.replace(/\.\d+$/, '') + '+09:00');
+      const dayBefore = new Date(Date.parse(ev.start.slice(0, 10) + 'T21:00:00+09:00') - 86400000);   // 日本時間で前日の21時
+      const q = await open(b, 'index.html', { time: dayBefore });
+      const bp = await q.$eval('.bonus-panel', e => e.innerText).catch(() => '');
+      const lb = await q.$eval('#main', e => e.innerText);
+      // そのコミュニティ・デイにレガシー技があるときだけ確かめる
+      if (/レガシー技/.test(lb)) {
+        check('index: 前日のおトク欄に「明日」のレガシー技が出る', /明日/.test(bp) && /レガシー技/.test(bp), bp.slice(0, 60));
+        check('index: このあと7日間の一覧に「レガシー技あり」が付く', /レガシー技あり/.test(lb), '');
+      }
+      await close(q, 'index(前日)');
+    }
+  }
   // コミュニティ・デイ当日は主役を「捕まえるべき」に（6回目で修正）
   {
     const ev = (JSON.parse(fs.readFileSync(path.join(CACHE, 'sd_events.json'), 'utf8')) || [])

@@ -110,6 +110,8 @@ section.block>h2 .count{font-size:12px;font-weight:500;color:var(--sub)}
 .legacy{margin-top:8px;font-size:13.5px;line-height:1.5;background:color-mix(in srgb,#0ea5e9 10%,transparent);border-left:3px solid #0ea5e9;border-radius:6px;padding:6px 9px}
 .legacy .lw{display:block;font-size:12px;color:var(--sub)}
 .paid.legacy-t{background:#0284c7}
+.lgmark{display:inline-block;margin-left:6px;font-size:11px;font-weight:700;color:#0369a1;white-space:nowrap}
+@media (prefers-color-scheme: dark){.lgmark{color:#7dd3fc}}
 .megasug{margin-top:8px;font-size:13px;line-height:1.5;background:color-mix(in srgb,#8e4ec6 9%,transparent);border-radius:8px;padding:6px 9px}
 .megasug .mhint{display:block;font-size:11px;color:var(--sub)}
 .bonuses{margin:8px 0 0;padding:0;list-style:none;display:grid;gap:3px}
@@ -781,6 +783,21 @@ function bonusPanel(dayEvents, now, isToday){
     }
   }
   let body;
+  // 明日レガシー技を覚えられるイベントの予告（前日のうちに準備できるように）
+  if (isToday){
+    const t0 = addDays(startOfDay(now), 1), t1 = addDays(startOfDay(now), 2);
+    for (const ev of EVENTS){
+      if (ev.canceled || !ev.start || ev.start < t0 || ev.start >= t1) continue;
+      for (const l of ev.legacy || []){
+        const prep = l.kind === "evolve" ? `進化前の${esc(jaMons(l.from))}とアメを用意しておくと、当日すぐ進化できます（進化の条件はゲーム内で確認を）` : "当日に捕まえると覚えています";
+        legacyRows.push(`<div class="brow"><span class="bicon" aria-hidden="true">📚</span><div class="btext">
+          <div class="bj"><span class="paid legacy-t">レガシー技</span>${legacyText(l)}</div>
+          <div class="bsrc"><span class="bsrc1"><span class="bst soon">明日</span>${esc(legacyWhen(ev, l))}</span>
+          <span class="bsrc1">${esc(ev.ja)}${legacyPower(l) ? ` ・ ${esc(legacyPower(l))}` : ""}</span>
+          <span class="bsrc1">💡 ${prep}</span></div></div></div>`);
+      }
+    }
+  }
   if (items.length || legacyRows.length){
     body = legacyRows.join("") + items.map(({b, src}) => {
       const srcs = src.map(({ev, st}) => {
@@ -892,7 +909,7 @@ function render(){
       const diff = Math.round((startOfDay(ev.start) - today) / DAY_MS);
       rows += `<div class="row${ev.canceled ? " canceled" : ""} cat-${ev.info.cat}" data-day="${diff}" role="button" tabindex="0">
         <span class="t">${fmtT(ev.start)}〜${sameDay(ev.start, ev.end) ? fmtT(ev.end) : fmtD(ev.end)}</span>
-        <span class="n"><span class="badge">${esc(ev.info.label)}</span>${esc(ev.ja)}${ev.canceled ? "（中止）" : ""}</span></div>`;
+        <span class="n"><span class="badge">${esc(ev.info.label)}</span>${esc(ev.ja)}${ev.canceled ? "（中止）" : ""}${!ev.canceled && ev.legacy && ev.legacy.length ? `<span class="lgmark">📚 レガシー技あり</span>` : ""}</span></div>`;
     }
     html += `<div class="list">${rows}</div>`;
   } else html += `<div class="empty">予定はまだ発表されていません</div>`;
