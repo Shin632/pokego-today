@@ -366,7 +366,7 @@ const BONUS_RULES = [
   [/^Chance to (?:receive|get|earn) Max Particles when catching .*$/i, () => "ポケモンを捕まえたとき（マックスバトル後も）マックス粒子をもらえることがある"],
   [/^More Power Spots than usual.*$/i, () => "パワースポットがいつもより多い"],
   [/^(1\/2|1\/4|half) (.+?) cost to activate the (.+?) Adventure Effect$/i,
-    (f, what, name) => `おでかけ効果「${name}」に必要な${resList(what) || what} ${/half/i.test(f) ? "1/2" : f}`],
+    (f, what, name) => `おでかけ効果「${adventureJa(name)}」に必要な${resList(what) || what} ${/half/i.test(f) ? "1/2" : f}`],
   // 「◯◯を捕まえたときの△△アップ」「〜からの△△が増える」
   [/^(?:Increased|Additional|Extra|More) (.+?) (?:for|from|when) catching (?!Pokémon\b)(.+)$/i,
     (what, mon) => { const r = resList(what); return r ? `${jaMons(mon)}を捕まえたときの${r}アップ` : null; }],
@@ -706,6 +706,9 @@ function bonusTag(b){
   return "";
 }
 const BONUS_ORDER = ["stardust","candy","xp","raid","egg","spawn","max","item","trade","gift","other"];
+// おでかけ効果の名前は、もとになった技の名前（技の日本語名の表から引く。データが無いとき用に主なものを持っておく）
+const ADVENTURE_JA = {"Dynamax Cannon": "ダイマックスほう", "Sunsteel Strike": "メテオドライブ", "Moongeist Beam": "シャドーレイ", "Behemoth Blade": "きょじゅうざん", "Behemoth Bash": "きょじゅうだん"};
+function adventureJa(en){ return (typeof MEGAS !== "undefined" && MEGAS && MEGAS.moveJa && MEGAS.moveJa[en]) || ADVENTURE_JA[en] || en; }
 // ===== レガシー技（イベント限定の技）を覚えられるタイミング =====
 const SLOT_JA = {fast: "技1", charged: "技2"};
 const moveJaName = (en) => (MEGAS && MEGAS.moveJa && MEGAS.moveJa[en]) || en;

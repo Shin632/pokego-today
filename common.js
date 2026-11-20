@@ -162,19 +162,28 @@ const NAME_RULES = [
   [/^(.+?) Special Research$/, (a)=>`スペシャルリサーチ：${jaMons(a)}`],
   [/^(.+?) Returns$/, (a)=>`${jaMons(a)} 再登場`],
 ];
+// イベント名によく出る英語の言葉（公式の日本語名が分からないものは、仮のカタカナ表記）。長いものから順に置き換える
+const EVENT_WORDS = [
+  [/\bGO Wild Area\b/g, "GOワイルドエリア"], [/\bPower Up!/g, "パワーアップ！"],
+  [/\bDynamax Trails\b/g, "ダイマックス・トレイル"], [/\bTwilight Trails\b/g, "トワイライト・トレイル"], [/\bTwilight Wishes\b/g, "トワイライト・ウィッシュ"],
+  [/:\s*Mega Edition\b/g, "（メガエディション）"], [/\bMega Catch Cup\b/g, "メガキャッチカップ"], [/\s*\bEdition\b/g, "エディション"], [/\bCup\b/g, "カップ"],
+  [/\bPok[eé]mon GO and (\w+)/g, "ポケモンGO × $1"], [/\bPok[eé]mon GO(?! Tour)\b/g, "ポケモンGO"], [/\bPok[eé]mon(?! GO)/g, "ポケモン"],
+  [/\bAlola\b/g, "アローラ"], [/\bTwilight\b/g, "トワイライト"], [/\bTrails\b/g, "トレイル"], [/\bWishes\b/g, "ウィッシュ"], [/\bDynamax\b/g, "ダイマックス"],
+];
+function eventWordsJa(s){ for (const [re, ja] of EVENT_WORDS) s = s.replace(re, ja); return s.replace(/([^\x00-\x7F]): /g, "$1："); }
 function translateName(ev){
   let s = ev.name.replace(/^\s*\[(?:Canceled|Cancelled)\]\s*/i, "").trim();
   if (ev.type === "go-battle-league"){
     s = s.replace(/\s*\|\s*[^|]*$/, ""); // 末尾の「| シーズン名」を除去
     for (const [re, ja] of LEAGUES) s = s.replace(re, ja);
     s = s.replace(/,? and /g, "、").replace(/, /g, "、");
-    return s;
+    return eventWordsJa(s);
   }
   for (const [re, fn] of NAME_RULES){
     const m = s.match(re);
-    if (m) return fn(...m.slice(1));
+    if (m) return eventWordsJa(fn(...m.slice(1)));
   }
-  return jaMons(s);
+  return eventWordsJa(jaMons(s));
 }
 
 
