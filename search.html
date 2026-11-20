@@ -63,6 +63,7 @@ footer a{color:var(--sub)}
   <input class="search" id="q" type="search" aria-label="ポケモンの名前で探す" placeholder="ポケモンの名前（例：ダンバル、メタグロス、Beldum）" autocomplete="off">
   <div class="sugg" id="sugg"></div>
   <div id="notice"></div>
+  <div id="stale"></div>
   <main id="main"></main>
   <footer>
     <div>※ 非公式のファンツールです。強さ・弱点・育成の情報はゲームデータ（PvPoke・PokeMiners・PokeAPI の公開データ）から、今の入手方法は LeekDuck の情報（ScrapedDuck 経由を含む）から、このアプリが3時間ごとに作ったデータを使っています。</div>
@@ -302,6 +303,7 @@ async function load(){
   if (cachedKeys.length) msgs.push("最新のデータを取得できなかったため、前回取得したデータで表示しています。");
   if (missing.length) msgs.push(`一部のデータ（${missing.join("、")}）を読み込めませんでした。表示できる情報だけ出しています。`);
   if (msgs.length) document.getElementById("notice").innerHTML = `<div class="notice">${msgs.join("<br>")}</div>`;
+  showStale(staleText(DATA.pokedex.generatedAt, 24, "ポケモンのデータ"));
   SPECIES = DATA.pokedex.species.map(s => ({...s, ja: nameJa(s.name)}));
   BY_ID = Object.assign(Object.create(null), Object.fromEntries(SPECIES.map(s => [s.id, s])));
   BY_NAME = Object.create(null); SPECIES.forEach(s => { if (!BY_NAME[s.name]) BY_NAME[s.name] = s; });

@@ -85,6 +85,7 @@ details.box>summary{padding:10px 0}
     <button class="btn" id="reload" type="button">↻ 更新</button>
   </header>
   <div id="notice"></div>
+  <div id="stale"></div>
   <main id="main"><div class="empty">読み込み中…</div></main>
 
   <details class="box">
@@ -237,6 +238,8 @@ function render(){
   const main = document.getElementById("main");
   if (!EVENTS || !BONUS){ return; }
   const now = new Date();
+  document.getElementById("lastUpdated").textContent = BONUS.updatedAt ? `出現データの取得：${fmtD(new Date(BONUS.updatedAt))} ${fmtT(new Date(BONUS.updatedAt))}` : "";
+  showStale(staleText(BONUS.updatedAt, 12, "出現の情報"));
   const all = collect(now);
   if (!all.length){ main.innerHTML = `<div class="empty">今、野生の出現が増えるイベントは見つかりませんでした</div>`; return; }
   const sortKey = (a, b) => (a.onlyLater - b.onlyLater) || ((b.j.u || 0) - (a.j.u || 0)) || nameOf(a).localeCompare(nameOf(b), "ja");
@@ -257,7 +260,6 @@ function render(){
   html += `<section><h2>📅 対象のイベント <span class="count">${evs.size}件</span></h2><div class="sub2">${[...evs.values()].sort((a, b) => a.en - b.en).map(s =>
     `${esc(s.name)}（${s.live ? "開催中・" : ""}${fmtD(s.s)} ${fmtT(s.s)}〜${fmtD(s.en)} ${fmtT(s.en)}）`).join("<br>")}</div></section>`;
   main.innerHTML = html;
-  document.getElementById("lastUpdated").textContent = BONUS.updatedAt ? `出現データの取得：${fmtD(new Date(BONUS.updatedAt))} ${fmtT(new Date(BONUS.updatedAt))}` : "";
 }
 async function getJson(url){
   const ctl = new AbortController(); const timer = setTimeout(() => ctl.abort(), 15000);

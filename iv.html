@@ -97,6 +97,7 @@ details.box>summary{padding:10px 0}
     <div class="quick"><button class="qb" type="button" data-iv="15,15,15">15/15/15</button><button class="qb" type="button" data-iv="0,15,15">0/15/15</button><button class="qb" type="button" data-iv="clear">個体値を消す</button></div>
   </div>
   <div id="notice"></div>
+  <div id="stale"></div>
   <main id="main"></main>
 
   <details class="box">
@@ -400,6 +401,7 @@ async function getJson(url){
   if (pd.cached || rk.cached) msgs.push("最新のデータを取得できなかったため、前回取得したデータで判定しています。");
   if (!RK) msgs.push("育成ランキングを読み込めなかったため、レイド・ジムの判定は省略されます。");
   if (msgs.length) document.getElementById("notice").innerHTML = `<div class="notice">${msgs.join("<br>")}</div>`;
+  showStale(staleText(PD.generatedAt, 24, "ポケモンのデータ"));
   LEVELS = buildLevels(PD.cpm);
   SPECIES = PD.species.map(s => ({...s, ja: nameJa(s.name)}));
   BY_ID = Object.assign(Object.create(null), Object.fromEntries(SPECIES.map(s => [s.id, s])));

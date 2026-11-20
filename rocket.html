@@ -76,6 +76,7 @@ details.box>summary{padding:10px 0}
     <button class="btn" id="reload" type="button">↻ 更新</button>
   </header>
   <div id="notice"></div>
+  <div id="stale"></div>
   <main id="main"><div class="empty">読み込み中…</div></main>
   <details class="box" id="more"><summary>9位以下を見る</summary><div id="rest"></div></details>
 
@@ -145,6 +146,7 @@ function card(t, top){
 }
 function render(){
   document.getElementById("lastUpdated").textContent = DATA && DATA.generatedAt ? `計算した日時：${fmtD(new Date(DATA.generatedAt))} ${fmtT(new Date(DATA.generatedAt))}` : "";
+  showStale(DATA ? staleText(DATA.generatedAt, 12, "計算に使ったデータ") : "");
   const main = document.getElementById("main");
   if (!DATA) return;
   // サカキ（ボス）はランキングから外す。順位は外した後で付け直す

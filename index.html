@@ -184,6 +184,7 @@ details.small>summary,details.fold>summary{padding:10px 0}
     <button class="btn" id="reload" type="button">↻ 更新</button>
   </header>
   <div id="notice"></div>
+  <div id="stale"></div>
   <nav class="days" id="days" aria-label="日付を選ぶ"></nav>
   <div class="summary" id="summary"></div>
   <main id="main"><div class="empty">読み込み中…</div></main>
@@ -826,6 +827,11 @@ function render(){
   document.getElementById("todayLabel").textContent = `${now.getMonth()+1}月${now.getDate()}日(${WD[now.getDay()]})`;
   document.getElementById("clock").textContent = `${now.getHours()}:${pad(now.getMinutes())} 現在`;
   document.getElementById("lastUpdated").textContent = fetchedAt ? `データ取得：${fmtD(fetchedAt)} ${fmtT(fetchedAt)}` : "";
+  // データが古いときの注意：取得元に「まだ終わっていないイベント」が1件もない、またはボーナス情報が12時間以上前のもの
+  showStale([
+    EVENTS.length && !EVENTS.some(e => e.end && e.end > now) ? "イベント情報に、まだ終わっていないイベントが1件もありません。データの取得元が更新されていない可能性があります。" : "",
+    BONUS ? staleText(BONUS.updatedAt, 12, "ボーナス・出現の情報") : "",
+  ]);
   renderDays(now);
 
   const main = document.getElementById("main");

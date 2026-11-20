@@ -271,3 +271,19 @@ function typeFg(hex){
   const l = luminance(hex);
   return 1.05 / (l + 0.05) >= (l + 0.05) / (0.0103 + 0.05) ? "#fff" : "#1a1a1a";
 }
+
+// ===== データが古いときの注意（取得元が止まっていると気づけないため） =====
+/** date（データを作った日時）から hours 時間以上たっていたら、id="stale" の欄に注意を出す。what＝何のデータか */
+function staleText(date, hours, what){
+  const d = date ? new Date(date) : null;
+  if (!d || isNaN(d)) return "";
+  const h = (Date.now() - d.getTime()) / 3600000;
+  if (h < hours) return "";
+  const ago = h >= 48 ? `${Math.floor(h / 24)}日` : `${Math.floor(h)}時間`;
+  return `${what}が${ago}ほど更新されていません（最終：${fmtD(d)} ${fmtT(d)}）。データの取得元が止まっている可能性があり、内容が古いかもしれません。`;
+}
+function showStale(msgs){
+  const el = document.getElementById("stale"); if (!el) return;
+  const list = (Array.isArray(msgs) ? msgs : [msgs]).filter(Boolean);
+  el.innerHTML = list.length ? `<div class="notice">⚠️ ${list.join("<br>⚠️ ")}</div>` : "";
+}

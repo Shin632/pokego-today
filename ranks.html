@@ -86,6 +86,7 @@ details.box>summary{padding:10px 0}
     <button class="btn" id="reload" type="button">↻ 更新</button>
   </header>
   <div id="notice"></div>
+  <div id="stale"></div>
   <div class="tabs" role="tablist">
     <button class="tab" type="button" data-tab="raid">⚔️ レイド</button>
     <button class="tab" type="button" data-tab="gymAttack">🏟 ジム攻撃</button>
@@ -160,6 +161,7 @@ function render(){
     .map(([k, l]) => `<button type="button" class="tg${show[k] ? "" : " off"}" data-show="${k}">${show[k] ? "✓ " : ""}${l}を含める</button>`).join("")
     + `<button type="button" class="tg easy${easyOnly ? " on" : ""}" data-easy="1">${easyOnly ? "✓ " : ""}育てやすいもの（難易度1〜3）だけ</button>`;
   document.getElementById("lastUpdated").textContent = DATA && DATA.generatedAt ? `計算した日時：${fmtD(new Date(DATA.generatedAt))} ${fmtT(new Date(DATA.generatedAt))}` : "";
+  showStale(DATA ? staleText(DATA.generatedAt, 12, "計算に使ったデータ") : "");
 
   const main = document.getElementById("main");
   if (!DATA){ return; }

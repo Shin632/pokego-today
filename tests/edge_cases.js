@@ -91,6 +91,14 @@ const info = (p) => p.evaluate(() => ({
     const r = await info(p);
     check(`${page} ${label}: エラーで止まらない`, !p.errors.length, p.errors.join(' / ').slice(0, 200));
     check(`${page} ${label}: undefined 等が出ない`, !/undefined|NaN|\[object Object\]|-\d+日/.test(r.text), (r.text.match(/.{0,20}(undefined|NaN|\[object Object\]|-\d+日).{0,20}/) || [''])[0]);
+    if (label === '半年後' && page !== 'shop.html') {
+      const st = await p.$eval('#stale', e => e.innerText).catch(() => '');
+      check(`${page} ${label}: データが古いと注意が出る`, /更新されていません|1件もありません/.test(st), st.slice(0, 60));
+    }
+    if (label === '半年前') {
+      const st = await p.$eval('#stale', e => e.innerText).catch(() => '');
+      check(`${page} ${label}: 新しいデータなら注意は出ない`, !st.trim(), st.slice(0, 60));
+    }
     if (page === 'index.html') console.log(`  [${label}] index: ${r.text.replace(/\n+/g, ' | ').slice(0, 300)}`);
     await p.ctx.close();
   }
