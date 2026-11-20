@@ -106,6 +106,7 @@ details.box>summary{padding:10px 0}
       <li><b>レイド・ジム</b>：そのポケモン（シャドウにチェックがあればシャドウの姿）と、進化後・メガシンカ後が、育成ランキングに入っているかを見ます（レイド総合・ジム攻撃は50位、タイプ別・ジム防衛は30位まで）。入っていれば、攻撃役は<b>攻撃13以上かつ全体80%以上で◎</b>、攻撃10以上かつ60%以上で○。ジム防衛は防御・HPがともに12以上で◎です。</li>
       <li><b>PvP</b>：進化後も含めて PvPoke のランキング上位（スーパー・ハイパーリーグ100位、マスターリーグ50位以内）にいるポケモンについて、<b>その個体値が4,096通りの中で何位か</b>を計算します（CP上限の中でいちばん高いレベル、最大レベル50。能力値の積で順位づけ）。<b>64位以内で◎、300位以内で○</b>。マスターリーグは個体値が高いほど強いので、全体93%以上で◎、85%以上で○です。</li>
       <li><b>判定</b>：どれかで◎なら「育成すべき」。◎はないが○がある、または伝説・幻・ウルトラビースト、ダイマックス・キョダイマックス、個体値100%、色違い・特別な背景・コスチュームなら「とっておく」。どれにも当てはまらなければ「逃がしてOK（アメにしてよい）」です。</li>
+      <li><b>まだGOで解禁されていないメガシンカ</b>：本編（XY・ORAS、レジェンズ Z-A とその追加コンテンツ）にはメガシンカがあるのに、ポケモンGOではまだ解禁されていないポケモン（進化先も含む）は、🔮で知らせます。解禁後の強さはGOのデータが出るまで分からないので判定には入れませんが、攻撃の個体値が13以上かつ全体80%以上なら、解禁に備えて「とっておく」にします。GOで解禁されると元データに入り、自動で通常の判定に切り替わります。</li>
       <li><b>技構成</b>：レイド・ジムは育成TOP10と同じ計算でいちばん良い技1・技2、PvPは PvPoke のおすすめ（技1と技2を2つ）です。★は今は普通には覚えられない技（すごいわざマシンやイベントが必要）です。</li>
       <li><b>シャドウのリトレーン</b>：シャドウのままの評価と、リトレーンした場合（個体値が各+2、通常の姿。ジムに置ける・メガシンカできる）の評価を比べ、良いほうをすすめます。同じくらいなら、レイド用ならシャドウのまま（攻撃1.2倍）をすすめます。</li>
       <li>色違い・特別な背景・コスチュームは、強さは通常と同じなので「育成すべき」かどうかの判定には影響しませんが、「逃がしてOK」にはならず「とっておく」以上になります。コスチュームのポケモンは進化できないものが多いので注意してください。キラ・思い出のポケモンかどうかは判定に入っていません。</li>
@@ -285,7 +286,20 @@ function evaluate(){
   const tags = new Set(chosen.tags || []);
   // 進化すると伝説になるもの（コスモッグなど）も、手に入る機会が少ないので同じ扱い
   const rare = fam.some(f => (f.tags || []).some(t => t === "legendary" || t === "mythical" || t === "ultrabeast"));
+  // 本編にはあるが、GOではまだ解禁されていないメガシンカ（進化先も含める）。地域の姿（アローラなど）は対象外
+  const megaGap = [], seenDex = new Set();
+  for (const f of fam){
+    if (seenDex.has(f.dex) || /_(alolan|galarian|hisuian|paldean)/.test(f.id)) continue;
+    seenDex.add(f.dex);
+    const goForms = SPECIES.filter(x => x.dex === f.dex && /_(mega|primal)/.test(x.id) && !/_shadow/.test(x.id)).length;
+    megaGap.push(...unreleasedMegas(f, goForms));
+  }
+  const megaNames = megaGap.map(m => m.name).join("・");
+  const megaGames = [...new Set(megaGap.map(m => m.game))].join("・");
+  // 解禁に備えて残す目安：レイドで使うなら攻撃が大事なので、攻撃13以上・全体80%以上
+  const megaKeep = megaGap.length && a >= 13 && pct >= 0.8;
   const keepReasons = [];
+  if (megaKeep) keepReasons.push(`本編にある${megaNames}が、ポケモンGOではまだ解禁されていない。解禁に備えて、攻撃の個体値が高いこの個体は残しておく価値がある`);
   if (rare) keepReasons.push("伝説・幻・ウルトラビーストは手に入る機会が少ない");
   if (gmax) keepReasons.push("キョダイマックスはマックスバトルでしか手に入らず、とても貴重");
   else if (dmax) keepReasons.push("ダイマックスはマックスバトルでしか手に入らない");
@@ -311,6 +325,7 @@ function evaluate(){
   }
   if (!useRows.length && keepReasons.length){
     if (gmax || dmax) useRows.push("<b>マックスバトル</b>：ダイマックス・キョダイマックスはマックスバトル専用の戦力（このアプリでは強さを評価できていません）");
+    if (megaKeep) useRows.push(`<b>メガシンカの解禁待ち</b>：${esc(megaNames)}（本編の${esc(megaGames)}）がポケモンGOで解禁されたら、レイドのアタッカー候補になります。解禁されると、このページの判定にも自動で反映されます`);
     if (rare) useRows.push("<b>将来に備えて</b>：この個体値では上位の使い道に向いていない（またはランキング外）ですが、入手機会が少ないので残しておく価値があります");
     if (total === 45) useRows.push("<b>記念・コレクション</b>：個体値100%は貴重です");
     if (shiny) useRows.push("<b>コレクション・交換</b>：色違いは見た目が特別です（強さは通常の色と同じ）");
@@ -331,7 +346,13 @@ function evaluate(){
   const looks = [shiny && "色違い", bg && "特別な背景", costume && "コスチューム"].filter(Boolean);
   if (looks.length) notes.push(`${looks.join("・")}でも強さ（種族値・技）は通常と同じです。` + (best >= 1 ? "" : `使い道はありませんが、${looks.join("・")}なので「逃がしてOK」にはしていません。`));
   if (costume && fam.length > 1) notes.push("コスチュームのポケモンは進化できないものが多いです。上の判定は進化後も含めているので、進化できない場合は進化前の姿のまま使うことになります。");
-  keepReasons.forEach(r => notes.push(r));
+  if (megaGap.length){
+    notes.push(`🔮 本編（${esc(megaGames)}）には <b>${esc(megaNames)}</b> がいますが、ポケモンGOではまだ解禁されていません。` +
+      `解禁後の強さはGOのデータが出るまで計算できないため、上の判定には入っていません。` +
+      (megaKeep ? "" : `解禁に備えて残すなら、攻撃の個体値が13以上（全体80%以上）の個体がおすすめです（レイドで使うメガシンカは攻撃が大事）。`) +
+      (shadow ? "シャドウのままではメガシンカできないので、使うときはリトレーンが必要です。" : ""));
+  }
+  keepReasons.filter(r => !megaKeep || !r.startsWith("本編にある")).forEach(r => notes.push(r));
 
   let html = `<div class="verdict ${cls}"><div class="big">${verdict}</div><div class="sum">${esc(sum)}</div></div>`;
   if (purify){

@@ -145,6 +145,14 @@ const close = async (p, label) => { check(`${label}: JavaScriptエラーなし`,
       const t = await p.$eval('#main', e => e.innerText);
       check(`iv: ${n} を判定できる`, t.includes(want) && (!ng || !t.includes(ng)), t.slice(0, 40));
     }
+    // 本編にはあるがGOで未解禁のメガシンカ（ポカブ→エンブオー）
+    for (const [n, iv, want] of [['ポカブ', [15, 14, 13], 'とっておく'], ['ポカブ', [5, 10, 10], '逃がしてOK']]) {
+      await p.fill('#q', ''); await p.fill('#q', n); await p.waitForTimeout(350); await setIv(...iv);
+      const t = await p.$eval('#main', e => e.innerText);
+      check(`iv: ${n} ${iv.join('/')} は「${want}」で、未解禁のメガシンカ（メガエンブオー）を知らせる`, t.includes(want) && t.includes('🔮') && t.includes('メガエンブオー'), t.slice(0, 50));
+    }
+    await p.fill('#q', ''); await p.fill('#q', 'ヒトカゲ'); await p.waitForTimeout(350); await setIv(15, 15, 15);
+    check('iv: メガシンカが解禁済みのポケモン（ヒトカゲ）には未解禁の注意を出さない', !(await p.$eval('#main', e => e.innerText)).includes('🔮'), '');
     await close(p, 'iv');
   }
 
