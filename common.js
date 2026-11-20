@@ -239,3 +239,22 @@ function translateTask(t){
   return {ja: jaMons(s), ok: false};
 }
 
+
+// ===== 電波がないときのための保存（前回取れたデータを使う） =====
+/** ブラウザに保存したデータを読む（壊れていたら null） */
+function cacheGet(key){ try { return JSON.parse(localStorage.getItem(key) || "null"); } catch { return null; } }
+/** ブラウザに保存する（容量いっぱいなどで保存できなくても止めない） */
+function cacheSet(key, v){ try { localStorage.setItem(key, JSON.stringify(v)); return true; } catch { return false; } }
+/**
+ * データを取りに行き、取れたら保存。取れなければ前回保存した分を返す。
+ * fetcher: () => Promise<data>、valid: data → true/false（形が正しいか）、unwrap: 保存した形 → data（他ページと保存の形が違うとき用）
+ * 戻り値：{data, cached（前回の分を使ったか）}
+ */
+async function fetchWithCache(key, fetcher, valid, unwrap = (x) => x, wrap = (x) => x){
+  try {
+    const d = await fetcher();
+    if (valid(d)){ cacheSet(key, wrap(d)); return {data: d, cached: false}; }
+  } catch {}
+  const c = unwrap(cacheGet(key));
+  return c && valid(c) ? {data: c, cached: true} : {data: null, cached: false};
+}

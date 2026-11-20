@@ -278,12 +278,30 @@ async function getJson(url){
   try { const r = await fetch(url, {cache: "no-cache", signal: ctl.signal}); if (!r.ok) throw new Error("HTTP " + r.status); return await r.json(); }
   finally { clearTimeout(timer); }
 }
+// 電波がないときは、前回保存した分を使う（保存先はほかのページと共通）
+const CACHES = {
+  pokedex: ["pogo-pokedex-cache-v1", d => d && Array.isArray(d.species) && d.species.length > 0],
+  rankings: ["pogo-rankings-cache-v1", d => d && Array.isArray(d.raid)],
+  megas: ["pogo-megas-cache-v1", d => d && Array.isArray(d.megas)],
+  raids: ["pogo-raids-cache-v1", d => d && Array.isArray(d.bosses)],
+  research: ["pogo-research-cache-v1", d => d && Array.isArray(d.categories)],
+  bonuses: ["pogo-bonuses-cache-v1", d => d && typeof d.events === "object" && d.events !== null],
+  events: ["pogo-events-cache-v1", d => Array.isArray(d), c => c && c.data, d => ({fetchedAt: Date.now(), data: d})],
+};
+const LABELS = {rankings: "育成ランキング", megas: "メガシンカ", raids: "レイド", research: "リサーチ", bonuses: "イベントの出現", events: "イベント"};
 async function load(){
-  const entries = await Promise.all(Object.entries(URLS).map(([k, u]) => getJson(u).then(v => [k, v], () => [k, null])));
-  DATA = Object.fromEntries(entries);
-  if (!DATA.pokedex || !Array.isArray(DATA.pokedex.species) || !DATA.pokedex.species.length){ document.getElementById("notice").innerHTML = `<div class="notice err">ポケモンの一覧を読み込めませんでした。時間をおいて開き直してください。</div>`; return; }
-  const missing = Object.entries(DATA).filter(([k, v]) => !v && k !== "pokedex").map(([k]) => k);
-  if (missing.length) document.getElementById("notice").innerHTML = `<div class="notice">一部のデータ（${missing.join("、")}）を読み込めませんでした。表示できる情報だけ出しています。</div>`;
+  const entries = await Promise.all(Object.entries(URLS).map(([k, u]) => {
+    const [key, valid, unwrap, wrap] = CACHES[k];
+    return fetchWithCache(key, () => getJson(u), valid, unwrap, wrap).then(r => [k, r]);
+  }));
+  DATA = Object.fromEntries(entries.map(([k, r]) => [k, r.data]));
+  const cachedKeys = entries.filter(([k, r]) => r.cached).map(([k]) => k);
+  if (!DATA.pokedex){ document.getElementById("notice").innerHTML = `<div class="notice err">ポケモンの一覧を読み込めませんでした。電波のよいところで一度開くと、次からは電波がなくても使えます。</div>`; return; }
+  const missing = Object.entries(DATA).filter(([k, v]) => !v && k !== "pokedex").map(([k]) => LABELS[k] || k);
+  const msgs = [];
+  if (cachedKeys.length) msgs.push("最新のデータを取得できなかったため、前回取得したデータで表示しています。");
+  if (missing.length) msgs.push(`一部のデータ（${missing.join("、")}）を読み込めませんでした。表示できる情報だけ出しています。`);
+  if (msgs.length) document.getElementById("notice").innerHTML = `<div class="notice">${msgs.join("<br>")}</div>`;
   SPECIES = DATA.pokedex.species.map(s => ({...s, ja: nameJa(s.name)}));
   BY_ID = Object.assign(Object.create(null), Object.fromEntries(SPECIES.map(s => [s.id, s])));
   BY_NAME = Object.create(null); SPECIES.forEach(s => { if (!BY_NAME[s.name]) BY_NAME[s.name] = s; });

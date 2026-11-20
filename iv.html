@@ -387,9 +387,17 @@ async function getJson(url){
   finally { clearTimeout(timer); }
 }
 (async () => {
-  [PD, RK] = await Promise.all([getJson(D + "pokedex.json").catch(() => null), getJson(D + "rankings.json").catch(() => null)]);
-  if (!PD || !PD.cpm || !Array.isArray(PD.species)){ document.getElementById("notice").innerHTML = `<div class="notice err">データを読み込めませんでした。時間をおいて開き直してください。</div>`; return; }
-  if (!RK) document.getElementById("notice").innerHTML = `<div class="notice">育成ランキングを読み込めなかったため、レイド・ジムの判定は省略されます。</div>`;
+  // 電波がないときは、前回保存した分を使う（保存先は検索・育成TOP10と共通）
+  const [pd, rk] = await Promise.all([
+    fetchWithCache("pogo-pokedex-cache-v1", () => getJson(D + "pokedex.json"), d => d && Array.isArray(d.cpm) && Array.isArray(d.species) && d.species.length > 0),
+    fetchWithCache("pogo-rankings-cache-v1", () => getJson(D + "rankings.json"), d => d && Array.isArray(d.raid)),
+  ]);
+  PD = pd.data; RK = rk.data;
+  if (!PD){ document.getElementById("notice").innerHTML = `<div class="notice err">データを読み込めませんでした。電波のよいところで一度開くと、次からは電波がなくても使えます。</div>`; return; }
+  const msgs = [];
+  if (pd.cached || rk.cached) msgs.push("最新のデータを取得できなかったため、前回取得したデータで判定しています。");
+  if (!RK) msgs.push("育成ランキングを読み込めなかったため、レイド・ジムの判定は省略されます。");
+  if (msgs.length) document.getElementById("notice").innerHTML = `<div class="notice">${msgs.join("<br>")}</div>`;
   LEVELS = buildLevels(PD.cpm);
   SPECIES = PD.species.map(s => ({...s, ja: nameJa(s.name)}));
   BY_ID = Object.assign(Object.create(null), Object.fromEntries(SPECIES.map(s => [s.id, s])));

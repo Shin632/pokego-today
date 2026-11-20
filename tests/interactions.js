@@ -234,6 +234,34 @@ const close = async (p, label) => { check(`${label}: JavaScriptエラーなし`,
     }
     await close(p, pg);
   }
+  // 電波がなくても、前回のデータで検索・育成判定ができる（改善A）
+  {
+    const ctx = await b.newContext({ viewport: { width: 390, height: 844 }, locale: 'ja-JP', timezoneId: 'Asia/Tokyo' });
+    let offline = false;
+    await ctx.route('**/*', r => {
+      const u = r.request().url();
+      for (const [k, f] of Object.entries(FILES)) if (u.includes(k)) {
+        if (offline) return r.abort();
+        return r.fulfill({ status: 200, contentType: 'application/json', headers: { 'access-control-allow-origin': '*' }, body: fs.readFileSync(path.join(CACHE, f)) });
+      }
+      return u.startsWith('file:') ? r.continue() : r.abort();
+    });
+    const p = await ctx.newPage(); const errs = []; p.on('pageerror', e => errs.push(e.message));
+    await p.goto('file://' + path.join(ROOT, 'iv.html')); await p.waitForTimeout(1300);
+    await p.goto('file://' + path.join(ROOT, 'search.html')); await p.waitForTimeout(1300);
+    offline = true;
+    await p.reload(); await p.waitForTimeout(1300);
+    await p.fill('#q', 'リザードン'); await p.waitForTimeout(500);
+    check('offline: 電波なしでも検索できる', (await p.$eval('#main', e => e.innerText)).includes('Charizard'), '');
+    await p.goto('file://' + path.join(ROOT, 'iv.html')); await p.waitForTimeout(1300);
+    await p.fill('#q', 'マリル'); await p.waitForTimeout(400);
+    await p.fill('#ia', '0'); await p.fill('#id', '15'); await p.fill('#ih', '15'); await p.waitForTimeout(300);
+    const t = await p.$eval('#main', e => e.innerText);
+    check('offline: 電波なしでも育成判定できる（ランキングも使う）', t.includes('育成すべき') && t.includes('スーパーリーグ'), t.slice(0, 50));
+    check('offline: 前回のデータで判定していると知らせる', (await p.$eval('#notice', e => e.innerText)).includes('前回取得したデータ'), '');
+    check('offline: JavaScriptエラーなし', !errs.length, errs.join(' / '));
+    await ctx.close();
+  }
   // コミュニティ・デイ当日は主役を「捕まえるべき」に（6回目で修正）
   {
     const ev = (JSON.parse(fs.readFileSync(path.join(CACHE, 'sd_events.json'), 'utf8')) || [])
