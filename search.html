@@ -215,7 +215,7 @@ function useForms(sp){
   const fam = [], seen = new Set(), stack = [BY_ID[baseId(sp.id)] || sp];
   while (stack.length){
     const x = stack.pop(); if (seen.has(x.id)) continue; seen.add(x.id); fam.push(x);
-    (x.evo || []).forEach(e => BY_ID[e] && stack.push(BY_ID[e]));
+    [...(x.evo || []), ...(FORM_TO[x.id] || [])].forEach(e => BY_ID[e] && stack.push(BY_ID[e]));
   }
   const bases = new Set(fam.map(x => x.id));
   return {fam, ids: new Set(SPECIES.filter(x => bases.has(baseId(x.id))).map(x => x.id))};

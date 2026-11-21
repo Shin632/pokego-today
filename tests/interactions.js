@@ -112,6 +112,9 @@ const close = async (p, label) => { check(`${label}: JavaScriptエラーなし`,
     await p.fill('#q', ''); await p.fill('#q', 'ピカ'); await p.waitForTimeout(500);
     const sg2 = await p.$$eval('.sg', e => e.map(x => x.innerText).join(' / '));
     check('search: コスチュームのピカチュウは候補に出ない', !/マスクド|かりゆし/.test(sg2), sg2);
+    // 合体・王の姿も活躍の場に含める（育成判定と食い違わないように。11/22・3回目）
+    await p.fill('#q', ''); await p.fill('#q', 'ネクロズマ'); await p.waitForTimeout(500);
+    check('search: ネクロズマの活躍の場に合体後の姿が入る', /あかつきのつばさ/.test((await p.$eval('#main', e => e.innerText)).split('育成難易度')[0]), '');
     // フォルム違いを同じ系統として出す（改善K）
     await p.fill('#q', 'ロトム'); await p.waitForTimeout(500);
     check('search: ロトムでウォッシュロトムなどのフォルムも出る', /ウォッシュロトム/.test(await p.$eval('#main', e => e.innerText)), '');

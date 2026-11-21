@@ -377,3 +377,9 @@ function unreleasedMegas(species, goForms){
   // GOに入っている分は、古いもの（XY・ORAS → Z-A → 追加コンテンツ）から順に入ったとみなす
   return forms.slice(goForms).map(f => ({name: f.suffix === "P" ? `ゲンシ${base}` : `メガ${base}${f.suffix}`, game: f.game}));
 }
+
+// 進化ではないが、同じ個体値のまま姿が変わるもの（王の姿・合体）。育成判定・検索で、変わった後の姿も含めて評価する
+const FORM_TO = {
+  zacian_hero: ["zacian_crowned_sword"], zamazenta_hero: ["zamazenta_crowned_shield"],
+  necrozma: ["necrozma_dawn_wings", "necrozma_dusk_mane"], kyurem: ["kyurem_black", "kyurem_white"],
+};

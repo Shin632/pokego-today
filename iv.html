@@ -172,11 +172,7 @@ function pvpRank(st, iv, cap, shadow){
 }
 
 // ===== 判定 =====
-// 進化ではないが、同じ個体値のまま姿が変わるもの（王の姿・合体）
-const FORM_TO = {
-  zacian_hero: ["zacian_crowned_sword"], zamazenta_hero: ["zamazenta_crowned_shield"],
-  necrozma: ["necrozma_dawn_wings", "necrozma_dusk_mane"], kyurem: ["kyurem_black", "kyurem_white"],
-};
+// FORM_TO（王の姿・合体で姿が変わるもの）は common.js
 function family(sp){
   const out = [sp], seen = new Set([sp.id]);
   for (let i = 0; i < out.length; i++) for (const e of [...(out[i].evo || []), ...(FORM_TO[out[i].id] || [])]) if (BY_ID[e] && !seen.has(e)){ seen.add(e); out.push(BY_ID[e]); }
