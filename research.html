@@ -163,7 +163,9 @@ const SD_TYPES = {event:"Event Tasks",catch:"Catching Tasks",throw:"Throwing Tas
 function catInfo(name){
   if (CATS[name]) return {ja: CATS[name][0], icon: CATS[name][1], event: name === "Event Tasks"};
   const m = String(name).match(/^(.+?) Tasks$/);
-  return {ja: m ? jaMons(m[1]) : (name || "その他"), icon: "🎉", event: true};
+  // イベント名はイベントページと同じ訳し方（translateName）にそろえる
+  const raw = m ? m[1] : (name || "");
+  return {ja: raw ? translateName({name: raw, type: "event"}) : "その他", icon: "🎉", event: true};
 }
 
 // ===== 報酬名の翻訳 =====
