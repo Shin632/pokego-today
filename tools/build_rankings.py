@@ -108,12 +108,61 @@ def load_pve_moves(gm):
 
 ITEM_JA = {"ITEM_SUN_STONE": "たいようのいし", "ITEM_KINGS_ROCK": "おうじゃのしるし", "ITEM_METAL_COAT": "メタルコート",
            "ITEM_GEN4_EVOLUTION_STONE": "シンオウのいし", "ITEM_DRAGON_SCALE": "りゅうのウロコ", "ITEM_UP_GRADE": "アップグレード",
-           "ITEM_GEN5_EVOLUTION_STONE": "イッシュのいし", "ITEM_OTHER_EVOLUTION_STONE_A": "ふしぎなパーツ"}
+           "ITEM_GEN5_EVOLUTION_STONE": "イッシュのいし"}
+# 個数つきの特別な素材（evolutionItemRequirementCost）
+COST_ITEM_JA = {"ITEM_OTHER_EVOLUTION_STONE_A": ("コレクレーのコイン", 1.0), "ITEM_BEANS": ("ジガルデセル", 1.0),
+                "ITEM_OTHER_EVOLUTION_STONE_MAPLE_A": ("専用のりんご", 0.5), "ITEM_OTHER_EVOLUTION_STONE_MAPLE_B": ("専用のりんご", 0.5),
+                "ITEM_OTHER_EVOLUTION_STONE_MAPLE_C": ("専用のりんご", 0.5)}
+LURE_JA = {"ITEM_TROY_DISK_MAGNETIC": "マグネット", "ITEM_TROY_DISK_MOSSY": "ハーブ", "ITEM_TROY_DISK_GLACIAL": "アイス",
+           "ITEM_TROY_DISK_RAINY": "レイニー", "ITEM_TROY_DISK_SPARKLY": "キラキラ"}
+GM_TYPE_JA = {"NORMAL": "ノーマル", "FIRE": "ほのお", "WATER": "みず", "ELECTRIC": "でんき", "GRASS": "くさ", "ICE": "こおり",
+              "FIGHTING": "かくとう", "POISON": "どく", "GROUND": "じめん", "FLYING": "ひこう", "PSYCHIC": "エスパー", "BUG": "むし",
+              "ROCK": "いわ", "GHOST": "ゴースト", "DRAGON": "ドラゴン", "DARK": "あく", "STEEL": "はがね", "FAIRY": "フェアリー"}
+
+
+def quest_text(q):
+    """進化タスク（evolutionQuestTemplate）→ 日本語の説明"""
+    g = (q.get("goals") or [{}])[0]
+    n = g.get("target") or 1
+    types, raid, dmax = [], False, False
+    for c in g.get("condition") or []:
+        for k in ("withPokemonType", "withOpponentPokemonBattleStatus"):
+            for t in (c.get(k) or {}).get("pokemonType" if k == "withPokemonType" else "opponentPokemonType") or []:
+                types.append(GM_TYPE_JA.get(t.replace("POKEMON_TYPE_", ""), t))
+        ct = (c.get("withCombatType") or {}).get("combatType") or []
+        raid = raid or "COMBAT_TYPE_RAID" in ct
+        dmax = dmax or "COMBAT_TYPE_DMAX" in ct
+    ty = "・".join(types)
+    qt = q.get("questType", "")
+    if qt == "QUEST_CATCH_POKEMON":
+        return f"{ty}タイプのポケモンを{n}匹捕まえる" if ty else f"ポケモンを{n}匹捕まえる"
+    if qt == "QUEST_FIGHT_POKEMON":
+        return f"相棒にして{ty}タイプのポケモンを{n}匹倒す" if ty else f"相棒にしてポケモンを{n}匹倒す"
+    if qt == "QUEST_COMPLETE_BATTLE":
+        where = "レイド・マックスバトル" if dmax else "レイド" if raid else "バトル"
+        return f"{where}で{ty}タイプのポケモンに{n}回勝つ" if ty else f"{where}で{n}回勝つ"
+    if qt == "QUEST_COMPLETE_RAID_BATTLE":
+        return f"レイドで{n}回勝つ"
+    if qt == "QUEST_BUDDY_EVOLUTION_WALK":
+        return f"相棒にして{n}km歩く"
+    if qt == "QUEST_BUDDY_EARN_AFFECTION_POINTS":
+        return f"相棒にしてハートを{n}個ためる"
+    if qt == "QUEST_BUDDY_FEED":
+        return f"相棒におやつを{n}回あげる"
+    if qt == "QUEST_USE_INCENSE":
+        return f"おこうを{n}回使う"
+    if qt == "QUEST_LAND_THROW":
+        return f"エクセレントスローを{n}回投げる"
+    return f"専用のタスク（{n}回）を達成する"
 
 
 def load_evolutions(gm):
-    """図鑑番号ごとに「進化前の図鑑番号・進化に必要なアメ・必要な道具」を返す"""
-    id2dex, branches = {}, []
+    """図鑑番号ごとに「進化前の図鑑番号・進化に必要なアメ・必要な道具・そのほかの条件（[(説明, 点数)]）」を返す"""
+    id2dex, branches, quests = {}, [], {}
+    for x in gm:
+        q = x.get("data", {}).get("evolutionQuestTemplate")
+        if q:
+            quests[x["templateId"]] = q
     for x in gm:
         ps = x.get("data", {}).get("pokemonSettings")
         if not ps:
@@ -125,24 +174,52 @@ def load_evolutions(gm):
             continue
         id2dex.setdefault(ps["pokemonId"], dex)
         for b in ps.get("evolutionBranch") or []:
-            if b.get("evolution") and b.get("candyCost"):
-                branches.append((dex, b["evolution"], int(b["candyCost"]), b.get("evolutionItemRequirement")))
+            if b.get("evolution") and (b.get("candyCost") or b.get("evolutionItemRequirementCost")):
+                branches.append((dex, b))
     evo = {}
-    for parent, child, cost, item in branches:
-        cd = id2dex.get(child)
+    for parent, b in branches:
+        cd = id2dex.get(b["evolution"])
         if cd is None or cd == parent:
             continue
+        cost = int(b.get("candyCost") or 0)
+        item = b.get("evolutionItemRequirement")
+        conds = []
+        if item in COST_ITEM_JA:
+            name, pt = COST_ITEM_JA[item]
+            conds.append((f"{name}{b.get('evolutionItemRequirementCost') or ''}個", pt)); item = None
+        if b.get("lureItemRequirement"):
+            conds.append((f"{LURE_JA.get(b['lureItemRequirement'], '特別な')}ルアーモジュールを使ったポケストップの近く", 0.5))
+        # 進化タスク（コミュニティ・デイ用・イベント用の軽いものは使わない）
+        qids = [d.get("questRequirementTemplateId") for d in b.get("questDisplay") or []]
+        qids = [q for q in qids if q and "_CD_" not in q and "BUDDY_EVENT" not in q]
+        if qids and qids[0] in quests:
+            conds.append((quest_text(quests[qids[0]]), 0.5))
+        elif b.get("kmBuddyDistanceRequirement"):
+            conds.append((f"相棒にして{int(b['kmBuddyDistanceRequirement'])}km歩く", 0.5))
+        if b.get("onlyDaytime"):
+            conds.append(("昼に進化させる", 0))
+        if b.get("onlyNighttime"):
+            conds.append(("夜に進化させる", 0))
+        if b.get("onlyUpsideDown"):
+            conds.append(("スマホを逆さにして進化させる", 0))
+        if b.get("genderRequirement"):
+            conds.append((("オス" if b["genderRequirement"] == "MALE" else "メス") + "だけが進化できる", 0))
         cur = evo.get(cd)
-        if cur is None or cost < cur[1]:
-            evo[cd] = (parent, cost, item)
+        # 同じ進化先への道が複数あるときは、アメが少なく条件の軽いほう
+        key = (cost, sum(p for _, p in conds))
+        if cur is None or key < (cur[1], sum(p for _, p in cur[3])):
+            evo[cd] = (parent, cost, item, conds)
     return evo
 
 
-def total_candy(dex, evo, depth=0):
+def total_candy(dex, evo, depth=0, conds=None):
+    """進化に必要なアメの合計と道具。conds を渡すと、そのほかの条件（[(説明, 点数)]）もそこに足す"""
     if dex not in evo or depth > 5:
         return 0, []
-    parent, cost, item = evo[dex]
-    c, items = total_candy(parent, evo, depth + 1)
+    parent, cost, item, cs = evo[dex]
+    if conds is not None:
+        conds[:0] = cs
+    c, items = total_candy(parent, evo, depth + 1, conds)
     return c + cost, items + ([item] if item else [])
 
 
@@ -194,7 +271,8 @@ def difficulty(p, b, evo):
         pts += 1; reasons.append("シャドウ：GOロケット団などから入手。やつあたりを消すにはイベントが必要")
     if b.get("fastElite") or b.get("chargedElite"):
         pts += 1; reasons.append("★の技にすごいわざマシンが必要")
-    candy, items = total_candy(p["dex"], evo)
+    conds = []
+    candy, items = total_candy(p["dex"], evo, conds=conds)
     if candy >= 400:
         pts += 1.5
     elif candy >= 200:
@@ -204,7 +282,9 @@ def difficulty(p, b, evo):
     if candy >= 100:
         reasons.append(f"進化にアメ{candy}個")
     for it in items:
-        pts += 0.5; reasons.append(f"進化に{ITEM_JA.get(it, 'どうぐ')}が必要")
+        pts += 0.5; reasons.append(f"進化に{ITEM_JA.get(it, '専用のどうぐ')}が必要")
+    for text, pt in conds:
+        pts += pt; reasons.append(f"進化の条件：{text}")
     # 相棒で歩いてアメ1個もらう距離（伝説・幻は「アメも集めにくい」で数え済みなので点は足さない）
     km = p.get("buddyDistance")
     if km and km >= 5:
