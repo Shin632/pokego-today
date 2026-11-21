@@ -140,8 +140,9 @@ const NAME_RULES = [
   [/^(.+?) in Max Battles$/, (a)=>`マックスバトル：${jaMons(a)}`],
   [/^(.+?) during Max Monday$/, (a)=>`マックスマンデー：${jaMons(a)}`],
   [/^Max Monday$/, ()=>"マックスマンデー"],
-  [new RegExp("^" + MONTH_RE + " Community Day Classic$"), (m)=>`${MONTHS[m]}月のコミュニティ・デイ クラシック`],
-  [new RegExp("^" + MONTH_RE + " Community Day$"), (m)=>`${MONTHS[m]}月のコミュニティ・デイ`],
+  [new RegExp("^" + MONTH_RE + " Community Day Classic(?: (\\d{4}))?$"), (m, y)=>`${MONTHS[m]}月のコミュニティ・デイ クラシック${y ? " " + y : ""}`],
+  [new RegExp("^" + MONTH_RE + " Community Day(?: (\\d{4}))?$"), (m, y)=>`${MONTHS[m]}月のコミュニティ・デイ${y ? " " + y : ""}`],
+  [/^Twitch Drops for (.+)$/, (a)=>`Twitch ドロップ：${a}`],
   [/^(.+?) Community Day Classic$/, (a)=>`コミュニティ・デイ クラシック：${jaMons(a)}`],
   [/^(.+?) Community Day$/, (a)=>`コミュニティ・デイ：${jaMons(a)}`],
   [/^Super Mega Raid Day$/, ()=>"スーパーメガレイド・デイ"],
@@ -168,6 +169,10 @@ const EVENT_WORDS = [
   [/\bDynamax Trails\b/g, "ダイマックス・トレイル"], [/\bTwilight Trails\b/g, "トワイライト・トレイル"], [/\bTwilight Wishes\b/g, "トワイライト・ウィッシュ"],
   [/:\s*Mega Edition\b/g, "（メガエディション）"], [/\bMega Catch Cup\b/g, "メガキャッチカップ"], [/\s*\bEdition\b/g, "エディション"], [/\bCup\b/g, "カップ"],
   [/\bPok[eé]mon GO and (\w+)/g, "ポケモンGO × $1"], [/\bPok[eé]mon GO(?! Tour)\b/g, "ポケモンGO"], [/\bPok[eé]mon(?! GO)/g, "ポケモン"],
+  [/\b(?:Latin America|LAIC) International Championships\b/g, "ラテンアメリカ・インターナショナル・チャンピオンシップス"],
+  [/\b(?:North America|NAIC) International Championships\b/g, "北アメリカ・インターナショナル・チャンピオンシップス"],
+  [/\b(?:Europe|EUIC) International Championships\b/g, "ヨーロッパ・インターナショナル・チャンピオンシップス"],
+  [/\bWorld Championships\b/g, "ワールドチャンピオンシップス"],
   [/\bAlola\b/g, "アローラ"], [/\bTwilight\b/g, "トワイライト"], [/\bTrails\b/g, "トレイル"], [/\bWishes\b/g, "ウィッシュ"], [/\bDynamax\b/g, "ダイマックス"],
 ];
 function eventWordsJa(s){ for (const [re, ja] of EVENT_WORDS) s = s.replace(re, ja); return s.replace(/([^\x00-\x7F]): /g, "$1："); }

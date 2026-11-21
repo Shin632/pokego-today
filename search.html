@@ -262,7 +262,8 @@ function activities(sp){
     const best = fin.map(x => ({x, a: MR.atk.indexOf(x.id) + 1, t: MR.tank.indexOf(x.id) + 1})).sort((p, q) => Math.min(p.a, p.t) - Math.min(q.a, q.t))[0];
     const g = fam.some(x => x.gmax);
     const top = best ? Math.min(best.a || 999, best.t || 999) : 999;
-    rows.push({key: "max", m: top <= 10 ? "◎" : top <= 25 ? "○" : "△", title: `マックスバトル（${g ? "キョダイマックス・ダイマックス" : "ダイマックス"}）`,
+    // ダイマックスできる種類が少ないので、順位ではなく「上位何%か」で決める（上位25%で◎、50%で○）
+    rows.push({key: "max", m: top <= Math.max(3, Math.round(MR.n * 0.25)) ? "◎" : top <= Math.round(MR.n * 0.5) ? "○" : "△", title: `マックスバトル（${g ? "キョダイマックス・ダイマックス" : "ダイマックス"}）`,
       body: best ? `ダイマックスできる${MR.n}種類の中で、攻撃 ${best.a}位・耐久 ${best.t}位${nm(best.x)}` : "ダイマックスできる",
       sub: `マックスバトルで捕まえた個体だけが使えます。${g ? "キョダイマックスは専用の強い技を使えます。" : ""}順位は種族値だけの目安です（技や相手のタイプは入っていません）`});
   }

@@ -256,6 +256,7 @@ const TYPES = {
   "update":               ["アップデート", "bg"],
   "location-specific":    ["地域限定", "event"],
   "potential-ultra-unlock":["ウルトラアンロック", "event"],
+  "twitch-drops":         ["Twitch ドロップ", "event"],
 };
 const BG_TYPES = new Set(["season", "go-pass", "go-battle-league", "research", "research-breakthrough", "update"]);
 function typeInfo(ev){
@@ -323,7 +324,7 @@ const BONUS_RULES = [
   [/^Increased chance (?:to|of) (?:receive|receiving|get|getting|earn|earning) (.+?) (?:from|when|for) (.+)$/i,
     (what, from) => `${findIn(ACTIONS, from) || from}に${findIn(RESOURCES, what) || jaMons(what)}をもらいやすい`],
   // タマゴ
-  [/^(1\/2|1\/3|1\/4|½|¼|half|one[- ]quarter|quarter)\s+(?:Egg\s+)?Hatch(?:ing)? Distance$/i,
+  [/^(1\/2|1\/3|1\/4|½|¼|half|one[- ]quarter|quarter)\s+(?:Egg\s+)?Hatch(?:ing)? Distance(?: when Eggs? (?:are|is) (?:placed|put) (?:into|in) (?:an )?Incubators?.*)?$/i,
     (f) => `タマゴの孵化に必要な距離 ${({"½":"1/2","¼":"1/4",half:"1/2",quarter:"1/4","one-quarter":"1/4","one quarter":"1/4"})[f.toLowerCase()] || f}`],
   [/^(?:Eggs? (?:will )?hatch at|Hatch Eggs at) (1\/2|1\/4|half|one[- ]quarter) (?:the )?distance/i, (f) => `タマゴの孵化に必要な距離 ${/half/i.test(f) ? "1/2" : /quarter/i.test(f) ? "1/4" : f}`],
   // 出現・色違い
@@ -346,6 +347,7 @@ const BONUS_RULES = [
   [/Remote Raid (?:Pass )?limit .*?(?:increased|raised) to (\w+)/i, (n) => `リモートレイドの1日の上限が${toNum(n)}回に`],
   // 交換
   [/^One additional Special Trade.*$/i, () => "スペシャル交換が1日1回追加"],
+  [/^Up to (\w+) Special Trades? (?:can be made )?per day.*$/i, (n) => `スペシャル交換が1日${toNum(n)}回までできる`],
   [/^Trades? .*?(\d+)% less Stardust.*$/i, (p) => `交換に必要なほしのすなが${p}%減`],
   [/^Increased chance (?:of|for|to get) (?:becoming )?Lucky (?:Pokémon from )?Trades?.*$/i, () => "キラ交換になりやすい"],
   // ギフト
