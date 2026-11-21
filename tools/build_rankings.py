@@ -218,7 +218,6 @@ def difficulty(p, b, evo):
 
 
 EVENTS_URL = "https://raw.githubusercontent.com/bigfoott/ScrapedDuck/data/events.json"
-MAX_BATTLES_URL = "https://leekduck.com/max-battles/"
 
 
 def load_max_forms(gm, ids):
@@ -1126,15 +1125,23 @@ def main(prev_path, out_path, prev_megas_path=None, out_megas_path=None, prev_ra
                             gmax.add(x["id"])
         except Exception as ex:
             print(f"前回の pokedex.json は使えませんでした: {ex}")
-        for url, label in ((EVENTS_URL, "events"), (MAX_BATTLES_URL, "max-battles")):
-            try:
-                txt = get(url).decode("utf-8", "replace")
-                if label == "events":
-                    txt = " | ".join(e.get("name", "") for e in json.loads(txt))
-                d2, g2 = max_names_from_text(txt, name2id)
-                dmax |= d2; gmax |= g2
-            except Exception as ex:
-                print(f"::warning::ダイマックス情報（{label}）: {ex}")
+        # イベント名（ScrapedDuck）と、同じワークフローで先に集めた LeekDuck のイベントページの本文（out/bonuses.json）
+        texts = []
+        try:
+            texts.append(" | ".join(e.get("name", "") for e in json.loads(get(EVENTS_URL))))
+        except Exception as ex:
+            print(f"::warning::ダイマックス情報（イベント名）: {ex}")
+        try:
+            with open(os.path.join(os.path.dirname(out_path) or ".", "bonuses.json"), encoding="utf-8") as f:
+                bon = json.load(f)
+            for ev in (bon.get("events") or {}).values():
+                texts += [b.get("text", "") for b in ev.get("bonuses") or []] + list(ev.get("notes") or [])
+                for g in ev.get("spawns") or []:
+                    texts += list(g.get("context") or []) + [p.get("name", "") for p in g.get("pokemon") or []]
+        except Exception as ex:
+            print(f"ダイマックス情報（イベントページ）は使えませんでした: {ex}")
+        d2, g2 = max_names_from_text(" | ".join(texts), name2id)
+        dmax |= d2; gmax |= g2
         # ダイマックスの個体は、進化してもダイマックスできる（進化先にも付ける）
         by_sid = {q["speciesId"]: q for q in pokemon}
         todo = list(dmax)
