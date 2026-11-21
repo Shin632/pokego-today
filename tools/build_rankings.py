@@ -915,6 +915,8 @@ def build_pokedex(pokemon, pvp, move_ja=None, move_en=None, dmax=frozenset(), gm
             item["pvpMoves"] = {lg: [{"id": m, "ja": (move_ja or {}).get(m), "en": (move_en or {}).get(m, m), "elite": m in elite} for m in ms]
                                 for lg, ms in PVP_MOVES[p["speciesId"]].items()}
         flags = [t for t in ("legendary", "mythical", "ultrabeast", "mega", "shadow", "regional") if t in tags]
+        if p["speciesId"].startswith("necrozma") and "ultrabeast" in flags:   # ネクロズマは伝説（PvPoke ではウルトラビースト扱い）
+            flags = ["legendary" if t == "ultrabeast" else t for t in flags]
         if flags:
             item["tags"] = flags
         if p["speciesId"] in dmax or p["speciesId"] in gmax:

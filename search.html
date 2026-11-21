@@ -336,7 +336,7 @@ function show(id){
   document.getElementById("sugg").innerHTML = "";
   // 同じ系統・同じ図鑑番号（ロトムのフォルム違いなど）をまとめて出す
   const variants = SPECIES.filter(x => baseId(x.id) === baseId(sp.id) || ((x.family === sp.family || x.dex === sp.dex) && !SUFFIX.test(x.id)));
-  const tags = (sp.tags || []).map(t => ({legendary: "伝説", mythical: "幻", ultrabeast: "UB", mega: "メガ", shadow: "シャドウ", regional: "地域限定"}[t])).filter(Boolean)
+  const tags = (sp.tags || []).map(t => /^necrozma/.test(sp.id) && t === "ultrabeast" ? "legendary" : t).map(t => ({legendary: "伝説", mythical: "幻", ultrabeast: "UB", mega: "メガ", shadow: "シャドウ", regional: "地域限定"}[t])).filter(Boolean)
     .map(t => `<span class="tag">${t}</span>`).join("");
   // 入手方法
   const src = sources(sp);
