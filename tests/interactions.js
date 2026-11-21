@@ -99,6 +99,19 @@ const close = async (p, label) => { check(`${label}: JavaScriptエラーなし`,
     check('search: 別の名前を入れると前のポケモンの情報が消える', !(await p.$eval('#main', e => e.innerText)).includes('リザードン'), '');
     await p.fill('#q', 'メタモン'); await p.waitForTimeout(500);
     check('search: メタモンが見つかる', (await p.$eval('#main', e => e.innerText)).includes('Ditto'), '');
+    // 活躍の場・育成難易度・候補は最終進化だけ（11/21 追加）
+    await p.fill('#q', ''); await p.fill('#q', 'メタグロス'); await p.waitForTimeout(500);
+    const mt = await p.$eval('#main', e => e.innerText);
+    check('search: 活躍の場がいちばん上に出る', mt.indexOf('活躍の場') >= 0 && mt.indexOf('活躍の場') < mt.indexOf('今の入手方法'), '');
+    check('search: 育成難易度が出る', /育成難易度[\s\S]*★/.test(mt) && mt.includes('連れ歩き'), '');
+    await p.fill('#q', ''); await p.fill('#q', 'アンノーン'); await p.waitForTimeout(500);
+    check('search: 活躍の場がないときはその旨を出す', (await p.$eval('#main', e => e.innerText)).includes('活躍の場はありません'), '');
+    await p.fill('#q', ''); await p.fill('#q', 'ダンバル'); await p.waitForTimeout(500);
+    const sg = await p.$$eval('.sg', e => e.map(x => x.innerText).join(' / '));
+    check('search: 候補は最終進化だけ（ダンバル→メタグロス）', /メタグロス/.test(sg) && !/^ダンバル/.test(sg) && !/メタング/.test(sg), sg);
+    await p.fill('#q', ''); await p.fill('#q', 'ピカ'); await p.waitForTimeout(500);
+    const sg2 = await p.$$eval('.sg', e => e.map(x => x.innerText).join(' / '));
+    check('search: コスチュームのピカチュウは候補に出ない', !/マスクド|かりゆし/.test(sg2), sg2);
     // フォルム違いを同じ系統として出す（改善K）
     await p.fill('#q', 'ロトム'); await p.waitForTimeout(500);
     check('search: ロトムでウォッシュロトムなどのフォルムも出る', /ウォッシュロトム/.test(await p.$eval('#main', e => e.innerText)), '');
@@ -291,10 +304,11 @@ const close = async (p, label) => { check(`${label}: JavaScriptエラーなし`,
       await close(q, 'index(前日)');
     }
   }
-  // コミュニティ・デイ当日は主役を「捕まえるべき」に（6回目で修正）
+  // コミュニティ・デイ当日は主役を「捕まえるべき」に（6回目で修正）。出現ポケモンの情報があるコミュニティ・デイで確かめる
   {
+    const bon = JSON.parse(fs.readFileSync(path.join(CACHE, 'bonuses.json'), 'utf8')).events || {};
     const ev = (JSON.parse(fs.readFileSync(path.join(CACHE, 'sd_events.json'), 'utf8')) || [])
-      .find(e => e.eventType === 'community-day' && e.start && new Date(e.start.replace(/\.\d+$/, '') + '+09:00') > new Date());
+      .find(e => e.eventType === 'community-day' && e.start && bon[e.eventID] && (bon[e.eventID].spawns || []).length);
     if (ev) {
       const q = await open(b, 'spawns.html', { time: new Date(new Date(ev.start.replace(/\.\d+$/, '') + '+09:00').getTime() + 30 * 60000) });
       const t = await q.$eval('main', e => e.innerText);

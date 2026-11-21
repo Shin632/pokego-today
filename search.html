@@ -26,6 +26,7 @@ h1{font-size:20px;margin:6px 2px 0}
 .lead{font-size:13px;color:var(--sub);margin:2px 2px 10px}
 .search{width:100%;font:inherit;font-size:17px;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:var(--panel);color:var(--text)}
 .sugg{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.sg small{font-size:11px;color:var(--sub);margin-left:2px}
 .sg{appearance:none;font:inherit;font-size:13.5px;border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:999px;padding:5px 11px;cursor:pointer}
 .notice{background:#fff4d6;color:#6b4b00;border-radius:10px;padding:8px 12px;font-size:13px;margin:8px 0}
 .notice.err{background:#ffe1e1;color:#8a1c1c}
@@ -49,6 +50,15 @@ h2{font-size:15.5px;margin:14px 0 6px;display:flex;align-items:center;gap:6px}
 .wk{display:flex;flex-wrap:wrap;gap:6px}
 .wk span{font-size:12.5px;font-weight:700;color:#fff;border-radius:6px;padding:2px 8px}
 .memo{display:grid;gap:4px;font-size:13.5px}
+.act{font-size:14px;font-weight:700;border-radius:10px;padding:8px 10px;margin-bottom:4px}
+.act.ok{background:color-mix(in srgb,#16a34a 12%,var(--panel));color:#15803d}
+.act.weak{background:color-mix(in srgb,#d97706 12%,var(--panel));color:#a16207}
+.act.none{background:var(--bg);color:var(--sub)}
+@media (prefers-color-scheme: dark){.act.ok{color:#4ade80}.act.weak{color:#fbbf24}}
+.mk{display:inline-block;width:1.4em;font-weight:800}
+.mk.g{color:#15803d}.mk.o{color:#1d4ed8}.mk.x{color:var(--sub)}
+@media (prefers-color-scheme: dark){.mk.g{color:#4ade80}.mk.o{color:#93c5fd}}
+.ds{color:#b45309;letter-spacing:1px}
 .empty{color:var(--sub);font-size:14px;background:var(--panel);border:1px dashed var(--line);border-radius:var(--radius);padding:14px;text-align:center;margin-top:12px}
 footer{margin-top:24px;font-size:12px;color:var(--sub);line-height:1.7}
 footer a{color:var(--sub)}
@@ -59,7 +69,7 @@ footer a{color:var(--sub)}
 <div class="wrap">
   <nav class="nav"><a href="index.html">📅 イベント</a><a href="search.html" class="cur">🔍 検索</a><a href="iv.html">⚖️ 育成判定</a><a href="spawns.html">🌿 野生</a><a href="raids.html">🐉 レイド</a><a href="rocket.html">🚀 ロケット団</a><a href="research.html">📋 リサーチ</a><a href="shop.html">🛒 ボックス判定</a><a href="ranks.html">🏆 育成TOP10</a></nav>
   <h1>ポケモン検索</h1>
-  <p class="lead">名前を入れると、今の入手方法・強さ・弱点と対策・育成メモをまとめて表示します</p>
+  <p class="lead">名前を入れると、活躍の場・育成難易度・今の入手方法・弱点と対策などをまとめて表示します（候補には最終進化を出します）</p>
   <input class="search" id="q" type="search" aria-label="ポケモンの名前で探す" placeholder="ポケモンの名前（例：ダンバル、メタグロス、Beldum）" autocomplete="off">
   <div class="sugg" id="sugg"></div>
   <div id="notice"></div>
@@ -105,7 +115,7 @@ const GO = {2: 1.6, .5: 0.625, 0: 0.390625};
 const SUFFIX = /_(shadow|mega|mega_x|mega_y|primal)$/;
 const baseId = (id) => { let s = id; while (SUFFIX.test(s)) s = s.replace(SUFFIX, ""); return s; };
 let DATA = {};
-let SPECIES = [], BY_ID = {}, BY_NAME = {};
+let SPECIES = [], BY_ID = {}, BY_NAME = {}, EVOLVING_DEX = new Set();
 
 // ===== 名前の検索 =====
 const toKata = (s) => String(s).replace(/[ぁ-ゖ]/g, c => String.fromCharCode(c.charCodeAt(0) + 0x60));
@@ -197,6 +207,121 @@ function weaknesses(types){
   return out;
 }
 
+// ===== 活躍の場 =====
+const MARK_CLS = {"◎": "g", "○": "o", "△": "x"};
+const mk = (m) => `<span class="mk ${MARK_CLS[m]}">${m}</span>`;
+/** このポケモンと、その進化先（最終進化まで）。メガ・シャドウの姿も含めた id の集合 */
+function useForms(sp){
+  const fam = [], seen = new Set(), stack = [BY_ID[baseId(sp.id)] || sp];
+  while (stack.length){
+    const x = stack.pop(); if (seen.has(x.id)) continue; seen.add(x.id); fam.push(x);
+    (x.evo || []).forEach(e => BY_ID[e] && stack.push(BY_ID[e]));
+  }
+  const bases = new Set(fam.map(x => x.id));
+  return {fam, ids: new Set(SPECIES.filter(x => bases.has(baseId(x.id))).map(x => x.id))};
+}
+// マックスバトルの目安：ダイマックスできる最終進化の中で、攻撃（与えるダメージ）と耐久（防御×HP）の順位
+let MAX_RANK = null;
+function maxRanks(){
+  if (MAX_RANK) return MAX_RANK;
+  const pool = SPECIES.filter(x => x.dmax && !SUFFIX.test(x.id) && !(x.evo || []).some(e => BY_ID[e] && BY_ID[e].dmax));
+  const atk = [...pool].sort((a, b) => b.stats[0] - a.stats[0]).map(x => x.id);
+  const tank = [...pool].sort((a, b) => b.stats[1] * b.stats[2] - a.stats[1] * a.stats[2]).map(x => x.id);
+  return MAX_RANK = {n: pool.length, atk, tank};
+}
+function activities(sp){
+  const {fam, ids} = useForms(sp);
+  const R = DATA.rankings || {};
+  const rows = [];
+  const nm = (x) => x.id === sp.id ? "" : `（${esc(nameJa(x.name))}）`;
+  // レイド
+  const raid = [];
+  (R.raid || []).slice(0, 50).forEach((x, i) => { if (ids.has(x.id)) raid.push({label: "レイド総合", rank: i + 1, x, m: i < 20 ? "◎" : "○"}); });
+  for (const [t, l] of Object.entries(R.raidByType || {})) (l || []).slice(0, 30).forEach((x, i) => { if (ids.has(x.id)) raid.push({label: `レイド・${(TYPE_INFO[t] || [t])[0]}`, rank: i + 1, x, m: i < 10 ? "◎" : "○"}); });
+  raid.sort((a, b) => (a.m === "◎" ? 0 : 1) - (b.m === "◎" ? 0 : 1) || a.rank - b.rank);
+  if (raid.length) rows.push({key: "raid", m: raid[0].m, title: "レイド攻略", body: raid.slice(0, 3).map(r => `${esc(r.label)} ${r.rank}位${nm(r.x)}`).join("、"),
+    sub: `おすすめ技：技1 ${mv(raid[0].x.fast)}／技2 ${mv(raid[0].x.charged)}`});
+  // ジム攻撃・ジム防衛
+  const gA = (R.gymAttack || []).slice(0, 50).map((x, i) => ({x, rank: i + 1})).filter(r => ids.has(r.x.id));
+  if (gA.length) rows.push({key: "gymA", m: gA[0].rank <= 10 ? "◎" : "○", title: "ジム攻撃", body: gA.slice(0, 2).map(r => `${r.rank}位${nm(r.x)}`).join("、"),
+    sub: `おすすめ技：技1 ${mv(gA[0].x.fast)}／技2 ${mv(gA[0].x.charged)}`});
+  const gD = (R.gymDefense || []).slice(0, 30).map((x, i) => ({x, rank: i + 1})).filter(r => ids.has(r.x.id));
+  if (gD.length) rows.push({key: "gymD", m: gD[0].rank <= 10 ? "◎" : "○", title: "ジム防衛", body: gD.slice(0, 2).map(r => `${r.rank}位${nm(r.x)}`).join("、"),
+    sub: `おすすめ技：技1 ${mv(gD[0].x.fast)}／技2 ${mv(gD[0].x.charged)}`});
+  // PvP
+  const pvp = [];
+  for (const x of SPECIES.filter(x => ids.has(x.id))) for (const [lg, rank] of Object.entries(x.pvpAll || {})) if (rank <= 100) pvp.push({lg, rank, x});
+  pvp.sort((a, b) => a.rank - b.rank);
+  if (pvp.length) rows.push({key: "pvp", m: pvp[0].rank <= 30 ? "◎" : "○", title: "PvP（トレーナーバトル）",
+    body: pvp.slice(0, 3).map(r => `${esc(r.lg)} ${r.rank}位${nm(r.x)}`).join("、"), sub: "PvPoke のランキング"});
+  // マックスバトル（ダイマックス・キョダイマックス）
+  const dm = fam.filter(x => x.dmax);
+  if (dm.length){
+    const MR = maxRanks();
+    const fin = dm.filter(x => !(x.evo || []).some(e => BY_ID[e] && BY_ID[e].dmax));
+    const best = fin.map(x => ({x, a: MR.atk.indexOf(x.id) + 1, t: MR.tank.indexOf(x.id) + 1})).sort((p, q) => Math.min(p.a, p.t) - Math.min(q.a, q.t))[0];
+    const g = fam.some(x => x.gmax);
+    const top = best ? Math.min(best.a || 999, best.t || 999) : 999;
+    rows.push({key: "max", m: top <= 10 ? "◎" : top <= 25 ? "○" : "△", title: `マックスバトル（${g ? "キョダイマックス・ダイマックス" : "ダイマックス"}）`,
+      body: best ? `ダイマックスできる${MR.n}種類の中で、攻撃 ${best.a}位・耐久 ${best.t}位${nm(best.x)}` : "ダイマックスできる",
+      sub: `マックスバトルで捕まえた個体だけが使えます。${g ? "キョダイマックスは専用の強い技を使えます。" : ""}順位は種族値だけの目安です（技や相手のタイプは入っていません）`});
+  }
+  // メガシンカでアメ集め
+  const megas = ((DATA.megas && DATA.megas.megas) || []).filter(m => ids.has(m.id));
+  if (megas.length){
+    const lv = (DATA.megas && DATA.megas.levels) || {};
+    const types = [...new Set(megas.flatMap(m => m.boostTypes || m.types || []))].map(t => (TYPE_INFO[t] || [t])[0]);
+    const l4 = megas.some(m => m.level4);
+    rows.push({key: "mega", m: "○", title: "メガシンカでアメ集め",
+      body: `${megas.map(m => esc(nameJa(m.name))).join("・")}：メガシンカ中、${types.join("・")}タイプのポケモンを捕まえるとアメ+${(lv["1"] || {}).extraCandy || 1}`,
+      sub: `メガレベル3なら+${(lv["3"] || {}).extraCandy || 2}${l4 ? "、メガレベル4なら+3" : ""}。一緒に戦う同じタイプのポケモンの攻撃も上がります`});
+  }
+  // 本編にあってGOで未解禁のメガシンカ（活躍の場には数えない）
+  const gap = [], seenDex = new Set();
+  for (const f of fam){
+    if (seenDex.has(f.dex) || /_(alolan|galarian|hisuian|paldean)/.test(f.id)) continue;
+    seenDex.add(f.dex);
+    gap.push(...unreleasedMegas(f, SPECIES.filter(x => x.dex === f.dex && /_(mega|primal)/.test(x.id) && !/_shadow/.test(x.id)).length));
+  }
+  return {rows, gap};
+}
+function activityHtml(sp){
+  const {rows, gap} = activities(sp);
+  const good = rows.filter(r => r.m !== "△");
+  let html = good.length ? `<div class="act ok">活躍の場が<b>${good.length}つ</b>あります</div>`
+    : rows.length ? `<div class="act weak">目立った活躍の場はありません（マックスバトルには出せますが、強い方ではありません）</div>`
+    : `<div class="act none">活躍の場はありません。レイド・ジム・PvPの上位にも入らず、ダイマックス・メガシンカもできません</div>`;
+  html += rows.map(r => `<div class="row">${mk(r.m)}<b>${esc(r.title)}</b>：${r.body}<span class="s">${r.sub}</span></div>`).join("");
+  if (gap.length) html += `<div class="row">🔮 <b>メガシンカの解禁待ち</b>：本編（${esc([...new Set(gap.map(g => g.game))].join("・"))}）には ${esc(gap.map(g => g.name).join("・"))} がいますが、ポケモンGOではまだ解禁されていません<span class="s">解禁されるとアメ集めやレイドで使える可能性があります（今は活躍の場に数えていません）</span></div>`;
+  return html;
+}
+
+// ===== 育成難易度 =====
+const DIFF_LABEL = ["", "かんたん", "ふつう", "やや大変", "大変", "とても大変"];
+function difficultyHtml(sp){
+  const {fam} = useForms(sp);
+  const targets = sp.evo && sp.evo.length ? fam.filter(x => !(x.evo || []).some(e => BY_ID[e])) : [sp];
+  let html = targets.filter(t => t.diff).map(t => `<div class="row"><b>${targets.length > 1 || t.id !== sp.id ? esc(nameJa(t.name)) + "：" : ""}<span class="ds">${"★".repeat(t.diff.level)}${"☆".repeat(5 - t.diff.level)}</span> ${DIFF_LABEL[t.diff.level]}</b>
+    <span class="s">${t.diff.reasons.length ? t.diff.reasons.map(esc).join("／") : "特に大変な点はありません"}</span></div>`).join("");
+  // 手に入れやすさ（出現率そのもののデータは公開されていないため、入手方法から判断）
+  const tags = new Set(fam.flatMap(x => x.tags || []));
+  const get = [];
+  if (tags.has("mythical")) get.push("幻：イベントのリサーチなどでしか手に入らない");
+  else if (tags.has("legendary") || tags.has("ultrabeast")) get.push("伝説：主にレイドで手に入る（野生ではほぼ出ない）");
+  if (tags.has("regional")) get.push("地域限定：決まった地域でしか出ない");
+  if (fam.some(x => PRIZE_MONS.has(x.name.replace(/ \(.*\)$/, "")))) get.push("出現が少ない人気ポケモン（このアプリの判断）");
+  const src = sources(sp);
+  if (src.length) get.push(`今は ${[...new Set(src.map(x => x.label))].join("・")} で手に入る（下の「今の入手方法」）`);
+  html += `<div class="row"><b>手に入れやすさ</b><span class="s">${get.length ? get.map(esc).join("／") : "特別な入手条件はありません"}。ふだんの野生での出現率は公開データに無いため入っていません</span></div>`;
+  // 連れ歩き
+  const km = sp.buddy || (targets[0] && targets[0].buddy);
+  if (km){
+    const megas = ((DATA.megas && DATA.megas.megas) || []).filter(m => useForms(sp).ids.has(m.id));
+    html += `<div class="row"><b>連れ歩き</b>：アメ1個に ${km}km<span class="s">アメ100個なら約${km * 100}km${megas.length ? "。メガシンカできるので、連れ歩きでメガエナジーももらえます" : ""}${tags.has("legendary") || tags.has("mythical") ? "。伝説・幻はアメが集めにくいので、アメXL・ふしぎなアメも頼りになります" : ""}</span></div>`;
+  }
+  return html;
+}
+
 // ===== 描画 =====
 const typeBadges = (ts) => ts.map(t => `<span class="tp" style="background:${(TYPE_INFO[t] || ["", "#888"])[1]};color:${typeFg((TYPE_INFO[t] || ["", "#888"])[1])}">${(TYPE_INFO[t] || [t])[0]}</span>`).join("");
 const mv = (m) => m ? `${esc(m.ja || m.en)}${m.elite ? `<span class="el">★</span>` : ""}` : "";
@@ -257,17 +382,38 @@ function show(id){
     <div class="name">${esc(nameJa(sp.name))}${typeBadges(sp.types)}${tags}</div>
     <div class="en">${esc(sp.name)} ・ 図鑑No.${sp.dex}</div>
     ${variants.length > 1 ? `<div class="variants">${variants.map(v => `<button type="button" class="vb${v.id === sp.id ? " cur" : ""}" data-id="${esc(v.id)}">${esc(nameJa(v.name))}</button>`).join("")}</div>` : ""}
+    <h2>🏟 活躍の場</h2>${activityHtml(sp)}
+    <h2>📈 育成難易度</h2>${difficultyHtml(sp)}
     <h2>📍 今の入手方法</h2>${srcHtml}
-    <h2>💪 強さ</h2>${stHtml}${pvpRows}
+    <h2>💪 ランキングの詳細</h2>${stHtml}${pvpRows}
     <h2>🛡 弱点と対策</h2>${wkHtml}${resHtml}${ctHtml}
     <h2>📝 育成メモ</h2><div class="memo">${memo.length ? memo.map(m => `<div>${m}</div>`).join("") : `<div class="none">特になし</div>`}</div>
   </div>`;
 }
+/** 最終進化（これ以上進化しない姿）。進化前を入れたときは、その進化先の最終進化を候補にする */
+function finals(sp){
+  const out = [], seen = new Set(), stack = [sp];
+  while (stack.length){
+    const x = stack.pop(); if (seen.has(x.id)) continue; seen.add(x.id);
+    const next = (x.evo || []).map(e => BY_ID[e]).filter(Boolean);
+    if (next.length) stack.push(...next); else out.push(x);
+  }
+  // 進化前のポケモンと同じ図鑑番号の姿（ピカチュウのコスチュームなど、進化できない見た目違い）は外す
+  return out.filter(x => !EVOLVING_DEX.has(x.dex)).sort((a, b) => a.dex - b.dex || a.id.length - b.id.length);
+}
 function suggest(q){
-  const hits = search(q).slice(0, 20);
-  document.getElementById("sugg").innerHTML = hits.map(sp => `<button type="button" class="sg" data-id="${esc(sp.id)}">${esc(sp.ja)}</button>`).join("")
+  // メガ・シャドウの姿は、通常の姿にまとめる
+  const hits = search(q).map(h => BY_ID[baseId(h.id)] || h);
+  const list = [], seen = new Set();
+  for (const h of hits){
+    for (const f of finals(h)){ if (!seen.has(f.id)){ seen.add(f.id); list.push({sp: f, via: f.id === h.id ? null : h}); } }
+    if (list.length >= 20) break;
+  }
+  document.getElementById("sugg").innerHTML = list.slice(0, 20).map(({sp, via}) =>
+      `<button type="button" class="sg" data-id="${esc(sp.id)}">${esc(sp.ja)}${via ? `<small>（${esc(via.ja)}の進化先）</small>` : ""}</button>`).join("")
     || (q.trim() ? `<span class="none">見つかりませんでした（実装済みのポケモンだけ探せます）</span>` : "");
-  if (hits.length && (norm(hits[0].ja) === norm(q) || norm(hits[0].name) === norm(q))) show(hits[0].id);
+  const top = list[0];
+  if (top && !top.via && (norm(top.sp.ja) === norm(q) || norm(top.sp.name) === norm(q))) show(top.sp.id);
   else if (shownId && BY_ID[shownId] && !norm(BY_ID[shownId].ja).startsWith(norm(q)) && !norm(BY_ID[shownId].name).startsWith(norm(q))){
     // 別の名前を入力し始めたら（今の名前の書きかけ・消しかけは除く）、前のポケモンの詳しい情報は消す（違うポケモンの情報が残って見えないように）
     document.getElementById("main").innerHTML = ""; shownId = null;
@@ -307,6 +453,7 @@ async function load(){
   showStale(staleText(DATA.pokedex.generatedAt, 24, "ポケモンのデータ"));
   SPECIES = DATA.pokedex.species.map(s => ({...s, ja: nameJa(s.name)}));
   BY_ID = Object.assign(Object.create(null), Object.fromEntries(SPECIES.map(s => [s.id, s])));
+  EVOLVING_DEX = new Set(SPECIES.filter(x => (x.evo || []).some(e => BY_ID[e])).map(x => x.dex));
   BY_NAME = Object.create(null); SPECIES.forEach(s => { if (!BY_NAME[s.name]) BY_NAME[s.name] = s; });
   const h = location.hash.slice(1);
   if (h && BY_ID[h]){ document.getElementById("q").value = BY_ID[h].ja; show(h); }

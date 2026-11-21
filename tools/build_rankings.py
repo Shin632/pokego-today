@@ -217,7 +217,46 @@ def difficulty(p, b, evo):
     return {"level": level, "reasons": reasons}
 
 
+EVENTS_URL = "https://raw.githubusercontent.com/bigfoott/ScrapedDuck/data/events.json"
+MAX_BATTLES_URL = "https://leekduck.com/max-battles/"
+
+
+def load_max_forms(gm, ids):
+    """ゲームデータの BREAD_POKEMON_SCALING_SETTINGS から、ダイマックス（BREAD_MODE）・キョダイマックス（BREAD_DOUGH_MODE）の姿があるポケモン。
+    ここに無くてもダイマックスできるポケモンはいる（表示の大きさを個別に決めているものだけ載っている）ので、イベント情報などで補う"""
+    dmax, gmax = set(), set()
+    for t in gm:
+        if t.get("templateId") != "BREAD_POKEMON_SCALING_SETTINGS":
+            continue
+        for v in t["data"]["breadPokemonScalingSettings"].get("visualSettings", []):
+            pid = v.get("pokemonId", "")
+            for f in v.get("pokemonFormData", []):
+                form = (f.get("pokemonForm") or pid)
+                if "ETERNAMAX" in form:
+                    continue
+                cand = [form.lower(), form.lower().replace("_normal", ""), pid.lower()]
+                sid = next((c for c in cand if c in ids), None)
+                if not sid:
+                    continue
+                for vd in f.get("visualData", []):
+                    (dmax if vd.get("breadMode") == "BREAD_MODE" else gmax).add(sid)
+    return dmax, gmax
+
+
+def max_names_from_text(text, name2id):
+    """「Dynamax Espurr」「Gigantamax Machamp」のような書き方からポケモンを拾う"""
+    dmax, gmax = set(), set()
+    for kind, name in re.findall(r"\b(Dynamax|Gigantamax) ([A-Z][\w'.\-é]+(?: \([^)]*\))?(?: (?!Dynamax|Gigantamax)[A-Z][\w'.\-é]+)?)", text):
+        for cand in (name, re.sub(r" \(.*\)$", "", name), name.split(" ")[0]):
+            sid = name2id.get(cand)
+            if sid:
+                (gmax if kind == "Gigantamax" else dmax).add(sid)
+                break
+    return dmax, gmax
+
+
 def load_move_names():
+
     ids = {}
     for r in csv.DictReader(io.StringIO(get(MOVES_CSV).decode("utf-8"))):
         ids[r["id"]] = r["identifier"]
@@ -772,7 +811,7 @@ def load_cpm(gm):
     return []
 
 
-def build_pokedex(pokemon, pvp, move_ja=None, move_en=None):
+def build_pokedex(pokemon, pvp, move_ja=None, move_en=None, dmax=frozenset(), gmax=frozenset()):
     """ポケモン検索ページ用：実装済みのポケモンの名前・タイプ・進化系統・相棒の距離・PvPの順位"""
     species = []
     # 系統（family）が無いフォルム違い（ロトム・デオキシス・オドリドリなど）は、同じ図鑑番号でまとめる
@@ -799,6 +838,12 @@ def build_pokedex(pokemon, pvp, move_ja=None, move_en=None):
         flags = [t for t in ("legendary", "mythical", "ultrabeast", "mega", "shadow", "regional") if t in tags]
         if flags:
             item["tags"] = flags
+        if p["speciesId"] in dmax or p["speciesId"] in gmax:
+            item["dmax"] = True
+        if p["speciesId"] in gmax:
+            item["gmax"] = True
+        # 育成難易度（技の★は種族ごとには決まらないので入れない）
+        item["diff"] = difficulty(p, {}, EVO)
         pr = pvp.get(p["speciesId"])
         if pr:
             item["pvp"] = [pr[0], pr[1]]
@@ -963,6 +1008,7 @@ def main(prev_path, out_path, prev_megas_path=None, out_megas_path=None, prev_ra
         TYPE_BOOSTS = load_type_boosts(gm)
         CATCH_DUST = load_catch_dust(gm)
         CPM_TABLE[:] = load_cpm(gm)
+        MAX_FORMS = load_max_forms(gm, {q["speciesId"] for q in pv["pokemon"]})
         del gm
         try:
             move_ja = load_move_names()
@@ -1061,7 +1107,44 @@ def main(prev_path, out_path, prev_megas_path=None, out_megas_path=None, prev_ra
         megas_data["evoUse"] = build_evo_use(pokemon, lists_all, PVP)
         # PvPoke はバトルに出られないポケモンを「未実装」としているので、ポケモンGOに実装済みのものは足す
         extra = [q for q in pv["pokemon"] if q["speciesId"] in NON_BATTLE_RELEASED]
-        pokedex_data = build_pokedex(pokemon + extra, PVP, move_ja, move_en)
+        # ダイマックス・キョダイマックス：ゲームデータ＋前回までに見つけた分＋イベント名＋LeekDuck のマックスバトルのページ
+        ids = {q["speciesId"] for q in pokemon}
+        dmax, gmax = MAX_FORMS
+        name2id = {}
+        for q in pokemon:
+            if "_shadow" in q["speciesId"] or "_mega" in q["speciesId"]:
+                continue
+            name2id.setdefault(q["speciesName"], q["speciesId"])
+        try:
+            prev_pd_path = os.path.join(os.path.dirname(prev_megas_path or "") or ".", "prev_pokedex.json")
+            with open(prev_pd_path, encoding="utf-8") as f:
+                for x in json.load(f).get("species", []):
+                    if x.get("id") in ids:
+                        if x.get("dmax"):
+                            dmax.add(x["id"])
+                        if x.get("gmax"):
+                            gmax.add(x["id"])
+        except Exception as ex:
+            print(f"前回の pokedex.json は使えませんでした: {ex}")
+        for url, label in ((EVENTS_URL, "events"), (MAX_BATTLES_URL, "max-battles")):
+            try:
+                txt = get(url).decode("utf-8", "replace")
+                if label == "events":
+                    txt = " | ".join(e.get("name", "") for e in json.loads(txt))
+                d2, g2 = max_names_from_text(txt, name2id)
+                dmax |= d2; gmax |= g2
+            except Exception as ex:
+                print(f"::warning::ダイマックス情報（{label}）: {ex}")
+        # ダイマックスの個体は、進化してもダイマックスできる（進化先にも付ける）
+        by_sid = {q["speciesId"]: q for q in pokemon}
+        todo = list(dmax)
+        while todo:
+            q = by_sid.get(todo.pop())
+            for e in ((q or {}).get("family") or {}).get("evolutions") or []:
+                if e in by_sid and e not in dmax:
+                    dmax.add(e); todo.append(e)
+        print("dynamax:", len(dmax), "gigantamax:", len(gmax))
+        pokedex_data = build_pokedex(pokemon + extra, PVP, move_ja, move_en, dmax, gmax)
         # 技名（英語 → 日本語）。イベントページの「レガシー技」の説明を訳すのに使う
         megas_data["moveJa"] = {move_en[mid]: move_ja[mid] for mid in move_en if mid in move_ja and move_ja[mid]}
         if out_raids_path:

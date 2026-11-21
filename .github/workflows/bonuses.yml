@@ -33,6 +33,7 @@ jobs:
           curl -fsSL "https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/data/rankings.json" -o prev_rankings.json || echo '{}' > prev_rankings.json
           curl -fsSL "https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/data/megas.json" -o prev_megas.json || echo '{}' > prev_megas.json
           curl -fsSL "https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/data/raids.json" -o prev_raids.json || echo '{}' > prev_raids.json
+          curl -fsSL "https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/data/pokedex.json" -o prev_pokedex.json || echo '{}' > prev_pokedex.json
 
       - name: ボーナス情報を収集
         run: |
