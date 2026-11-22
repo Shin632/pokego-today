@@ -28,7 +28,7 @@
 - 英語のデータを、ポケモン名辞書（[PokeAPI](https://github.com/PokeAPI/pokeapi) のデータから作成）と置き換えルールで日本語にしています。公式の日本語イベント名とは違う場合や、英語のまま残る部分があります。
 - 時刻は端末のタイムゾーンで表示します。データ上「現地時間」のイベントは端末の地域の時刻、UTC指定のもの（GOバトルリーグなど）は日本時間に直して表示します。
 
-- ボーナス情報は `.github/workflows/bonuses.yml`（GitHub Actions、3時間ごと）が `tools/scrape_bonuses.py` で LeekDuck の各イベントページの「Bonuses」欄を集め、`data` ブランチの `bonuses.json` に保存しています。同じワークフローで `tools/scrape_research.py` が LeekDuck のリサーチ一覧を集めて `research.json` に保存します。Actions タブから手動実行もできます。
+- ボーナス情報は `.github/workflows/bonuses.yml`（GitHub Actions、3時間ごとの予定。GitHub の予定実行は遅れることがあり、実際は数時間〜9時間ほどの間隔）が `tools/scrape_bonuses.py` で LeekDuck の各イベントページの「Bonuses」欄を集め、`data` ブランチの `bonuses.json` に保存しています。同じワークフローで `tools/scrape_research.py` が LeekDuck のリサーチ一覧を集めて `research.json` に保存します。Actions タブから手動実行もできます。
 
 ## 使い方
 - `index.html` をブラウザで開くだけで動きます（インターネット接続が必要）。

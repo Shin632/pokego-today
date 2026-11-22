@@ -383,3 +383,23 @@ const FORM_TO = {
   zacian_hero: ["zacian_crowned_sword"], zamazenta_hero: ["zamazenta_crowned_shield"],
   necrozma: ["necrozma_dawn_wings", "necrozma_dusk_mane"], kyurem: ["kyurem_black", "kyurem_white"],
 };
+
+// ===== マックスバトルの目安（検索・育成判定で共通） =====
+// ダイマックスできる最終進化の中で、攻撃（与えるダメージ）と耐久（防御×HP）が何位か。種族値だけの目安
+// （技や相手のタイプは入っていない）。ページ側の SPECIES・BY_ID を使う
+let MAX_RANK_CACHE = null;
+function maxBattlePool(){
+  if (MAX_RANK_CACHE && MAX_RANK_CACHE.src === SPECIES) return MAX_RANK_CACHE;
+  const pool = SPECIES.filter(x => x.dmax && !/_(shadow|mega|mega_x|mega_y|primal)$/.test(x.id) && !(x.evo || []).some(e => BY_ID[e] && BY_ID[e].dmax));
+  return MAX_RANK_CACHE = {src: SPECIES, pool, n: pool.length};
+}
+/** 種族 sp の、マックスバトルでの攻撃・耐久の順位（sp が一覧に無くても、種族値から何位相当かを出す） */
+function maxBattleRank(sp){
+  const {pool, n} = maxBattlePool();
+  const others = pool.filter(x => x.id !== sp.id);
+  const a = 1 + others.filter(x => x.stats[0] > sp.stats[0]).length;
+  const t = 1 + others.filter(x => x.stats[1] * x.stats[2] > sp.stats[1] * sp.stats[2]).length;
+  return {a, t, n: Math.max(n, others.length + 1)};
+}
+/** 順位 → ◎○△（種類が少ないので割合で決める：上位25%で◎、50%で○） */
+function maxBattleMark(top, n){ return top <= Math.max(3, Math.round(n * 0.25)) ? "◎" : top <= Math.round(n * 0.5) ? "○" : "△"; }

@@ -106,6 +106,9 @@ const close = async (p, label) => { check(`${label}: JavaScriptエラーなし`,
     check('search: 育成難易度が出る', /育成難易度[\s\S]*★/.test(mt) && mt.includes('連れ歩き'), '');
     await p.fill('#q', ''); await p.fill('#q', 'アンノーン'); await p.waitForTimeout(500);
     check('search: 活躍の場がないときはその旨を出す', (await p.$eval('#main', e => e.innerText)).includes('活躍の場はありません'), '');
+    // タイプ別は20位まで・シャドウだけなら「シャドウなら」（11/22 改善A）
+    await p.fill('#q', ''); await p.fill('#q', 'ケッキング'); await p.waitForTimeout(500);
+    check('search: シャドウの姿だけがランキングに入っているときは「シャドウなら」', /レイド攻略（シャドウなら）/.test(await p.$eval('#main', e => e.innerText)), '');
     await p.fill('#q', ''); await p.fill('#q', 'ダンバル'); await p.waitForTimeout(500);
     const sg = await p.$$eval('.sg', e => e.map(x => x.innerText).join(' / '));
     check('search: 候補は最終進化だけ（ダンバル→メタグロス）', /メタグロス/.test(sg) && !/^ダンバル/.test(sg) && !/メタング/.test(sg), sg);
@@ -169,6 +172,14 @@ const close = async (p, label) => { check(`${label}: JavaScriptエラーなし`,
     }
     await p.fill('#q', ''); await p.fill('#q', 'ヒトカゲ'); await p.waitForTimeout(350); await setIv(15, 15, 15);
     check('iv: メガシンカが解禁済みのポケモン（ヒトカゲ）には未解禁の注意を出さない', !(await p.$eval('#main', e => e.innerText)).includes('🔮'), '');
+    // マックスバトルの目安（11/22 改善B）
+    await p.fill('#q', ''); await p.fill('#q', 'ハピナス'); await p.waitForTimeout(350);
+    await p.setChecked('#dmax', true); await setIv(3, 15, 15);
+    const mx = await p.$eval('#main', e => e.innerText);
+    check('iv: ダイマックスのハピナスはマックスバトルの耐久役として出る', /マックスバトルの耐久役/.test(mx) && /育成すべき/.test(mx), mx.slice(0, 60));
+    await setIv(3, 5, 5);
+    check('iv: 防御・HPが低いと1段階下がる', /○ マックスバトルの耐久役/.test(await p.$eval('#main', e => e.innerText)), '');
+    await p.setChecked('#dmax', false);
     await close(p, 'iv');
   }
 

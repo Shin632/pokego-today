@@ -110,7 +110,7 @@ details.box>summary{padding:10px 0}
       <li><b>技構成</b>：レイド・ジムは育成TOP10と同じ計算でいちばん良い技1・技2、PvPは PvPoke のおすすめ（技1と技2を2つ）です。★は今は普通には覚えられない技（すごいわざマシンやイベントが必要）です。</li>
       <li><b>シャドウのリトレーン</b>：シャドウのままの評価と、リトレーンした場合（個体値が各+2、通常の姿。ジムに置ける・メガシンカできる）の評価を比べ、良いほうをすすめます。同じくらいなら、レイド用ならシャドウのまま（攻撃1.2倍）をすすめます。</li>
       <li>色違い・特別な背景・コスチュームは、強さは通常と同じなので「育成すべき」かどうかの判定には影響しませんが、「逃がしてOK」にはならず「とっておく」以上になります。コスチュームのポケモンは進化できないものが多いので注意してください。キラ・思い出のポケモンかどうかは判定に入っていません。</li>
-      <li>ダイマックス・キョダイマックスは、マックスバトルでの強さのデータがまだ無いので、強さではなく「手に入りにくさ」で「とっておく」以上にしています。</li>
+      <li>ダイマックス・キョダイマックスにチェックすると、マックスバトルでの強さの目安も見ます。ダイマックスできる最終進化の中で、攻撃（種族値）か耐久（防御×HP）が上位25%なら◎、50%なら○（検索ページと同じ）。攻撃役なら攻撃の個体値12以上、耐久役なら防御＋HPが24以上でないときは1段階下げます。技や相手のタイプは入っていないので目安です。マックスバトルでしか手に入らないため、どの場合も「とっておく」以上にします。</li>
     </ul>
   </details>
   <footer>
@@ -184,7 +184,7 @@ function rankingUses(forms){
   const ids = new Set(forms);
   const add = (label, list, limit, role) => (list || []).slice(0, limit).forEach((x, i) => { if (ids.has(x.id)) rows.push({label, rank: i + 1, x, role}); });
   add("レイド総合", RK.raid, 50, "atk"); add("ジム攻撃", RK.gymAttack, 50, "atk"); add("ジム防衛", RK.gymDefense, 30, "def");
-  for (const [t, l] of Object.entries(RK.raidByType || {})) add(`レイド・${TYPES_JA[t[0].toUpperCase() + t.slice(1)] || t}`, l, 30, "atk");
+  for (const [t, l] of Object.entries(RK.raidByType || {})) add(`レイド・${TYPES_JA[t[0].toUpperCase() + t.slice(1)] || t}`, l, 20, "atk");   // タイプ別は20位まで（検索の「活躍の場」と同じ）
   rows.sort((a, b) => a.rank - b.rank);
   return rows;
 }
@@ -278,7 +278,20 @@ function evaluate(){
     else if (cur.best > 0) purify = {rec: "either", title: "どちらでも（基本はシャドウのまま）", why: "シャドウのままでもリトレーンしても同じくらい使えます。レイドで使うならシャドウのまま（攻撃1.2倍）、ジムに置く・メガシンカさせるならリトレーン。"};
     else purify = {rec: "none", title: "リトレーンは不要", why: "どちらでも上位の使い道がありません。リトレーンにはほしのすなとアメがかかるので、急いでしなくてよいです。"};
   }
-  const best = Math.max(cur.best, pur ? pur.best : 0);
+  let best = Math.max(cur.best, pur ? pur.best : 0);
+  // マックスバトル（ダイマックス・キョダイマックスにチェックしたとき）：検索と同じ目安（種族値の順位）に、個体値を加味する
+  let maxUse = null;
+  if ((dmax || gmax) && !shadow){
+    const fin = fam.filter(f => !(f.evo || []).some(e => BY_ID[e]) && !/_(alolan|galarian|hisuian|paldean)/.test(f.id) || f.id === chosen.id && !(f.evo || []).length);
+    const cand = (fin.length ? fin : [chosen]).map(f => ({f, ...maxBattleRank(f)})).sort((p, q) => Math.min(p.a, p.t) - Math.min(q.a, q.t))[0];
+    const role = cand.a <= cand.t ? "atk" : "tank";
+    const m0 = maxBattleMark(Math.min(cand.a, cand.t), cand.n);
+    // 攻撃役は攻撃、耐久役は防御とHPの個体値が大事
+    const ivOk = role === "atk" ? a >= 12 : d + h >= 24;
+    const m = ivOk ? m0 : m0 === "◎" ? "○" : "△";
+    maxUse = {m, role, ...cand, ivOk};
+    best = Math.max(best, MARK_VAL[m]);
+  }
   const tags = new Set(chosen.tags || []);
   // 進化すると伝説になるもの（コスモッグなど）も、手に入る機会が少ないので同じ扱い
   const rare = fam.some(f => (f.tags || []).some(t => t === "legendary" || t === "mythical" || t === "ultrabeast"));
@@ -311,6 +324,9 @@ function evaluate(){
   // 使い道（育成・とっておくのとき）
   const usePath = shadow && purify && purify.rec === "purify" ? pur : cur;
   const useRows = [];
+  if (maxUse && MARK_VAL[maxUse.m] >= 1){
+    useRows.push(`${maxUse.m} <b>マックスバトルの${maxUse.role === "atk" ? "攻撃役" : "耐久役（タンク）"}</b>：${esc(nameJa(maxUse.f.name))}は、ダイマックスできる${maxUse.n}種類の中で攻撃 ${maxUse.a}位・耐久 ${maxUse.t}位${gmax ? "。キョダイマックスは専用の強い技を使えます" : ""}`);
+  }
   if (best >= 1){
     const label = shadow ? (purify.rec === "purify" ? "（リトレーン後）" : "（シャドウのまま）") : "";
     usePath.pe.filter(x => MARK_VAL[x.m] >= 1).sort((p, q) => MARK_VAL[q.m] - MARK_VAL[p.m] || p.u.rank - q.u.rank).slice(0, 4)
@@ -320,7 +336,7 @@ function evaluate(){
         useRows.push(`${x.m} <b>PvPの${esc(x.league)}</b>：${esc(nameJa(x.v.name))}として（PvPokeで${x.prank}位）${mv ? `。${mv}${x.v.pvpMoves[x.league].length > 2 ? "（2つ目の技2は「わざを追加」で覚えさせる）" : ""}` : ""}${label}`); });
   }
   if (!useRows.length && keepReasons.length){
-    if (gmax || dmax) useRows.push("<b>マックスバトル</b>：ダイマックス・キョダイマックスはマックスバトル専用の戦力（このアプリでは強さを評価できていません）");
+    if ((gmax || dmax) && !maxUse) useRows.push("<b>マックスバトル</b>：ダイマックス・キョダイマックスはマックスバトル専用の戦力");
     if (megaKeep) useRows.push(`<b>メガシンカの解禁待ち</b>：${esc(megaNames)}（本編の${esc(megaGames)}）がポケモンGOで解禁されたら、レイドのアタッカー候補になります。解禁されると、このページの判定にも自動で反映されます`);
     if (rare) useRows.push("<b>将来に備えて</b>：この個体値では上位の使い道に向いていない（またはランキング外）ですが、入手機会が少ないので残しておく価値があります");
     if (total === 45) useRows.push("<b>記念・コレクション</b>：個体値100%は貴重です");
@@ -338,7 +354,9 @@ function evaluate(){
   const notes = [`個体値 ${a}/${d}/${h}（${Math.round(pct * 100)}%・評価の星 ${"★".repeat(stars)}${"☆".repeat(4 - stars)}）`];
   if (fam.length > 1) notes.push(`${fam.some(f => FORM_TO[f.id]) ? "姿を変えた後（王の姿・合体）" : "進化先"}も含めて判定しました：${fam.slice(1).map(f => esc(nameJa(f.name))).join("、")}`);
   if (document.getElementById("shadow").checked && !hasShadowForm) notes.push("このポケモンはシャドウの姿が未実装のため、通常の姿として判定しました。");
-  if (dmax || gmax) notes.push("マックスバトル向けの強さはデータが無いため評価に入っていません。");
+  if (maxUse && MARK_VAL[maxUse.m] < 1) notes.push(`マックスバトルでは、${esc(nameJa(maxUse.f.name))}はダイマックスできる${maxUse.n}種類の中で攻撃 ${maxUse.a}位・耐久 ${maxUse.t}位で、強い方ではありません${maxUse.ivOk ? "" : "（個体値も向いていません）"}。`);
+  if (maxUse) notes.push(`マックスバトルの判定は種族値の順位による目安です（技や相手のタイプは入っていません）。${maxUse.role === "atk" ? `攻撃役は攻撃の個体値が大事（この個体：攻撃${a}）` : `耐久役は防御・HPの個体値が大事（この個体：防御${d}・HP${h}）`}${maxUse.ivOk ? "" : "なので、1段階下げています"}。`);
+  else if ((dmax || gmax) && shadow) notes.push("シャドウのポケモンはダイマックスできません。");
   const looks = [shiny && "色違い", bg && "特別な背景", costume && "コスチューム"].filter(Boolean);
   if (looks.length) notes.push(`${looks.join("・")}でも強さ（種族値・技）は通常と同じです。` + (best >= 1 ? "" : `使い道はありませんが、${looks.join("・")}なので「逃がしてOK」にはしていません。`));
   if (costume && fam.length > 1) notes.push("コスチュームのポケモンは進化できないものが多いです。上の判定は進化後も含めているので、進化できない場合は進化前の姿のまま使うことになります。");

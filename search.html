@@ -76,7 +76,7 @@ footer a{color:var(--sub)}
   <div id="stale"></div>
   <main id="main"></main>
   <footer>
-    <div>※ 非公式のファンツールです。強さ・弱点・育成の情報はゲームデータ（PvPoke・PokeMiners・PokeAPI の公開データ）から、今の入手方法は LeekDuck の情報（ScrapedDuck 経由を含む）から、このアプリが3時間ごとに作ったデータを使っています。</div>
+    <div>※ 非公式のファンツールです。強さ・弱点・育成の情報はゲームデータ（PvPoke・PokeMiners・PokeAPI の公開データ）から、今の入手方法は LeekDuck の情報（ScrapedDuck 経由を含む）から、このアプリが数時間ごとに作ったデータを使っています。</div>
     <div>※ 計算の前提は各ページ（育成TOP10、レイド、リサーチなど）と同じです。</div>
   </footer>
 </div>
@@ -220,15 +220,6 @@ function useForms(sp){
   const bases = new Set(fam.map(x => x.id));
   return {fam, ids: new Set(SPECIES.filter(x => bases.has(baseId(x.id))).map(x => x.id))};
 }
-// マックスバトルの目安：ダイマックスできる最終進化の中で、攻撃（与えるダメージ）と耐久（防御×HP）の順位
-let MAX_RANK = null;
-function maxRanks(){
-  if (MAX_RANK) return MAX_RANK;
-  const pool = SPECIES.filter(x => x.dmax && !SUFFIX.test(x.id) && !(x.evo || []).some(e => BY_ID[e] && BY_ID[e].dmax));
-  const atk = [...pool].sort((a, b) => b.stats[0] - a.stats[0]).map(x => x.id);
-  const tank = [...pool].sort((a, b) => b.stats[1] * b.stats[2] - a.stats[1] * a.stats[2]).map(x => x.id);
-  return MAX_RANK = {n: pool.length, atk, tank};
-}
 function activities(sp){
   const {fam, ids} = useForms(sp);
   const R = DATA.rankings || {};
@@ -237,13 +228,14 @@ function activities(sp){
   // レイド
   const raid = [];
   (R.raid || []).slice(0, 50).forEach((x, i) => { if (ids.has(x.id)) raid.push({label: "レイド総合", rank: i + 1, x, m: i < 20 ? "◎" : "○"}); });
-  for (const [t, l] of Object.entries(R.raidByType || {})) (l || []).slice(0, 30).forEach((x, i) => { if (ids.has(x.id)) raid.push({label: `レイド・${(TYPE_INFO[t] || [t])[0]}`, rank: i + 1, x, m: i < 10 ? "◎" : "○"}); });
+  // タイプ別は20位まで（30位までだと、そのタイプの中でも控えのポケモンまで入るため）
+  for (const [t, l] of Object.entries(R.raidByType || {})) (l || []).slice(0, 20).forEach((x, i) => { if (ids.has(x.id)) raid.push({label: `レイド・${(TYPE_INFO[t] || [t])[0]}`, rank: i + 1, x, m: i < 10 ? "◎" : "○"}); });
   raid.sort((a, b) => (a.m === "◎" ? 0 : 1) - (b.m === "◎" ? 0 : 1) || a.rank - b.rank);
-  if (raid.length) rows.push({key: "raid", m: raid[0].m, title: "レイド攻略", body: raid.slice(0, 3).map(r => `${esc(r.label)} ${r.rank}位${nm(r.x)}`).join("、"),
+  if (raid.length) rows.push({key: "raid", m: raid[0].m, title: shadowOnly(sp, raid.map(r => r.x)) ? "レイド攻略（シャドウなら）" : "レイド攻略", body: raid.slice(0, 3).map(r => `${esc(r.label)} ${r.rank}位${nm(r.x)}`).join("、"),
     sub: `おすすめ技：技1 ${mv(raid[0].x.fast)}／技2 ${mv(raid[0].x.charged)}`});
   // ジム攻撃・ジム防衛
   const gA = (R.gymAttack || []).slice(0, 50).map((x, i) => ({x, rank: i + 1})).filter(r => ids.has(r.x.id));
-  if (gA.length) rows.push({key: "gymA", m: gA[0].rank <= 10 ? "◎" : "○", title: "ジム攻撃", body: gA.slice(0, 2).map(r => `${r.rank}位${nm(r.x)}`).join("、"),
+  if (gA.length) rows.push({key: "gymA", m: gA[0].rank <= 10 ? "◎" : "○", title: shadowOnly(sp, gA.map(r => r.x)) ? "ジム攻撃（シャドウなら）" : "ジム攻撃", body: gA.slice(0, 2).map(r => `${r.rank}位${nm(r.x)}`).join("、"),
     sub: `おすすめ技：技1 ${mv(gA[0].x.fast)}／技2 ${mv(gA[0].x.charged)}`});
   const gD = (R.gymDefense || []).slice(0, 30).map((x, i) => ({x, rank: i + 1})).filter(r => ids.has(r.x.id));
   if (gD.length) rows.push({key: "gymD", m: gD[0].rank <= 10 ? "◎" : "○", title: "ジム防衛", body: gD.slice(0, 2).map(r => `${r.rank}位${nm(r.x)}`).join("、"),
@@ -252,18 +244,17 @@ function activities(sp){
   const pvp = [];
   for (const x of SPECIES.filter(x => ids.has(x.id))) for (const [lg, rank] of Object.entries(x.pvpAll || {})) if (rank <= 100) pvp.push({lg, rank, x});
   pvp.sort((a, b) => a.rank - b.rank);
-  if (pvp.length) rows.push({key: "pvp", m: pvp[0].rank <= 30 ? "◎" : "○", title: "PvP（トレーナーバトル）",
+  if (pvp.length) rows.push({key: "pvp", m: pvp[0].rank <= 30 ? "◎" : "○", title: shadowOnly(sp, pvp.map(r => r.x)) ? "PvP（シャドウなら）" : "PvP（トレーナーバトル）",
     body: pvp.slice(0, 3).map(r => `${esc(r.lg)} ${r.rank}位${nm(r.x)}`).join("、"), sub: "PvPoke のランキング"});
   // マックスバトル（ダイマックス・キョダイマックス）
   const dm = fam.filter(x => x.dmax);
   if (dm.length){
-    const MR = maxRanks();
     const fin = dm.filter(x => !(x.evo || []).some(e => BY_ID[e] && BY_ID[e].dmax));
-    const best = fin.map(x => ({x, a: MR.atk.indexOf(x.id) + 1, t: MR.tank.indexOf(x.id) + 1})).sort((p, q) => Math.min(p.a, p.t) - Math.min(q.a, q.t))[0];
+    const MR = {n: maxBattlePool().n};
+    const best = fin.map(x => ({x, ...maxBattleRank(x)})).sort((p, q) => Math.min(p.a, p.t) - Math.min(q.a, q.t))[0];
     const g = fam.some(x => x.gmax);
     const top = best ? Math.min(best.a || 999, best.t || 999) : 999;
-    // ダイマックスできる種類が少ないので、順位ではなく「上位何%か」で決める（上位25%で◎、50%で○）
-    rows.push({key: "max", m: top <= Math.max(3, Math.round(MR.n * 0.25)) ? "◎" : top <= Math.round(MR.n * 0.5) ? "○" : "△", title: `マックスバトル（${g ? "キョダイマックス・ダイマックス" : "ダイマックス"}）`,
+    rows.push({key: "max", m: maxBattleMark(top, MR.n), title: `マックスバトル（${g ? "キョダイマックス・ダイマックス" : "ダイマックス"}）`,
       body: best ? `ダイマックスできる${MR.n}種類の中で、攻撃 ${best.a}位・耐久 ${best.t}位${nm(best.x)}` : "ダイマックスできる",
       sub: `マックスバトルで捕まえた個体だけが使えます。${g ? "キョダイマックスは専用の強い技を使えます。" : ""}順位は種族値だけの目安です（技や相手のタイプは入っていません）`});
   }
@@ -286,13 +277,15 @@ function activities(sp){
   }
   return {rows, gap};
 }
+/** ランキングに入っているのがシャドウの姿だけなら true（このポケモン自身がシャドウのときは除く） */
+const shadowOnly = (sp, xs) => !/_shadow$/.test(sp.id) && xs.length > 0 && xs.every(x => /_shadow$/.test(x.id));
 function activityHtml(sp){
   const {rows, gap} = activities(sp);
   const good = rows.filter(r => r.m !== "△");
   let html = good.length ? `<div class="act ok">活躍の場が<b>${good.length}つ</b>あります</div>`
     : rows.length ? `<div class="act weak">目立った活躍の場はありません（マックスバトルには出せますが、強い方ではありません）</div>`
     : `<div class="act none">活躍の場はありません。レイド・ジム・PvPの上位にも入らず、ダイマックス・メガシンカもできません</div>`;
-  html += rows.map(r => `<div class="row">${mk(r.m)}<b>${esc(r.title)}</b>：${r.body}<span class="s">${r.sub}</span></div>`).join("");
+  html += rows.map(r => `<div class="row">${mk(r.m)}<b>${esc(r.title)}</b>：${r.body}<span class="s">${r.sub}${/シャドウなら/.test(r.title) ? "。ランキングに入っているのはシャドウの姿だけです（GOロケット団・シャドウレイドで手に入ります）" : ""}</span></div>`).join("");
   if (gap.length) html += `<div class="row">🔮 <b>メガシンカの解禁待ち</b>：本編（${esc([...new Set(gap.map(g => g.game))].join("・"))}）には ${esc(gap.map(g => g.name).join("・"))} がいますが、ポケモンGOではまだ解禁されていません<span class="s">解禁されるとアメ集めやレイドで使える可能性があります（今は活躍の場に数えていません）</span></div>`;
   return html;
 }
