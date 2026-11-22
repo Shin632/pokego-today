@@ -36,6 +36,13 @@ section>h2{font-size:16px;margin:0 0 8px;display:flex;align-items:center;gap:6px
 .sub2{font-size:12px;color:var(--sub);margin:-4px 2px 8px}
 /* ピックアップ */
 .pick{display:grid;gap:8px}
+.megas{display:grid;gap:8px}
+.mrow{background:var(--panel);border:1px solid var(--line);border-left:4px solid #8e4ec6;border-radius:12px;padding:9px 11px}
+.mname{font-weight:800;font-size:15px}
+.mtypes{font-size:12px;font-weight:700;color:#7c3aed;margin-left:6px}
+@media (prefers-color-scheme: dark){.mtypes{color:#c4b5fd}}
+.mtg{font-size:13px;margin-top:3px;line-height:1.5}
+.msub{font-size:12px;color:var(--sub);margin-top:2px}
 .pc{display:grid;grid-template-columns:56px 1fr;gap:10px;align-items:center;background:linear-gradient(135deg,#fff8e6,var(--panel) 70%);border:2px solid #f5b83d;border-radius:var(--radius);padding:9px 11px}
 @media (prefers-color-scheme: dark){.pc{background:linear-gradient(135deg,#2f2614,var(--panel) 70%);border-color:#a7731c}}
 .pc.rare{background:linear-gradient(135deg,#f1ebff,var(--panel) 70%);border-color:#8b5cf6}
@@ -234,6 +241,55 @@ function chip(m){
   const tip = m.j.cls === "miss" ? "進化しても育成ランキング上位30位に入らず、PvPでも上位に入らない" : m.j.why.join(" ／ ");
   return `<span class="${cls.join(" ")}"${tip ? ` title="${esc(tip)}"` : ""}>${img}<span>${esc(nameOf(m))}${m.shiny ? `<span class="sh">✨</span>` : ""}${m.times.length ? `<span class="t">🕒 ${esc(m.times[0])}</span>` : ""}</span></span>`;
 }
+// ===== アメ集めにおすすめのメガシンカ =====
+// メガシンカ中は、メガシンカしたポケモンと同じタイプのポケモンを捕まえるとアメが増える。
+// 今出ているポケモンのタイプに多く効くものを選ぶ（捕まえるべきポケモンは重く、スルー推奨は軽く数える）
+const TJ = (t) => (typeof TYPES_JA !== "undefined" && TYPES_JA[t[0].toUpperCase() + t.slice(1)]) || t;
+function megaPicks(all){
+  if (!MEGAS || !Array.isArray(MEGAS.megas) || !MEGAS.types) return [];
+  const live = all.filter(m => !m.onlyLater);
+  const targets = (live.length ? live : all).map(m => ({m, types: MEGAS.types[monKey(m.name)] || [], w: m.j.cls === "hit" || m.rare ? 3 : m.j.cls === "miss" ? 0.5 : 1}))
+    .filter(t => t.types.length);
+  const cands = [];
+  for (const mg of MEGAS.megas){
+    const boost = mg.boostTypes || mg.types;
+    const hit = targets.filter(t => t.types.some(ty => boost.includes(ty)));
+    if (hit.length) cands.push({mg, hit, shared: [...new Set(hit.flatMap(t => t.types.filter(ty => boost.includes(ty))))]});
+  }
+  // 1つずつ選ぶ。2つ目以降は、まだ選んだメガシンカが効いていないポケモンを重く数える（同じタイプばかりにならないように）
+  const covered = new Set(), out = [], seen = new Set();
+  while (out.length < 3){
+    let best = null;
+    for (const c of cands){
+      const key = c.mg.id.replace(/_(mega(_[xyz])?|primal)$/, "");   // 同じポケモンの X・Y は1つに
+      if (seen.has(key)) continue;
+      const w = c.hit.reduce((x, t) => x + t.w * (covered.has(t) ? 0.2 : 1), 0);
+      // 効く数（重みつき）→ 伝説でない・メガエナジーが少なくて済む → メガレベル4対応
+      const score = w * 10 - (c.mg.legendary ? 25 : 0) - (c.mg.subsequent || 40) / 20 + (c.mg.level4 ? 2 : 0);
+      if (!best || score > best.score) best = {...c, key, score, fresh: c.hit.filter(t => !covered.has(t)).length};
+    }
+    if (!best || (out.length && best.fresh === 0)) break;   // 新しく効くポケモンが無ければ打ち切り
+    seen.add(best.key); best.hit.forEach(t => covered.add(t)); out.push(best);
+  }
+  return out.map(c => ({...c, total: targets.length, coveredAll: covered.size}));
+}
+function megaHtml(all){
+  const picks = megaPicks(all);
+  if (!picks.length) return "";
+  const lv = MEGAS.levels || {};
+  const e1 = (lv["1"] && lv["1"].extraCandy) || 1, e3 = (lv["3"] && lv["3"].extraCandy) || 2;
+  const rows = picks.map((c, i) => {
+    const good = c.hit.filter(t => t.w >= 3).map(t => esc(nameOf(t.m)));
+    const other = c.hit.filter(t => t.w < 3).map(t => esc(nameOf(t.m)));
+    return `<div class="mrow"><div class="mname">${i + 1}. ${esc(nameJa(c.mg.name))}<span class="mtypes">${c.shared.map(TJ).join("・")}タイプに効く</span></div>
+      <div class="mtg">${good.length ? `🎯 捕まえるべき：${good.join("、")}` : ""}${good.length && other.length ? "<br>" : ""}${other.length ? `ほか：${other.slice(0, 12).join("、")}${other.length > 12 ? ` ほか${other.length - 12}種類` : ""}` : ""}</div>
+      <div class="msub">今出ている${c.total}種類のうち${c.hit.length}種類に効く${c.mg.level4 ? "・メガレベル4対応" : ""}${c.mg.legendary ? "・伝説（メガエナジーを集めにくい）" : ""}・2回目からのメガシンカにメガエナジー${c.mg.subsequent || "?"}</div></div>`;
+  }).join("");
+  return `<section><h2>⚡ アメ集めにおすすめのメガシンカ</h2>
+    <p class="sub2">メガシンカ中に、同じタイプのポケモンを捕まえるとアメ+${e1}（メガレベル3なら+${e3}${picks.some(c => c.mg.level4) ? "、メガレベル4なら+3" : ""}）。今出ているポケモン（捕まえるべきものを重く数える）に多く効くものから、なるべく違うタイプを選んでいます（3つで${picks[0].total}種類中${picks[picks.length - 1].coveredAll}種類をカバー）。</p>
+    <div class="megas">${rows}</div></section>`;
+}
+
 function render(){
   const main = document.getElementById("main");
   if (!EVENTS || !BONUS){ return; }
@@ -249,6 +305,7 @@ function render(){
   let html = "";
   html += `<section><h2>🎯 捕まえるべきポケモン <span class="count">${pick.length}種類</span></h2>
     ${pick.length ? `<div class="pick">${pick.map(m => bigCard(m, false)).join("")}</div>` : `<div class="empty">今は特にありません</div>`}</section>`;
+  html += megaHtml(all);
   html += `<section><h2>💎 出現しにくいポケモン <span class="count">${rare.length}種類</span></h2>
     <p class="sub2">「運が良ければ出会える」とされているポケモン。見かけたら逃さずに。</p>
     ${rare.length ? `<div class="pick">${rare.map(m => bigCard(m, true)).join("")}</div>` : `<div class="empty">今は特にありません</div>`}</section>`;

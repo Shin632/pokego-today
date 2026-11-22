@@ -266,6 +266,12 @@ const close = async (p, label) => { check(`${label}: JavaScriptエラーなし`,
       const empty = await p.$$eval('.boss', bs => bs.filter(b => !b.querySelector('.cr')).length);
       check('raids: 全部外しても各ボスに有利なポケモンが出る', empty === 0, empty);
     }
+    if (pg === 'spawns.html') {
+      const t = await p.$eval('main', e => e.innerText);
+      check('spawns: アメ集めにおすすめのメガシンカが出る', /アメ集めにおすすめのメガシンカ/.test(t) && /1\. メガ|1\. ゲンシ/.test(t), t.slice(0, 40));
+      const names = await p.$$eval('.mrow .mname', es => es.map(e => e.innerText.split('\n')[0]));
+      check('spawns: おすすめのメガシンカは3つまでで、同じものが重ならない', names.length >= 1 && names.length <= 3 && new Set(names).size === names.length, names.join(' / '));
+    }
     if (pg === 'rocket.html') {
       check('rocket: 8位まで表示', (await p.$$eval('#main .tr', e => e.length)) === 8, '');
       check('rocket: サカキがランキングにいない', !(await p.$eval('#main', e => e.innerText)).includes('サカキ'), '');
