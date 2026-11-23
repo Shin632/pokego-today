@@ -406,13 +406,17 @@ function rewardHtml(r, hit, low, prize){
   if (r.type === "encounter"){
     const i = encounterInfo(r);
     const parts = [];
+    // 当たりにした理由を先に。そのほかの使い道は「ほかに」として後ろに
+    const atk = i && i.e && i.e.useA && i.e.ua >= HIT_U;
+    if (i && i.prize) parts.push("人気・貴重なポケモン");
     if (i && i.dust >= DUST_HIT) parts.push(`ほしのすな稼ぎ：捕まえると +${i.dust}`);
-    if (i && i.e && i.e.useA && i.e.ua >= HIT_U) parts.push(`${nameJa(i.e.bestA)}：${i.e.useA}`);
-    else if (i && i.e && i.e.use) parts.push(`${nameJa(i.e.best)}：${i.e.use}`);
+    if (atk) parts.push(`${nameJa(i.e.bestA)}：${i.e.useA}`);
     if (i && i.ml) parts.push(`PvP：${nameJa(i.ml.best)}がPvPokeのマスターリーグ ${i.ml.rank}位`);
-    else if (i && i.pvp) parts.push(`PvP：${nameJa(i.pvp.best)}がPvPokeの${i.pvp.league} ${i.pvp.rank}位`);
+    const other = [];
+    if (i && i.e && i.e.use && !(atk && i.e.use === i.e.useA)) other.push(`${nameJa(i.e.best)}：${i.e.use}`);
+    if (i && i.pvp && !(i.ml && i.pvp.league === "マスターリーグ")) other.push(`PvP：${nameJa(i.pvp.best)}がPvPokeの${i.pvp.league} ${i.pvp.rank}位`);
+    if (other.length) parts.push((parts.length ? "ほかに " : "") + other.join("、"));
     if (i && i.notForTask) parts.push("ジム防衛やスーパー・ハイパーリーグ向きだが、タスクのポケモンは個体値が最低10で、野生で捕まえても同じかそれ以上なので当たりにしていない");
-    if (i && i.prize && !parts.length) parts.push("人気・貴重なポケモン");
     if (i && i.cls === "miss") parts.push("進化しても育成ランキング上位30位に入らず、PvPでも上位に入らない");
     tip = parts.join(" ／ ");
   }

@@ -965,6 +965,24 @@ def gbl_rules(cup, by_id=None):
     return r
 
 
+def gbl_allowed(p, rules):
+    """カップの決まり（使えるタイプ・使えないタイプ・使えないタグ・使えないポケモン）に合うか"""
+    sid = p["speciesId"]
+    types = {t for t in p["types"] if t != "none"}
+    tags = set(p.get("tags") or [])
+    if re.search(r"_(mega|mega_[xyz]|primal)$", sid):
+        tags.add("mega")
+    if sid in rules["excludeIds"]:
+        return False
+    if rules["excludeTypes"] and types & set(rules["excludeTypes"]):
+        return False
+    if rules["includeTypes"] and not types & set(rules["includeTypes"]):
+        return False
+    if tags & set(rules["excludeTags"]):
+        return False
+    return True
+
+
 def split_gbl_name(name):
     """「Ultra League, Master League: Mega Edition, and 2026 GO LAIC Cup | Twilight Trails」→ リーグごとに分ける。
     「: Mega Edition」は、そのリーグだけにかかる（LeekDuck のイベントページの見出しが「Ultra League」「Master League: Mega Edition」と分かれているため）"""
@@ -1028,10 +1046,17 @@ def build_gbl(pv, move_ja, move_en, events):
         except Exception as ex:
             print(f"::warning::GBL ランキング {cup}/{cp}: {ex}")
             continue
+        c = cups.get(cup) or {}
+        rules = gbl_rules(c, by_id) if c else None
         top = []
-        for x in data[:GBL_TOP]:
+        for x in data:
+            if len(top) >= GBL_TOP:
+                break
             p = by_id.get(x["speciesId"])
             if not p:
+                continue
+            # PvPoke のランキングがカップの決まりより古いことがあるので、決まりに合わないポケモンは除く
+            if rules and not gbl_allowed(p, rules):
                 continue
             b = p["baseStats"]
             stats = (b["atk"], b["def"], b["hp"])
@@ -1043,10 +1068,9 @@ def build_gbl(pv, move_ja, move_en, events):
                         "moves": [{"ja": move_ja.get(m), "en": move_en.get(m, m), "elite": m in elite} for m in x.get("moveset") or []],
                         "lv": lv, "dust": dust, "candy": candy, "xl": xl,
                         "tags": [t for t in ("legendary", "mythical", "ultrabeast", "mega", "shadow") if t in (p.get("tags") or [])]})
-        c = cups.get(cup) or {}
         f = next((f for f in formats if f.get("cup") == cup and f.get("cp") == cp), {})
         leagues[key] = {"cup": cup, "cp": cp, "kind": kind, "title": f.get("title") or c.get("title") or cup,
-                        "rules": gbl_rules(c, by_id) if c else None, "top": top}
+                        "rules": rules, "top": top}
     return {"schema": SCHEMA, "generatedAt": now.isoformat(timespec="seconds").replace("+00:00", "Z"),
             "fromLevel": GBL_FROM_LEVEL, "events": evs, "leagues": leagues}
 
