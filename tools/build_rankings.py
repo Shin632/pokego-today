@@ -967,23 +967,9 @@ def gbl_rules(cup, by_id=None):
 
 def split_gbl_name(name):
     """「Ultra League, Master League: Mega Edition, and 2026 GO LAIC Cup | Twilight Trails」→ リーグごとに分ける。
-    「: Mega Edition」は、その前に並んだリーグ（カップでないもの）すべてにかかるとみなす"""
+    「: Mega Edition」は、そのリーグだけにかかる（LeekDuck のイベントページの見出しが「Ultra League」「Master League: Mega Edition」と分かれているため）"""
     s = re.sub(r"\s*\|.*$", "", name or "").strip()
-    parts = [p.strip() for p in re.split(r",\s*(?:and\s+)?|\s+and\s+", s) if p.strip()]
-    out, pending = [], []
-    for p in parts:
-        m = re.match(r"^(.+?):\s*(.+)$", p)
-        if m and re.search(r"League$", m.group(1)) and re.search(r"Edition$", m.group(2)) and "Cup" not in m.group(1):
-            for q in pending:
-                out.append(f"{q}: {m.group(2)}")
-            pending = []
-            out.append(p)
-        elif re.search(r"League$", p) and "Cup" not in p:
-            pending.append(p)
-        else:
-            out += pending; pending = []
-            out.append(p)
-    return out + pending
+    return [p.strip() for p in re.split(r",\s*(?:and\s+)?|\s+and\s+", s) if p.strip()]
 
 
 def gbl_cup_for(label, formats, cups):

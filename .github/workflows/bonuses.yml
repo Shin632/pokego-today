@@ -45,11 +45,6 @@ jobs:
         run: |
           python3 tools/scrape_research.py prev_research.json out/research.json
 
-      - name: （一時的な調査）ショップのボックスの情報があるか
-        continue-on-error: true
-        run: |
-          python3 tools/probe_shop.py
-
       - name: 育成ランキング・レイドボスの有利なポケモンを計算
         continue-on-error: true
         run: |
