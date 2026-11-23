@@ -79,6 +79,27 @@ function serve(){
   check('shop: JavaScriptエラーなし', !errs.length, errs.join(' / '));
   console.log(`読み取り ${files.length}枚：${(ms / 1000).toFixed(1)}秒（初回の準備を含む）`);
   console.log('判定：' + verdict.replace(/\n/g, ' / '));
+  // 2b) 本物のスマホと同じ解像度（3倍）の画像と、ボックス一覧の画面（1枚に複数・中身なし）
+  {
+    const q = await (await b.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 3 })).newPage();
+    await q.setContent(MOCK(BOXES[0])); const hi = path.join(OUT, 'shop_mock_hi.png'); await q.screenshot({ path: hi });
+    await q.setContent(`<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8"><style>body{margin:0;background:#2a9d8f;font-family:sans-serif}
+      .g{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;padding:120px 12px}.t{background:#fff;border-radius:12px;padding:10px;text-align:center}
+      .n{font-size:13px;font-weight:700}.p{margin-top:40px;background:#1fa36f;color:#fff;border-radius:20px;font-weight:700;padding:4px}</style></head><body>
+      <div class="g"><div class="t"><div class="n">レイドボックス</div><div class="p">275</div></div><div class="t"><div class="n">ブーストボックス</div><div class="p">85</div></div>
+      <div class="t"><div class="n">スペシャルボックス</div><div class="p">480</div></div></div></body></html>`);
+    const list = path.join(OUT, 'shop_mock_list.png'); await q.screenshot({ path: list });
+    await p.evaluate(() => localStorage.removeItem('pogo-shop-saved-v1')); await p.reload(); await p.waitForTimeout(400);
+    await p.setInputFiles('#shots', [hi]);
+    await p.waitForFunction(() => /枚読み取りました/.test(document.getElementById('ocrStatus').innerText), null, { timeout: 120000 });
+    const g = (await p.evaluate(() => JSON.parse(localStorage.getItem('pogo-shop-saved-v1') || '[]')))[0] || {};
+    check('ocr: 3倍の解像度の画像でも読める', g.price === 275 && (g.rows || []).length === 2, JSON.stringify(g).slice(0, 120));
+    await p.setInputFiles('#shots', [list]);
+    await p.waitForFunction(() => /枚読み取りました/.test(document.getElementById('ocrStatus').innerText), null, { timeout: 120000 });
+    const st = await p.$eval('#ocrStatus', e => e.innerText);
+    const n = (await p.evaluate(() => JSON.parse(localStorage.getItem('pogo-shop-saved-v1') || '[]'))).length;
+    check('ocr: ボックス一覧の画面（中身なし）は取り込まず、中身の画面を選ぶよう案内する', n === 1 && /中身の画面/.test(st), `${n}件 ${st}`);
+  }
   // 3) 日付が変わると、前の日のボックスは消える
   await p.evaluate(() => { const s = JSON.parse(localStorage.getItem('pogo-shop-saved-v1')); s.forEach(x => x.day = '2000-01-01'); localStorage.setItem('pogo-shop-saved-v1', JSON.stringify(s)); });
   await p.reload(); await p.waitForTimeout(500);

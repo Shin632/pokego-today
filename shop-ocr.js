@@ -60,7 +60,9 @@ function findAlias(line, alias){
   if (alias.length < 4) return -1;   // 短い言葉は、ぴったりでないと間違えやすい
   for (let w = alias.length - 1; w <= alias.length + 1; w++){
     for (let s = 0; s + w <= line.length; s++){
-      if (bigramSim(line.slice(s, s + w), alias) >= 0.75) return s + w;
+      const win = line.slice(s, s + w);
+      // 並び順の違う言葉（「アップグレードボックス」と「ボックスアップグレード」）を同じとみなさないよう、頭か終わりの2文字は合っていること
+      if ((win.slice(0, 2) === alias.slice(0, 2) || win.slice(-2) === alias.slice(-2)) && bigramSim(win, alias) >= 0.75) return s + w;
     }
   }
   return -1;
@@ -118,7 +120,8 @@ function parseBoxText(text){
   if (!free && pool.length > 1) notes.push(`値段の候補が複数ありました（${[...new Set(pool.map(c => c.v))].join("、")}）。いちばん安いものにしています`);
   // 名前：「〜ボックス」「〜BOX」を含む行、なければ最初の行
   // （読み取った日本語は1文字ずつ空白が入ることがあるので、空白を除いて探す）
-  const nameIdx = norm.findIndex(l => /ボックス|BOX|Box|パック|セット/i.test(l) && !/アップグレ|ポケモンボックス/.test(l));
+  // アイテムとして読んだ行（「ポケモンボックスアップグレード ×1」など）は名前にしない
+  const nameIdx = norm.findIndex((l, i) => /ボックス|BOX|Box|パック|セット/i.test(l) && !used.has(i));
   const name = nameIdx >= 0 ? norm[nameIdx].replace(/[0-9,%]+[A-Za-z]*$/, "").slice(0, 30) : "";
   if (!rows.length) notes.push("中身のアイテムを読み取れませんでした");
   if (price == null) notes.push("値段を読み取れませんでした");
@@ -138,9 +141,9 @@ async function ocrWorker(onProgress){
   return OCR_WORKER;
 }
 /** 画像を読み取りやすくする：1.5倍に広げ、mode="gray" は白黒の濃淡、"bin" は白と黒の2色 */
-async function prepImage(file, mode, want = 1.5){
+async function prepImage(file, mode, want = 1.5, exact = false){
   const bmp = await createImageBitmap(file);
-  const scale = Math.min(want, (want > 1.5 ? 4200 : 2600) / Math.max(bmp.width, bmp.height));
+  const scale = exact ? want : Math.min(want, (want > 1.5 ? 4200 : 2600) / Math.max(bmp.width, bmp.height));
   const c = document.createElement("canvas");
   c.width = Math.round(bmp.width * scale); c.height = Math.round(bmp.height * scale);
   const g = c.getContext("2d");
@@ -168,18 +171,23 @@ async function numWorker(){
  * ボタンの上の白い文字も読めるように、白黒の濃淡の画像と、白い文字だけを残した画像の両方で読む */
 async function readPrice(_w, file){
   const w = await numWorker();
+  const bmp = await createImageBitmap(file);
   const words = [];
-  for (const [mode, psm] of [["gray", "3"], ["white", "6"]]){
-    await w.setParameters({tessedit_pageseg_mode: psm});
-    // 文字の位置（大きさ）も使うので、blocks も出してもらう
-    const {data} = await w.recognize(await prepImage(file, mode), {}, {text: true, blocks: true});
-    for (const bl of data.blocks || []) for (const pa of bl.paragraphs || []) for (const li of pa.lines || []) for (const x of li.words || []) words.push(x);
+  // 画像の大きさによって読めたり読めなかったりするので、縦の長さを2通りにそろえて読む（スマホのスクショは縦2000〜2800くらい）
+  for (const tall of [1800, 1300]){
+    const sc = tall / bmp.height;
+    for (const [mode, psm] of [["gray", "3"], ["white", "6"]]){
+      await w.setParameters({tessedit_pageseg_mode: psm});
+      const {data} = await w.recognize(await prepImage(file, mode, sc, true), {}, {text: true, blocks: true});
+      for (const bl of data.blocks || []) for (const pa of bl.paragraphs || []) for (const li of pa.lines || []) for (const x of li.words || []) words.push({...x, h0: (x.bbox.y1 - x.bbox.y0) / sc});
+    }
   }
   return pickPrice(words);
 }
 function pickPrice(words){
-  const ws = words.map(x => ({t: x.text.replace(/,/g, ""), h: x.bbox.y1 - x.bbox.y0, y: x.bbox.y1, conf: x.confidence}))
-    .filter(x => /^[0-9]{1,5}$/.test(x.t) && x.conf >= 40);
+  // 読み違えた数字は確信度がとても低い（0前後）ので、確信度の高いものだけを使う。大きさは元の画像での高さで比べる
+  const ws = words.map(x => ({t: x.text.replace(/,/g, ""), h: x.h0 ?? (x.bbox.y1 - x.bbox.y0), conf: x.confidence}))
+    .filter(x => /^[0-9]{1,5}$/.test(x.t) && x.conf >= 70);
   if (!ws.length) return null;
   // いちばん大きな文字の数字。同じくらいの大きさなら確信度の高いもの
   ws.sort((a, b) => (b.h - a.h > 3 ? 1 : a.h - b.h > 3 ? -1 : 0) || b.conf - a.conf);
