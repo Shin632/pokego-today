@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1f6feb">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>GOバトルリーグ｜今日のポケGOイベント</title>
+<style>
+:root{--bg:#f4f6fa;--panel:#ffffff;--text:#14171c;--sub:#5b6472;--line:#e3e7ee;--accent:#1f6feb;--muted:#9aa3b1;--radius:14px}
+@media (prefers-color-scheme: dark){:root{--bg:#0f1115;--panel:#1a1d24;--text:#eceff4;--sub:#a3acba;--line:#2b303a;--muted:#6c7584}}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--bg);color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic UI",Meiryo,sans-serif;
+  font-size:15px;line-height:1.5;-webkit-text-size-adjust:100%;
+  padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+.wrap{max-width:760px;margin:0 auto;padding:12px 14px 40px}
+.nav{display:flex;gap:8px;margin:2px 0 6px;overflow-x:auto;scrollbar-width:none}
+.nav::-webkit-scrollbar{display:none}
+.nav a{flex:0 0 auto;font-size:13px;color:var(--accent);text-decoration:none;border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:5px 12px}
+.nav a.cur{background:var(--accent);border-color:var(--accent);color:#fff}
+header.top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;padding:6px 2px 4px}
+h1{font-size:20px;margin:0}
+.lead{font-size:13px;color:var(--sub);margin:2px 0 0}
+.btn{appearance:none;font:inherit;font-size:13px;border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:999px;padding:7px 12px;cursor:pointer;white-space:nowrap}
+.btn[disabled]{opacity:.5}
+.notice{background:#fff4d6;color:#6b4b00;border-radius:10px;padding:8px 12px;font-size:13px;margin:8px 0}
+.notice.err{background:#ffe1e1;color:#8a1c1c}
+@media (prefers-color-scheme: dark){.notice{background:#3a2f12;color:#f3d999}.notice.err{background:#3f1a1a;color:#ffb4b4}}
+h2{font-size:16px;margin:18px 2px 6px}
+.lg{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:12px;margin-top:12px}
+.lg.special{border:2px solid #b45309}
+.lh{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.lname{font-size:18px;font-weight:800;line-height:1.3}
+.kind{display:inline-block;font-size:11px;font-weight:700;color:#fff;border-radius:6px;padding:1px 7px}
+.kind.special{background:#b45309}.kind.mega{background:#7c3aed}.kind.normal{background:#1f6feb}
+.en{font-size:11.5px;color:var(--sub)}
+.meta{font-size:12.5px;color:var(--sub);margin-top:3px}
+.ease{display:inline-block;font-size:11.5px;font-weight:700;border-radius:6px;padding:1px 7px;margin-left:2px}
+.ease.e1{background:#dcfce7;color:#166534}.ease.e2{background:#fef3c7;color:#92400e}.ease.e3{background:#fee2e2;color:#991b1b}
+@media (prefers-color-scheme: dark){.ease.e1{background:#14532d;color:#bbf7d0}.ease.e2{background:#78350f;color:#fde68a}.ease.e3{background:#7f1d1d;color:#fecaca}}
+.rules{margin:8px 0 0;padding:8px 10px;border-radius:10px;background:color-mix(in srgb,#b45309 9%,var(--panel));font-size:13px;line-height:1.6}
+.rules ul{margin:2px 0 0;padding-left:1.2em}
+.rules .s{font-size:11.5px;color:var(--sub)}
+h3{font-size:13.5px;margin:12px 0 2px;color:var(--sub)}
+.pr{display:grid;grid-template-columns:24px 1fr;gap:6px;padding:7px 0;border-top:1px dashed var(--line)}
+.pr:first-of-type{border-top:none}
+.pn{font-weight:800;color:var(--sub);text-align:center}
+.pnm{font-weight:700}
+.pmv{font-size:12.5px}
+.pmv .el{font-size:11px;color:#b45309;font-weight:700}
+.pcost{font-size:11.5px;color:var(--sub)}
+.cheap{display:inline-block;font-size:10.5px;font-weight:700;color:#166534;border:1px solid currentColor;border-radius:5px;padding:0 5px;margin-left:4px}
+@media (prefers-color-scheme: dark){.cheap{color:#86efac}}
+.tp{display:inline-block;font-size:10.5px;font-weight:700;color:#fff;border-radius:5px;padding:0 6px;margin-left:4px;vertical-align:2px}
+.tag{display:inline-block;font-size:10.5px;font-weight:700;border-radius:5px;padding:0 5px;margin-left:4px;vertical-align:2px;border:1px solid currentColor}
+.tag.mega{color:#7c3aed}.tag.shadow{color:#6b21a8}.tag.leg{color:#b45309}
+.empty{color:var(--sub);font-size:14px;background:var(--panel);border:1px dashed var(--line);border-radius:var(--radius);padding:14px;text-align:center;margin-top:12px}
+details.box{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:10px 12px;margin-top:16px}
+details.box>summary{cursor:pointer;font-weight:700}
+.crit{font-size:13px;line-height:1.7;margin:8px 0 0;padding-left:1.2em}
+footer{margin-top:24px;font-size:12px;color:var(--sub);line-height:1.7}
+footer a{color:var(--sub)}
+@media (min-width: 600px){ .nav{flex-wrap:wrap; overflow-x:visible} }
+/* 押しやすさ：開閉ボタン・リンクの押せる範囲を広げる（高さ40px前後） */
+details.box>summary{padding:10px 0}
+.lk{display:inline-block;padding:8px 0;font-size:12.5px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="nav"><a href="index.html">📅 イベント</a><a href="search.html">🔍 検索</a><a href="iv.html">⚖️ 育成判定</a><a href="spawns.html">🌿 野生</a><a href="raids.html">🐉 レイド</a><a href="rocket.html">🚀 ロケット団</a><a href="research.html">📋 リサーチ</a><a href="gbl.html" class="cur">⚔️ バトルリーグ</a><a href="shop.html">🛒 ボックス判定</a><a href="ranks.html">🏆 育成TOP10</a></nav>
+  <header class="top">
+    <div><h1>GOバトルリーグ</h1>
+    <p class="lead">今開催中のリーグと、それぞれのおすすめポケモン。特別ルールのカップを先に、そのあとは参加しやすい（育成のほしのすな・アメが少なくて済む）スーパー → ハイパー → マスターの順</p></div>
+    <button class="btn" id="reload" type="button">↻ 更新</button>
+  </header>
+  <div id="notice"></div>
+  <div id="stale"></div>
+  <main id="main"><div class="empty">読み込み中…</div></main>
+  <details class="box"><summary>見方・決め方</summary>
+    <ul class="crit">
+      <li><b>並び順</b>：特別ルールのカップ（タイプや使えるポケモンに決まりがあるもの）を最優先。次にメガエディションなどを含め、CP上限の低い順（スーパーリーグ CP1500 → ハイパーリーグ CP2500 → マスターリーグ 上限なし）。CP上限が低いほど、強化に必要なほしのすな・アメが少なく、参加しやすいためです。</li>
+      <li><b>リーグの読み取り</b>：イベント名（例「Ultra League, Master League: Mega Edition, and 2026 GO LAIC Cup」）を分けて、PvPoke のリーグ・カップに当てはめています。「: Mega Edition」は、その前に並んだリーグすべてにかかるとみなしています。正式な内容はイベントの詳細（LeekDuck・英語）で確認してください。</li>
+      <li><b>ルール</b>：PvPoke のカップの設定（使えるタイプ・使えないタイプ・使えないポケモン）を日本語にしたものです。捕まえた時期などの条件は入っていません。</li>
+      <li><b>おすすめポケモン</b>：PvPoke の、そのリーグ・カップのランキング上位10（技は PvPoke のおすすめ。★はすごいわざマシン等が必要な技）。下の「育成コストが少なくて済むおすすめ」は、上位50のうちアメXLが要らず、伝説・幻でないものです。</li>
+      <li><b>育成コスト</b>：レベル20（レイド・リサーチで捕まえたとき）から、PvP向けによく使う個体（攻撃0・防御15・HP15）がCP上限ぎりぎりになるレベルまで強化するのに必要なほしのすな・アメ・アメXL（ゲームデータの強化コスト表で計算）。マスターリーグはレベル40までで計算しています（レベル50まではさらにアメXL 296個が必要）。シャドウは1.2倍。</li>
+    </ul>
+  </details>
+  <footer>
+    <div>※ 非公式のファンツールです。リーグの日程は LeekDuck の情報（ScrapedDuck 経由）、ルールとランキングは <a href="https://pvpoke.com/" target="_blank" rel="noopener">PvPoke</a> の公開データ、育成コストはゲームデータ（PokeMiners）から、このアプリが数時間ごとに作ったデータを使っています。</div>
+    <div id="lastUpdated"></div>
+  </footer>
+</div>
+
+<script src="names-ja.js"></script>
+<script src="common.js"></script>
+<script>
+"use strict";
+const D = "https://raw.githubusercontent.com/Shin632/pokego-today/data/";
+const CACHE_KEY = "pogo-gbl-cache-v1";
+const TYPE_INFO = {
+  normal:["ノーマル","#9fa19f"], fire:["ほのお","#e62829"], water:["みず","#2980ef"], electric:["でんき","#d8b300"], grass:["くさ","#3fa129"],
+  ice:["こおり","#3dcef3"], fighting:["かくとう","#ff8000"], poison:["どく","#9141cb"], ground:["じめん","#915121"], flying:["ひこう","#81b9ef"],
+  psychic:["エスパー","#ef4179"], bug:["むし","#91a119"], rock:["いわ","#afa981"], ghost:["ゴースト","#704170"], dragon:["ドラゴン","#5060e1"],
+  dark:["あく","#624d4e"], steel:["はがね","#60a1b8"], fairy:["フェアリー","#ef70ef"],
+};
+const typeBadges = (ts) => (ts || []).map(t => { const c = (TYPE_INFO[t] || ["", "#888"])[1]; return `<span class="tp" style="background:${c};color:${typeFg(c)}">${(TYPE_INFO[t] || [t])[0]}</span>`; }).join("");
+const LEAGUE_JA = {500: "リトルカップ", 1500: "スーパーリーグ", 2500: "ハイパーリーグ", 10000: "マスターリーグ"};
+const CP_JA = (cp) => cp >= 10000 ? "CP上限なし" : `CP${cp}以下`;
+const KIND_JA = {special: "特別ルール", mega: "メガ", normal: "通常"};
+const TAG_JA = {legendary: "伝説", mythical: "幻", ultrabeast: "ウルトラビースト", mega: "メガシンカ", shadow: "シャドウ"};
+// 参加しやすさ（CP上限が低いほど、育成のほしのすな・アメが少なくて済む）
+const EASE = {500: ["e1", "とても参加しやすい"], 1500: ["e1", "参加しやすい"], 2500: ["e2", "ふつう"], 10000: ["e3", "育成が大変"]};
+let DATA = null;
+
+function parseTime(s){
+  if (!s) return null;
+  if (/Z$|[+-]\d{2}:?\d{2}$/.test(s)){ const d = new Date(s); return isNaN(d) ? null : d; }
+  const m = String(s).match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/);
+  return m ? new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5]) : null;
+}
+/** リーグ名（英語）→ 日本語の表示名 */
+function leagueName(lg, label){
+  const base = LEAGUE_JA[lg.cp] || `CP${lg.cp}`;
+  if (lg.kind === "normal") return base;
+  if (lg.kind === "mega") return `${base}（メガエディション）`;
+  // 特別ルールのカップ：英語の名前をなるべく日本語に
+  let s = String(label || lg.title).replace(/:\s*(Great|Ultra|Master|Little) League Edition/i, (m, w) => `（${LEAGUE_JA[{Little: 500, Great: 1500, Ultra: 2500, Master: 10000}[w]]}版）`);
+  s = s.replace(/\bMega\b/g, "メガ").replace(/\bCatch\b/g, "キャッチ").replace(/\bCup\b/g, "カップ").replace(/\bGO\b/g, "GO").trim();
+  return /リーグ/.test(s) ? s : `${s}（${base}）`;
+}
+const nm = (x) => esc(nameJa(x.name));
+const mvs = (x) => {
+  const ms = (x.moves || []).slice(0, 3).map(m => `${esc(m.ja || m.en)}${m.elite ? `<span class="el">★</span>` : ""}`);
+  return ms.length ? `技1 ${ms[0]}／技2 ${ms.slice(1).join("・")}` : "";
+};
+const num = (n) => n >= 10000 ? `${(n / 10000).toFixed(n % 10000 ? 1 : 0)}万` : String(n);
+function costText(x, cp){
+  if (!x.lv) return "CP上限に収まらない";
+  if (!x.dust && !x.candy && !x.xl) return `強化なしでOK（レベル${x.lv}で上限）`;
+  return `レベル${DATA.fromLevel || 20}→${x.lv}${cp >= 10000 ? "" : ""}：ほしのすな ${num(x.dust)}・アメ ${x.candy}${x.xl ? `・アメXL ${x.xl}` : ""}`;
+}
+const isCheap = (x) => !x.xl && !(x.tags || []).some(t => t === "legendary" || t === "mythical" || t === "ultrabeast") && x.dust <= 100000;
+function rulesHtml(lg){
+  const r = lg.rules; const items = [];
+  items.push(`<b>${CP_JA(lg.cp)}</b>`);
+  if (r){
+    if (r.includeTypes.length) items.push(`使えるタイプ：${r.includeTypes.map(t => (TYPE_INFO[t] || [t])[0]).join("・")}`);
+    if (r.excludeTypes.length) items.push(`使えないタイプ：${r.excludeTypes.map(t => (TYPE_INFO[t] || [t])[0]).join("・")}`);
+    const tags = r.excludeTags.filter(t => TAG_JA[t] && t !== "mega");
+    if (tags.length) items.push(`${tags.map(t => TAG_JA[t]).join("・")}は使えない`);
+    items.push(r.megaAllowed ? "メガシンカしたポケモンも使える" : "メガシンカしたポケモンは使えない");
+    if (r.excludeIds.length){
+      const names = [...new Set((r.excludeNames || r.excludeIds.map(idToName)).map(n => nameJa(n)))];
+      items.push(`使えないポケモン（${names.length}種類）：${names.map(esc).join("、")}`);
+    }
+  }
+  if (lg.cup === "catch") items.push("キャッチカップは、捕まえた時期などの条件があることが多いです（下のイベントの詳細で確認を）");
+  return `<div class="rules"><b>ルール</b><ul>${items.map(i => `<li>${i}</li>`).join("")}</ul>
+    <div class="s">PvPoke の設定から作ったものです。正式なルールはイベントの詳細で確認してください</div></div>`;
+}
+/** "corsola_galarian" → "Corsola (Galarian)" のような英語名（names-ja の辞書で引けるように） */
+function idToName(id){
+  const parts = id.split("_"); const base = parts[0].replace(/^\w/, c => c.toUpperCase());
+  const rest = parts.slice(1).join(" ");
+  return rest ? `${base} (${rest.replace(/\b\w/g, c => c.toUpperCase())})` : base;
+}
+function leagueCard(lg, label, ev, now){
+  const top = lg.top || [];
+  const best = top.slice(0, 10);
+  const cheap = top.slice(10).filter(isCheap).slice(0, 5);
+  const row = (x, i) => `<div class="pr"><div class="pn">${i}</div><div>
+      <div class="pnm">${nm(x)}${typeBadges(x.types)}${(x.tags || []).filter(t => TAG_JA[t]).map(t => `<span class="tag ${t === "mega" ? "mega" : t === "shadow" ? "shadow" : "leg"}">${TAG_JA[t]}</span>`).join("")}${isCheap(x) ? `<span class="cheap">育てやすい</span>` : ""}</div>
+      <div class="pmv">${mvs(x)}</div>
+      <div class="pcost">${esc(costText(x, lg.cp))}${x.score ? ` ・ 評価 ${x.score}` : ""}</div></div></div>`;
+  const st = parseTime(ev.start), en = parseTime(ev.end);
+  const live = st && en && st <= now && now < en;
+  const [ecls, etxt] = EASE[lg.cp] || ["e2", "ふつう"];
+  return `<article class="lg ${lg.kind === "special" ? "special" : ""}">
+    <div class="lh"><span class="kind ${lg.kind}">${KIND_JA[lg.kind] || ""}</span><span class="lname">${esc(leagueName(lg, label))}</span><span class="ease ${ecls}">${etxt}</span></div>
+    <div class="en">${esc(label)}</div>
+    <div class="meta">${live ? "開催中 ・ " : ""}${st ? `${fmtD(st)} ${fmtT(st)}` : ""}〜${en ? `${fmtD(en)} ${fmtT(en)}` : ""}</div>
+    ${lg.kind !== "normal" ? rulesHtml(lg) : `<div class="meta">${CP_JA(lg.cp)} ・ メガシンカしたポケモンは使えない</div>`}
+    <h3>おすすめポケモン TOP${best.length}</h3>${best.map((x, i) => row(x, i + 1)).join("") || `<div class="meta">ランキングがありません</div>`}
+    ${cheap.length ? `<h3>育成コストが少なくて済むおすすめ</h3>${cheap.map(x => row(x, top.indexOf(x) + 1)).join("")}` : ""}
+    ${ev.link ? `<a class="lk" href="${esc(safeUrl(ev.link))}" target="_blank" rel="noopener">イベントの詳細（LeekDuck・英語）↗</a>` : ""}
+  </article>`;
+}
+// 並び順：特別ルール → メガエディションなど・通常（CP上限の低い順：スーパー → ハイパー → マスター）
+const ORDER = (x) => (x.lg.kind === "special" ? 0 : 1) * 100000 + x.lg.cp;
+function render(){
+  const main = document.getElementById("main");
+  if (!DATA) return;
+  const now = new Date();
+  document.getElementById("lastUpdated").textContent = DATA.generatedAt ? `計算した日時：${fmtD(new Date(DATA.generatedAt))} ${fmtT(new Date(DATA.generatedAt))}` : "";
+  showStale(staleText(DATA.generatedAt, 12, "バトルリーグの情報"));
+  const items = (ev) => ev.leagues.filter(l => l.key && DATA.leagues[l.key]).map(l => ({lg: DATA.leagues[l.key], label: l.label, ev}));
+  const live = (DATA.events || []).filter(e => { const s = parseTime(e.start), en = parseTime(e.end); return s && en && s <= now && now < en; });
+  const next = (DATA.events || []).filter(e => { const s = parseTime(e.start); return s && s > now; }).sort((a, b) => parseTime(a.start) - parseTime(b.start));
+  let html = `<h2>⚔️ 今開催中のリーグ</h2>`;
+  const cur = live.flatMap(items).sort((a, b) => ORDER(a) - ORDER(b));
+  html += cur.length ? cur.map(x => leagueCard(x.lg, x.label, x.ev, now)).join("") : `<div class="empty">今開催中のリーグの情報がありません</div>`;
+  const unknown = live.flatMap(e => e.leagues.filter(l => !l.key || !DATA.leagues[l.key]).map(l => l.label));
+  if (unknown.length) html += `<div class="meta" style="margin-top:8px">ランキングが見つからなかったリーグ：${unknown.map(esc).join("、")}</div>`;
+  if (next.length){
+    html += `<details class="box"><summary>🔜 次に始まるリーグ（${next.length}件）</summary>`;
+    for (const e of next){
+      const st = parseTime(e.start);
+      html += `<h2>${esc(fmtD(st))} ${esc(fmtT(st))}から</h2>` + items(e).sort((a, b) => ORDER(a) - ORDER(b)).map(x => leagueCard(x.lg, x.label, x.ev, now)).join("");
+    }
+    html += `</details>`;
+  }
+  main.innerHTML = html;
+}
+async function getJson(url){
+  const ctl = new AbortController(); const timer = setTimeout(() => ctl.abort(), 20000);
+  try { const r = await fetch(url, {cache: "no-cache", signal: ctl.signal}); if (!r.ok) throw new Error("HTTP " + r.status); return await r.json(); }
+  finally { clearTimeout(timer); }
+}
+let loading = false;
+async function refresh(){
+  if (loading) return; loading = true;
+  const btn = document.getElementById("reload"); btn.disabled = true; btn.textContent = "更新中…";
+  const r = await fetchWithCache(CACHE_KEY, () => getJson(D + "gbl.json"), d => d && Array.isArray(d.events) && d.leagues && typeof d.leagues === "object");
+  if (r.data){ DATA = r.data; document.getElementById("notice").innerHTML = r.cached ? `<div class="notice">最新のデータを取得できなかったため、前回取得したデータを表示しています。</div>` : ""; render(); }
+  else { document.getElementById("notice").innerHTML = `<div class="notice err">データを取得できませんでした。「更新」を押してください。</div>`; document.getElementById("main").innerHTML = `<div class="empty">表示できるデータがありません</div>`; }
+  btn.disabled = false; btn.textContent = "↻ 更新"; loading = false;
+}
+document.getElementById("reload").addEventListener("click", refresh);
+refresh();
+</script>
+</body>
+</html>

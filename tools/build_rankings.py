@@ -880,6 +880,191 @@ def load_pvp_ranks():
     return out
 
 
+# ===== GOバトルリーグ（gbl.json） =====
+GBL_RANK_URL = "https://raw.githubusercontent.com/pvpoke/pvpoke/master/src/data/rankings/{cup}/overall/rankings-{cp}.json"
+LEAGUE_WORDS = [("Little", 500), ("Great", 1500), ("Ultra", 2500), ("Master", 10000)]
+GBL_TOP = 50          # 各リーグで保存する上位の数
+GBL_FROM_LEVEL = 20   # 育成コストは、レイド・リサーチで捕まえたときのレベル20から数える
+UPGRADE_COST = {}
+
+
+def load_upgrade_costs(gm):
+    for x in gm:
+        if x.get("templateId") == "POKEMON_UPGRADE_SETTINGS":
+            u = x["data"]["pokemonUpgrades"]
+            return {"dust": u.get("stardustCost") or [], "candy": u.get("candyCost") or [], "xl": u.get("xlCandyCost") or [],
+                    "shadow": u.get("shadowStardustMultiplier") or 1.2}
+    return {}
+
+
+def cpm_at(lv):
+    i = int(lv) - 1
+    if lv == int(lv):
+        return CPM_TABLE[i]
+    a, b = CPM_TABLE[i], CPM_TABLE[i + 1]
+    return math.sqrt((a * a + b * b) / 2)
+
+
+def cp_of(stats, iv, lv):
+    a, d, h = stats
+    m = cpm_at(lv)
+    return max(10, math.floor((a + iv[0]) * math.sqrt(d + iv[1]) * math.sqrt(h + iv[2]) * m * m / 10))
+
+
+def upgrade_cost(lv_from, lv_to, shadow=False):
+    """レベル lv_from → lv_to の強化に必要な（ほしのすな, アメ, アメXL）"""
+    dust = candy = xl = 0
+    lv = lv_from
+    while lv < lv_to - 1e-9:
+        i = int(lv) - 1
+        dust += UPGRADE_COST["dust"][i] if i < len(UPGRADE_COST["dust"]) else 0
+        if int(lv) < 40:
+            candy += UPGRADE_COST["candy"][i] if i < len(UPGRADE_COST["candy"]) else 0
+        else:
+            j = int(lv) - 40
+            xl += UPGRADE_COST["xl"][j] if j < len(UPGRADE_COST["xl"]) else 0
+        lv += 0.5
+    if shadow:
+        dust, candy, xl = round(dust * UPGRADE_COST.get("shadow", 1.2)), math.ceil(candy * 1.2), math.ceil(xl * 1.2)
+    return dust, candy, xl
+
+
+def gbl_target_level(stats, cap):
+    """PvP向けによく使う個体（攻撃0・防御15・HP15）が、CP上限に収まる最大のレベル（50まで）。マスターリーグは40"""
+    if cap >= 10000:
+        return 40.0
+    best = None
+    lv = 1.0
+    while lv <= 50:
+        if cp_of(stats, (0, 15, 15), lv) <= cap:
+            best = lv
+        lv += 0.5
+    return best
+
+
+def gbl_rules(cup, by_id=None):
+    """PvPoke のカップの決まり → 表示用（タイプ・タグ・使えないポケモン）"""
+    r = {"includeTypes": [], "excludeTypes": [], "excludeTags": [], "excludeIds": [], "megaAllowed": True}
+    for f in cup.get("include") or []:
+        if f.get("filterType") == "type":
+            r["includeTypes"] += f.get("values") or []
+    for f in cup.get("exclude") or []:
+        t, v = f.get("filterType"), f.get("values") or []
+        if t == "type":
+            r["excludeTypes"] += v
+        elif t == "tag":
+            r["excludeTags"] += v
+        elif t == "id":
+            r["excludeIds"] += v
+    if "mega" in r["excludeTags"]:
+        r["megaAllowed"] = False
+    # 使えないポケモンは英語名でも持つ（画面で日本語にする）
+    r["excludeNames"] = [(by_id or {}).get(i, {}).get("speciesName", i) for i in r["excludeIds"]]
+    if len(set(r["includeTypes"])) >= 18:   # 全タイプが入っているのは「制限なし」と同じ
+        r["includeTypes"] = []
+    return r
+
+
+def split_gbl_name(name):
+    """「Ultra League, Master League: Mega Edition, and 2026 GO LAIC Cup | Twilight Trails」→ リーグごとに分ける。
+    「: Mega Edition」は、その前に並んだリーグ（カップでないもの）すべてにかかるとみなす"""
+    s = re.sub(r"\s*\|.*$", "", name or "").strip()
+    parts = [p.strip() for p in re.split(r",\s*(?:and\s+)?|\s+and\s+", s) if p.strip()]
+    out, pending = [], []
+    for p in parts:
+        m = re.match(r"^(.+?):\s*(.+)$", p)
+        if m and re.search(r"League$", m.group(1)) and re.search(r"Edition$", m.group(2)) and "Cup" not in m.group(1):
+            for q in pending:
+                out.append(f"{q}: {m.group(2)}")
+            pending = []
+            out.append(p)
+        elif re.search(r"League$", p) and "Cup" not in p:
+            pending.append(p)
+        else:
+            out += pending; pending = []
+            out.append(p)
+    return out + pending
+
+
+def gbl_cup_for(label, formats, cups):
+    """リーグ名 → (PvPoke のカップ名, CP上限, 表示名用の種類)。見つからなければ None"""
+    cp = next((c for w, c in LEAGUE_WORDS if re.search(rf"\b{w} League", label)), None)
+    low = label.lower()
+    if "catch cup" in low:
+        f = next((f for f in formats if f.get("cup") == "catch"), None)
+        return ("catch", cp or (f or {}).get("cp", 1500), "special")
+    if "laic" in low:
+        f = next((f for f in formats if "laic" in f.get("cup", "") and "gbl" in f.get("cup", "")), None) \
+            or next((f for f in formats if "laic" in f.get("cup", "")), None)
+        if f:
+            return (f["cup"], cp or f.get("cp", 1500), "special")
+    if re.search(r"mega edition|^mega ", low) and cp:
+        return ("mega", cp, "mega")
+    if cp and re.fullmatch(r"(Little|Great|Ultra|Master) League", label.strip()):
+        return ("all", cp, "normal")
+    # そのほかのカップ：PvPoke の形式名と単語で照らし合わせる
+    words = set(re.findall(r"[a-z]+", low)) - {"cup", "league", "edition", "the", "go", "great", "ultra", "master"}
+    for f in formats:
+        fw = set(re.findall(r"[a-z]+", (f.get("title", "") + " " + f.get("cup", "")).lower()))
+        if words and words & fw:
+            return (f["cup"], cp or f.get("cp", 1500), "special")
+    return None
+
+
+def build_gbl(pv, move_ja, move_en, events):
+    """今と、これから2週間のGOバトルリーグのリーグごとに、ルールとおすすめポケモン（PvPoke のランキング＋育成コスト）"""
+    now = dt.datetime.now(dt.timezone.utc)
+    by_id = {p["speciesId"]: p for p in pv["pokemon"]}
+    cups = {c["name"]: c for c in pv.get("cups") or []}
+    formats = pv.get("formats") or []
+    evs, need = [], {}
+    for e in events:
+        if e.get("eventType") != "go-battle-league" or not e.get("start") or not e.get("end"):
+            continue
+        st = dt.datetime.fromisoformat(e["start"].replace("Z", "+00:00"))
+        en = dt.datetime.fromisoformat(e["end"].replace("Z", "+00:00"))
+        if st.tzinfo is None:   # 現地時間の書き方なら日本時間とみなす
+            st, en = st.replace(tzinfo=dt.timezone(dt.timedelta(hours=9))), en.replace(tzinfo=dt.timezone(dt.timedelta(hours=9)))
+        if en < now or st > now + dt.timedelta(days=14):
+            continue
+        leagues = []
+        for label in split_gbl_name(e.get("name", "")):
+            c = gbl_cup_for(label, formats, cups)
+            if c:
+                key = f"{c[0]}-{c[1]}"
+                need[key] = c
+            leagues.append({"label": label, "key": f"{c[0]}-{c[1]}" if c else None, "kind": c[2] if c else "unknown"})
+        evs.append({"id": e.get("eventID"), "name": e.get("name"), "start": e["start"], "end": e["end"], "link": e.get("link"), "leagues": leagues})
+    leagues = {}
+    for key, (cup, cp, kind) in need.items():
+        try:
+            data = json.loads(get(GBL_RANK_URL.format(cup=cup, cp=cp)))
+        except Exception as ex:
+            print(f"::warning::GBL ランキング {cup}/{cp}: {ex}")
+            continue
+        top = []
+        for x in data[:GBL_TOP]:
+            p = by_id.get(x["speciesId"])
+            if not p:
+                continue
+            b = p["baseStats"]
+            stats = (b["atk"], b["def"], b["hp"])
+            shadow = "_shadow" in x["speciesId"]
+            lv = gbl_target_level(stats, cp)
+            dust, candy, xl = upgrade_cost(GBL_FROM_LEVEL, lv, shadow) if lv and lv > GBL_FROM_LEVEL else (0, 0, 0)
+            elite = set(p.get("eliteMoves") or [])
+            top.append({"id": x["speciesId"], "name": x["speciesName"], "score": x.get("score"), "types": [t for t in p["types"] if t != "none"],
+                        "moves": [{"ja": move_ja.get(m), "en": move_en.get(m, m), "elite": m in elite} for m in x.get("moveset") or []],
+                        "lv": lv, "dust": dust, "candy": candy, "xl": xl,
+                        "tags": [t for t in ("legendary", "mythical", "ultrabeast", "mega", "shadow") if t in (p.get("tags") or [])]})
+        c = cups.get(cup) or {}
+        f = next((f for f in formats if f.get("cup") == cup and f.get("cp") == cp), {})
+        leagues[key] = {"cup": cup, "cp": cp, "kind": kind, "title": f.get("title") or c.get("title") or cup,
+                        "rules": gbl_rules(c, by_id) if c else None, "top": top}
+    return {"schema": SCHEMA, "generatedAt": now.isoformat(timespec="seconds").replace("+00:00", "Z"),
+            "fromLevel": GBL_FROM_LEVEL, "events": evs, "leagues": leagues}
+
+
 CPM_TABLE = []   # レベル1〜のCP補正値（ゲームデータの PLAYER_LEVEL_SETTINGS）
 
 
@@ -1071,6 +1256,7 @@ def main(prev_path, out_path, prev_megas_path=None, out_megas_path=None, prev_ra
         prev = None
     megas_data = prev_megas
     pokedex_data = None
+    gbl_data = None
     raids_data = None
     if prev_raids_path:
         try:
@@ -1089,6 +1275,7 @@ def main(prev_path, out_path, prev_megas_path=None, out_megas_path=None, prev_ra
         TYPE_BOOSTS = load_type_boosts(gm)
         CATCH_DUST = load_catch_dust(gm)
         CPM_TABLE[:] = load_cpm(gm)
+        UPGRADE_COST.update(load_upgrade_costs(gm))
         MAX_FORMS = load_max_forms(gm, {q["speciesId"] for q in pv["pokemon"]})
         del gm
         try:
@@ -1097,6 +1284,11 @@ def main(prev_path, out_path, prev_megas_path=None, out_megas_path=None, prev_ra
             print(f"::warning::技の日本語名を取得できませんでした: {ex}")
             move_ja = {}
         move_en = {m["moveId"]: m["name"] for m in pv["moves"]}
+        # 技の日本語名を取れなかったときは、前回の megas.json の対応表（英語名 → 日本語名）を使う
+        if not move_ja and prev_megas and prev_megas.get("moveJa"):
+            prev_ja = prev_megas["moveJa"]
+            move_ja = {mid: prev_ja[en] for mid, en in move_en.items() if en in prev_ja}
+            print(f"技の日本語名は前回のものを使います（{len(move_ja)}件）")
         # GO 独自の技名（ウェザーボールのタイプ違いなど）は元の技名に寄せる
         for mid in move_en:
             if mid not in move_ja and "~" + mid.replace("_", "") in move_ja:
@@ -1110,6 +1302,9 @@ def main(prev_path, out_path, prev_megas_path=None, out_megas_path=None, prev_ra
         for mid in move_en:
             if mid not in move_ja and move_en[mid] in ja_by_en:
                 move_ja[mid] = ja_by_en[move_en[mid]]
+            # 「Psybeam+」のような強化版の技は、もとの技の日本語名に「＋」
+            elif mid not in move_ja and move_en[mid].endswith("+") and move_en[mid][:-1] in ja_by_en:
+                move_ja[mid] = ja_by_en[move_en[mid][:-1]] + "＋"
         pokemon = [p for p in pv["pokemon"] if p.get("released") and "teambuilderexclude" not in p.get("tags", [])
                    and not p["speciesId"].endswith(("_xs", "_xl"))]
 
@@ -1233,6 +1428,11 @@ def main(prev_path, out_path, prev_megas_path=None, out_megas_path=None, prev_ra
                 if e in by_sid and e not in dmax:
                     dmax.add(e); todo.append(e)
         print("dynamax:", len(dmax), "gigantamax:", len(gmax))
+        try:
+            gbl_data = build_gbl(pv, move_ja, move_en, json.loads(get(EVENTS_URL)))
+            print("gbl:", [(e["name"][:50], [l["key"] for l in e["leagues"]]) for e in gbl_data["events"]])
+        except Exception as ex:
+            print(f"::warning::GBL: {ex}")
         pokedex_data = build_pokedex(pokemon + extra, PVP, move_ja, move_en, dmax, gmax)
         # 技名（英語 → 日本語）。イベントページの「レガシー技」の説明を訳すのに使う
         megas_data["moveJa"] = {move_en[mid]: move_ja[mid] for mid in move_en if mid in move_ja and move_ja[mid]}
@@ -1263,6 +1463,9 @@ def main(prev_path, out_path, prev_megas_path=None, out_megas_path=None, prev_ra
     if out_megas_path and megas_data:
         with open(out_megas_path, "w", encoding="utf-8") as f:
             json.dump(megas_data, f, ensure_ascii=False)
+        if gbl_data:   # GOバトルリーグのページ用
+            with open(os.path.join(os.path.dirname(out_megas_path) or ".", "gbl.json"), "w", encoding="utf-8") as f:
+                json.dump(gbl_data, f, ensure_ascii=False, separators=(",", ":"))
         if pokedex_data:   # ポケモン検索ページ用（megas.json と同じ場所に置く）
             with open(os.path.join(os.path.dirname(out_megas_path) or ".", "pokedex.json"), "w", encoding="utf-8") as f:
                 json.dump(pokedex_data, f, ensure_ascii=False, separators=(",", ":"))

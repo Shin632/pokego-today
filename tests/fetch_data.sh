@@ -5,7 +5,7 @@ cd "$(dirname "$0")"
 mkdir -p .cache
 D=https://raw.githubusercontent.com/Shin632/pokego-today/data
 S=https://raw.githubusercontent.com/bigfoott/ScrapedDuck/data
-for f in bonuses research rankings megas raids pokedex; do
+for f in bonuses research rankings megas raids pokedex gbl; do
   curl -fsS -o ".cache/$f.json" "$D/$f.json?t=$(date +%s)" || echo "取得失敗: $f"
 done
 curl -fsS -o .cache/sd_events.json "$S/events.json" || echo "取得失敗: events"

@@ -10,7 +10,7 @@ const ROOT = path.resolve(__dirname, '..');
 const CACHE = path.join(__dirname, '.cache');
 const FILES = {
   'ScrapedDuck/data/events.json': 'sd_events.json', '/data/bonuses.json': 'bonuses.json', '/data/research.json': 'research.json',
-  '/data/rankings.json': 'rankings.json', '/data/megas.json': 'megas.json', '/data/raids.json': 'raids.json', '/data/pokedex.json': 'pokedex.json',
+  '/data/rankings.json': 'rankings.json', '/data/megas.json': 'megas.json', '/data/raids.json': 'raids.json', '/data/pokedex.json': 'pokedex.json', '/data/gbl.json': 'gbl.json',
 };
 (async () => {
   const b = await chromium.launch();

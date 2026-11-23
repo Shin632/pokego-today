@@ -13,7 +13,7 @@ const CACHE = path.join(__dirname, '.cache');
 const OUT = path.join(__dirname, 'out');
 fs.mkdirSync(OUT, { recursive: true });
 
-const PAGES = ['index.html', 'search.html', 'iv.html', 'spawns.html', 'raids.html', 'rocket.html', 'research.html', 'shop.html', 'ranks.html'];
+const PAGES = ['index.html', 'search.html', 'iv.html', 'spawns.html', 'raids.html', 'rocket.html', 'research.html', 'gbl.html', 'shop.html', 'ranks.html'];
 const VIEWPORTS = [{ name: 'phone', width: 390, height: 844 }, { name: 'pc', width: 1280, height: 800 }];
 // 英語のまま残っていても問題ない語
 const ALLOW = /^(PvP|PvPoke|XP|CP|DPS|TDO|GO|Pok[eé]mon|LeekDuck|ScrapedDuck|PokeMiners|PokeAPI|GitHub|Pages|Dynamax|Trails|Twilight|Wishes|Tour|Wild|Area|Lv|MP|UB|Max|Mega|TL|IV|OK|Ctrl|Shift|JSON|HTTP|Failed|fetch|km|Web|The|Of|Edition|Cup|League|LAIC|Catch|Great|Ultra|Master|Kaohsiung|Alola|Global|Los|Angeles|Duolingo|adidas|Pass|Deluxe|Gigantamax|Raid|Day|Battle|Hour|Spotlight|Community|Classic|Research|Timed|Returns|Showers|Minior|Leonids|Geminids|Eternamax)$/i;
@@ -47,7 +47,7 @@ function scenarioTimes() {
 const FILES = {
   'ScrapedDuck/data/events.json': 'sd_events.json', 'ScrapedDuck/data/research.json': 'sd_research.json',
   '/data/bonuses.json': 'bonuses.json', '/data/research.json': 'research.json', '/data/rankings.json': 'rankings.json',
-  '/data/megas.json': 'megas.json', '/data/raids.json': 'raids.json', '/data/pokedex.json': 'pokedex.json',
+  '/data/megas.json': 'megas.json', '/data/raids.json': 'raids.json', '/data/pokedex.json': 'pokedex.json', '/data/gbl.json': 'gbl.json',
 };
 
 async function checkPage(browser, page, vp, scheme, sc, opts = {}) {

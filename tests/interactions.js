@@ -9,7 +9,7 @@ const CACHE = path.join(__dirname, '.cache');
 const FILES = {
   'ScrapedDuck/data/events.json': 'sd_events.json', 'ScrapedDuck/data/research.json': 'sd_research.json',
   '/data/bonuses.json': 'bonuses.json', '/data/research.json': 'research.json', '/data/rankings.json': 'rankings.json',
-  '/data/megas.json': 'megas.json', '/data/raids.json': 'raids.json', '/data/pokedex.json': 'pokedex.json',
+  '/data/megas.json': 'megas.json', '/data/raids.json': 'raids.json', '/data/pokedex.json': 'pokedex.json', '/data/gbl.json': 'gbl.json',
 };
 const fails = [], passes = [];
 function check(name, ok, detail = '') { (ok ? passes : fails).push(name + (ok ? '' : ` → ${detail}`)); }
@@ -259,14 +259,16 @@ const close = async (p, label) => { check(`${label}: JavaScriptエラーなし`,
   for (const pg of ['raids.html', 'rocket.html', 'spawns.html']) {
     const p = await open(b, pg);
     const txt = await p.$eval('main', e => e.innerText);
-    check(`${pg}: 中身が表示される`, txt.length > 100 && !txt.includes('読み込み中'), txt.slice(0, 40));
+    // 野生の出現が増えるイベントが今ないときは「見つかりませんでした」と出るのが正しい
+    const noSpawn = pg === 'spawns.html' && /野生の出現が増えるイベントは見つかりませんでした/.test(txt);
+    check(`${pg}: 中身が表示される`, (txt.length > 100 || noSpawn) && !txt.includes('読み込み中'), txt.slice(0, 40));
     if (pg === 'raids.html') {
       for (const k of ['mega', 'shadow', 'legendary']) await p.click(`[data-show="${k}"]`);
       await p.waitForTimeout(100);
       const empty = await p.$$eval('.boss', bs => bs.filter(b => !b.querySelector('.cr')).length);
       check('raids: 全部外しても各ボスに有利なポケモンが出る', empty === 0, empty);
     }
-    if (pg === 'spawns.html') {
+    if (pg === 'spawns.html' && !noSpawn) {
       const t = await p.$eval('main', e => e.innerText);
       check('spawns: アメ集めにおすすめのメガシンカが出る', /アメ集めにおすすめのメガシンカ/.test(t) && /1\. メガ|1\. ゲンシ/.test(t), t.slice(0, 40));
       const names = await p.$$eval('.mrow .mname', es => es.map(e => e.innerText.split('\n')[0]));
@@ -323,6 +325,22 @@ const close = async (p, label) => { check(`${label}: JavaScriptエラーなし`,
       }
       await close(q, 'index(前日)');
     }
+  }
+  // GOバトルリーグ（11/23 追加）：特別ルールが先、そのあと CP上限の低い順
+  {
+    const g = JSON.parse(fs.readFileSync(path.join(CACHE, 'gbl.json'), 'utf8'));
+    const live = (g.events || []).find(e => new Date(e.start) <= new Date() && new Date() < new Date(e.end));
+    const q = await open(b, 'gbl.html', live ? {} : { time: new Date(new Date((g.events[0] || {}).start || Date.now()).getTime() + 3600000) });
+    const cards = await q.$$eval('main > .lg', es => es.map(e => ({ kind: (e.querySelector('.kind') || {}).textContent, name: (e.querySelector('.lname') || {}).textContent, n: e.querySelectorAll('.pr').length })));
+    check('gbl: 開催中のリーグが出る', cards.length >= 1, JSON.stringify(cards).slice(0, 80));
+    const firstNormal = cards.findIndex(c => c.kind !== '特別ルール');
+    check('gbl: 特別ルールが先に並ぶ', cards.slice(firstNormal < 0 ? cards.length : firstNormal).every(c => c.kind !== '特別ルール'), cards.map(c => c.kind).join(','));
+    const cpOrder = cards.filter(c => c.kind !== '特別ルール').map(c => /スーパー/.test(c.name) ? 1 : /ハイパー/.test(c.name) ? 2 : /マスター/.test(c.name) ? 3 : 0);
+    check('gbl: スーパー → ハイパー → マスターの順', cpOrder.every((v, i) => !i || v >= cpOrder[i - 1]), cpOrder.join(','));
+    check('gbl: 各リーグにおすすめポケモンが出る', cards.every(c => c.n >= 1), '');
+    const sp = await q.$('main > .lg.special');
+    if (sp) check('gbl: 特別ルールにはルールの説明が出る', /ルール/.test(await sp.innerText()), '');
+    await close(q, 'gbl');
   }
   // コミュニティ・デイ当日は主役を「捕まえるべき」に（6回目で修正）。出現ポケモンの情報があるコミュニティ・デイで確かめる
   {

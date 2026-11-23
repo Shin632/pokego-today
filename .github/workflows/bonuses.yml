@@ -62,6 +62,7 @@ jobs:
           [ -f megas.json ] && git add megas.json
           [ -f raids.json ] && git add raids.json
           [ -f pokedex.json ] && git add pokedex.json
+          [ -f gbl.json ] && git add gbl.json
           git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
             commit -q -m "ボーナス情報を更新"
           git push -q -f "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" data

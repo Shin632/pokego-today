@@ -12,6 +12,7 @@ const FORM_WORDS = {
   "Hero":"ナイーブ","Crowned":"けんのおう","Sword":"けん","Shield":"たて","Ordinary":"いつも","Resolute":"かくご",
   "Dawn Wings":"あかつきのつばさ","Dusk Mane":"たそがれのたてがみ","Ultra":"ウルトラ",
   "Black":"ブラック","White":"ホワイト","Kyurem":"キュレム",
+  "Busted":"ばれたすがた","Disguised":"ばけたすがた",
 };
 function escRe(s){return s.replace(/[.*+?^${}()|[\]\\]/g,"\\$&");}
 let MON_RE = null;
@@ -67,6 +68,7 @@ const FORMS = {
   "Black": ["pre", "ブラック"], "White": ["pre", "ホワイト"],
   "Alolan": ["suf", "アローラ"], "Galarian": ["suf", "ガラル"], "Hisuian": ["suf", "ヒスイ"], "Paldean": ["suf", "パルデア"],
   "Galarian Standard": ["suf", "ガラル"], "Standard": ["drop"],
+  "Busted": ["suf", "ばれたすがた"], "Disguised": ["suf", "ばけたすがた"],
   "Origin": ["suf", "オリジンフォルム"], "Altered": ["suf", "アナザーフォルム"], "Incarnate": ["suf", "けしんフォルム"], "Therian": ["suf", "れいじゅうフォルム"],
   "Dawn Wings": ["suf", "あかつきのつばさ"], "Dusk Mane": ["suf", "たそがれのたてがみ"],
   "Crowned Sword": ["suf", "けんのおう"], "Crowned Shield": ["suf", "たてのおう"],
