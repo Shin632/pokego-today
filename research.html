@@ -127,7 +127,7 @@ footer a{color:var(--sub)}
   <div class="tools">
     <input class="search" id="q" type="search" aria-label="ポケモン・アイテムで探す" placeholder="ポケモン・アイテムで探す（例：ミニリュウ）" autocomplete="off">
     <div class="chips" id="chips"></div>
-    <div class="legend">🎯＝当たりのポケモン（人気・貴重、進化・メガ後が強い、またはほしのすなが多くもらえる） ／ グレー＝ハズレ（進化しても育成ランキング上位30位に入らず、PvPでも使われない） ／ タイトルがグレー＝割に合わないタスク</div>
+    <div class="legend">🎯＝当たりのポケモン（人気・貴重、進化・メガ後がレイドやジム攻撃のアタッカーとして強い、マスターリーグで強い、またはほしのすなが多くもらえる。タスクのポケモンは個体値が最低10なので、ジム防衛やスーパー・ハイパーリーグ向きなだけのものは当たりにしていません） ／ グレー＝ハズレのポケモン（進化しても育成ランキング上位30位に入らず、PvPでも使われない）と、価値の低いアイテム（ふつうのボール・ふつうの木の実・キズぐすりなど） ／ タイトルがグレー＝割に合わないタスク</div>
   </div>
   <main id="main"><div class="empty">読み込み中…</div></main>
   <footer>
@@ -222,7 +222,9 @@ const EFFORT_RULES = [
   [/^Win (\d+|an?) raids?$/i, (n) => [num(n) <= 1 ? 4 : 5, "レイドパスが必要"]],
   [/^Win an? \w+-star raid or higher$/i, () => [4.5, "レイドパスと★3以上の勝利が必要"]],
   [/^Win (\d+|an?) Max Battles?$/i, (n) => [num(n) <= 1 ? 3.5 : 4.5, "マックス粒子が必要"]],
-  [/^Unlock (\d+|an?) Max Moves?$/i, () => [3, "アメとほしのすなを使う"]],
+  // マックスわざの解放はマックス粒子とアメを使う（ほしのすなとアメを使うのは、ザシアン・ザマゼンタの王の姿だけ）。
+  // マックス粒子は1日に集められる量に上限があるので、そのぶん手間を重く見る
+  [/^Unlock (\d+|an?) Max Moves?$/i, () => [3.5, "マックス粒子とアメを使う。マックス粒子は1日に集められる量に上限があるので、ほかに使う予定があるなら注意"]],
   [/^Earn (\d+) Stardust$/i, (n) => [num(n) >= 10000 ? 4 : 3, "たくさん集める必要がある"]],
   [/^Earn (\d+) XP$/i, (n) => [num(n) >= 10000 ? 3.5 : 2.5, "たくさん集める必要がある"]],
   [/^Earn (\d+|an?) Cand(?:y|ies) walking/i, (n) => [num(n) <= 1 ? 2.5 : num(n) <= 2 ? 3 : 4, "相棒と歩く必要がある"]],
@@ -240,7 +242,7 @@ const interp = (x, pts) => { if (x <= pts[0][0]) return pts[0][1]; for (let i = 
 /** 報酬1つの価値 0〜10（目安） */
 function rewardValue(r){
   const n = r.name || "", q = +r.qty || 1;
-  if (r.type === "encounter") return PRIZE_MONS.has(n.replace(/^(Alolan|Galarian|Hisuian|Paldean) /, "")) ? 5 : 2;
+  if (r.type === "encounter"){ const i = encounterInfo(r); return i && i.cls === "hit" ? 5 : i && i.cls === "miss" ? 1 : 2; }
   if (/^Rare Candy XL$/.test(n)) return 10;
   if (/^Rare Candy$/.test(n)) return Math.min(10, 5 + q * 1.3);
   if (n === "Stardust") return interp(q, [[0,0],[200,1],[500,2],[1000,3.5],[1500,4.5],[2000,5],[5000,7]]);
@@ -359,9 +361,14 @@ function setNotice(html, isErr){
 
 // ===== 描画 =====
 /** 出会えるポケモンの当たり・ハズレ
- *  当たり：人気・貴重なポケモン、または進化・メガシンカ後が育成ランキング（上位30位）で役立ち度0.55以上
+ *  タスクで出会うポケモンは個体値が最低10（攻撃・防御・HPとも10以上）なので、「タスクで手に入れる意味」があるものだけを当たりにする
+ *  当たり：人気・貴重なポケモン／進化・メガシンカ後がレイド・ジム攻撃のアタッカーとして役立ち度0.55以上（個体値が高いほど良い使い道）
+ *         ／マスターリーグ30位以内（同じく個体値が高いほど良い）／捕まえたときのほしのすなが多い
+ *  当たりにしない：ジム防衛（個体値の影響が小さく、野生で捕まえても同じ）、スーパー・ハイパーリーグ（攻撃の個体値が低いほうが良いので、
+ *         最低10の個体は向かない）だけで役立つもの
  *  ハズレ：人気・貴重でなく、進化・メガシンカ後もランキング上位30位に入らず、PvP（対戦）でも使われない
  *         （PvP：スーパー・ハイパーリーグ100位以内、マスターリーグ50位以内なら「使える」としてハズレにしない） */
+const ML_HIT = 30;
 const HIT_U = 0.55;
 const DUST_HIT = 600;   // 捕まえたときの追加のほしのすながこれ以上なら当たり（ほしのすな稼ぎ）
 let CATCH_DUST = null;
@@ -374,14 +381,20 @@ function encounterInfo(r){
   const e = EVO_USE ? EVO_USE[k] || null : null;
   const prize = PRIZE_MONS.has(base);
   const u = e ? e.u : 0;
+  const ua = e ? e.ua || 0 : 0;   // アタッカー（レイド・ジム攻撃）としての役立ち度
+  const ml = e && e.ml && e.ml.rank <= ML_HIT ? e.ml : null;
   const pvp = e && e.pvp ? e.pvp : null;
   const dust = CATCH_DUST ? CATCH_DUST[k] || 0 : 0;
-  const cls = prize || u >= HIT_U || dust >= DUST_HIT ? "hit" : (EVO_USE && !prize && u === 0 && !pvp ? "miss" : "");
-  return {cls, e, prize, pvp, dust};
+  const cls = prize || ua >= HIT_U || ml || dust >= DUST_HIT ? "hit" : (EVO_USE && !prize && u === 0 && !pvp ? "miss" : "");
+  // 役立つが当たりにしなかったもの（ジム防衛・スーパー／ハイパーリーグ向き）
+  const notForTask = cls === "" && (u >= HIT_U || (pvp && pvp.league !== "マスターリーグ"));
+  return {cls, e, prize, pvp, dust, ml, notForTask};
 }
-/** 価値の低い報酬：ボール（割に合うタスクのみ）、ハズレのポケモン（すべてのタスク） */
+/** 価値の低い報酬：ふつうのボール・ふつうの木の実・キズぐすり・げんきのかけら（すべてのタスク）、
+ *  ハイパーボール（割に合うタスクのみ）、ハズレのポケモン（すべてのタスク） */
+const LOW_ITEMS = /^(Poké Ball|Great Ball|Razz Berry|Nanab Berry|Pinap Berry|Potion|Super Potion|Hyper Potion|Revive)$/;
 function isLowValue(r, good){
-  if (r.type !== "encounter") return good && /^(Poké|Great|Ultra) Ball$/.test(r.name);
+  if (r.type !== "encounter") return LOW_ITEMS.test(r.name) || (good && r.name === "Ultra Ball");
   const i = encounterInfo(r);
   return !!i && i.cls === "miss";
 }
@@ -394,8 +407,11 @@ function rewardHtml(r, hit, low, prize){
     const i = encounterInfo(r);
     const parts = [];
     if (i && i.dust >= DUST_HIT) parts.push(`ほしのすな稼ぎ：捕まえると +${i.dust}`);
-    if (i && i.e && i.e.use) parts.push(`${nameJa(i.e.best)}：${i.e.use}`);
-    if (i && i.pvp) parts.push(`PvP：${nameJa(i.pvp.best)}がPvPokeの${i.pvp.league} ${i.pvp.rank}位`);
+    if (i && i.e && i.e.useA && i.e.ua >= HIT_U) parts.push(`${nameJa(i.e.bestA)}：${i.e.useA}`);
+    else if (i && i.e && i.e.use) parts.push(`${nameJa(i.e.best)}：${i.e.use}`);
+    if (i && i.ml) parts.push(`PvP：${nameJa(i.ml.best)}がPvPokeのマスターリーグ ${i.ml.rank}位`);
+    else if (i && i.pvp) parts.push(`PvP：${nameJa(i.pvp.best)}がPvPokeの${i.pvp.league} ${i.pvp.rank}位`);
+    if (i && i.notForTask) parts.push("ジム防衛やスーパー・ハイパーリーグ向きだが、タスクのポケモンは個体値が最低10で、野生で捕まえても同じかそれ以上なので当たりにしていない");
     if (i && i.prize && !parts.length) parts.push("人気・貴重なポケモン");
     if (i && i.cls === "miss") parts.push("進化しても育成ランキング上位30位に入らず、PvPでも上位に入らない");
     tip = parts.join(" ／ ");

@@ -1109,13 +1109,18 @@ def build_evo_use(pokemon, lists, pvp=None):
     英語名（"Alolan Geodude" 形式）→ {"u": 役立ち度, "best": 役立つ姿, "use": 使い道}（役立ち度0のものは省略）"""
     by_id = {p["speciesId"]: p for p in pokemon}
     useful = usefulness_index(lists, max_rank=30)   # 通常の姿はシャドウより順位が下がりやすいので30位まで見る
+    # アタッカー（レイド・ジム攻撃）だけの役立ち度：個体値が高いほど良い使い道。
+    # リサーチなどの「個体値が最低10」の出会いで価値があるのはこちら（ジム防衛は個体値の影響が小さく、野生で捕まえても同じ）
+    useful_atk = usefulness_index([l for l in lists if l[0] != "ジム防衛"], max_rank=30)
     out = {}
     for p in pokemon:
         tags = p.get("tags", [])
         if "shadow" in tags or "mega" in tags:
             continue
         best = (0.0, None, None)
+        best_atk = (0.0, None, None)
         best_pvp = None
+        best_ml = None
         todo, seen = [p], set()
         while todo:
             q = todo.pop()
@@ -1125,9 +1130,15 @@ def build_evo_use(pokemon, lists, pvp=None):
             for vid, f in [(q["speciesId"], 1.0)] + [(q["speciesId"] + suf, 0.8) for suf in ("_mega", "_mega_x", "_mega_y", "_primal")]:
                 if vid in useful and useful[vid][0] * f > best[0]:
                     best = (useful[vid][0] * f, by_id[vid]["speciesName"] if vid in by_id else q["speciesName"], useful[vid][1])
+                if vid in useful_atk and useful_atk[vid][0] * f > best_atk[0]:
+                    best_atk = (useful_atk[vid][0] * f, by_id[vid]["speciesName"] if vid in by_id else q["speciesName"], useful_atk[vid][1])
             pr = (pvp or {}).get(q["speciesId"])
             if pr and (best_pvp is None or pr[2] < best_pvp["ratio"]):
                 best_pvp = {"league": pr[0], "rank": pr[1], "ratio": pr[2], "best": q["speciesName"]}
+            # マスターリーグ（個体値が高いほど良い）
+            ml = PVP_ALL.get(q["speciesId"], {}).get("マスターリーグ")
+            if ml and (best_ml is None or ml < best_ml["rank"]):
+                best_ml = {"rank": ml, "best": q["speciesName"]}
             for e in (q.get("family") or {}).get("evolutions") or []:
                 if e in by_id:
                     todo.append(by_id[e])
@@ -1139,8 +1150,13 @@ def build_evo_use(pokemon, lists, pvp=None):
         cur = out.get(key)
         if not cur or best[0] > cur["u"] or (best_pvp and not cur.get("pvp")):
             item = {"u": round(best[0], 3), "best": best[1], "use": best[2]}
+            if best_atk[0] > 0:
+                item["ua"] = round(best_atk[0], 3)
+                item["bestA"], item["useA"] = best_atk[1], best_atk[2]
             if best_pvp:
                 item["pvp"] = {k: best_pvp[k] for k in ("league", "rank", "best")}
+            if best_ml:
+                item["ml"] = best_ml
             out[key] = item
     return out
 
