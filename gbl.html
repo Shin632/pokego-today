@@ -68,6 +68,9 @@ footer a{color:var(--sub)}
 /* 押しやすさ：開閉ボタン・リンクの押せる範囲を広げる（高さ40px前後） */
 details.box>summary{padding:10px 0}
 .lk{display:inline-block;padding:8px 0;font-size:12.5px}
+.soon{display:inline-block;font-size:11px;font-weight:700;border-radius:5px;padding:0 6px;margin-left:4px}
+.soon.end{background:#fee2e2;color:#991b1b}.soon.new{background:#dbeafe;color:#1e40af}
+@media (prefers-color-scheme: dark){.soon.end{background:#7f1d1d;color:#fecaca}.soon.new{background:#1e3a8a;color:#bfdbfe}}
 </style>
 </head>
 <body>
@@ -85,6 +88,7 @@ details.box>summary{padding:10px 0}
     <ul class="crit">
       <li><b>並び順</b>：特別ルールのカップ（タイプや使えるポケモンに決まりがあるもの）を最優先。次にメガエディションなどを含め、CP上限の低い順（スーパーリーグ CP1500 → ハイパーリーグ CP2500 → マスターリーグ 上限なし）。CP上限が低いほど、強化に必要なほしのすな・アメが少なく、参加しやすいためです。</li>
       <li><b>リーグの読み取り</b>：イベント名（例「Ultra League, Master League: Mega Edition, and 2026 GO LAIC Cup」）を分けて、PvPoke のリーグ・カップに当てはめています。「: Mega Edition」は、そのリーグだけにかかります（LeekDuck のイベントページの見出しで確認）。正式な内容はイベントの詳細（LeekDuck・英語）で確認してください。</li>
+      <li><b>期間の重なり</b>：元データの日程では、前の週と次の週のリーグの期間が1日ほど重なることがあります。そのときは両方を出し、「まもなく終了」「新しく始まった」の札で見分けられるようにしています。</li>
       <li><b>ルール</b>：PvPoke のカップの設定（使えるタイプ・使えないタイプ・使えないポケモン）を日本語にしたものです。捕まえた時期などの条件は入っていません。</li>
       <li><b>おすすめポケモン</b>：PvPoke の、そのリーグ・カップのランキング上位10（技は PvPoke のおすすめ。★はすごいわざマシン等が必要な技）。下の「育成コストが少なくて済むおすすめ」は、上位50のうちアメXLが要らず、伝説・幻でないものです。</li>
       <li><b>育成コスト</b>：レベル20（レイド・リサーチで捕まえたとき）から、PvP向けによく使う個体（攻撃0・防御15・HP15）がCP上限ぎりぎりになるレベルまで強化するのに必要なほしのすな・アメ・アメXL（ゲームデータの強化コスト表で計算）。マスターリーグはレベル40までで計算しています（レベル50まではさらにアメXL 296個が必要）。シャドウは1.2倍。</li>
@@ -131,6 +135,7 @@ function leagueName(lg, label){
   // 特別ルールのカップ：英語の名前をなるべく日本語に
   let s = String(label || lg.title).replace(/:\s*(Great|Ultra|Master|Little) League Edition/i, (m, w) => `（${LEAGUE_JA[{Little: 500, Great: 1500, Ultra: 2500, Master: 10000}[w]]}版）`);
   s = s.replace(/\bMega\b/g, "メガ").replace(/\bCatch\b/g, "キャッチ").replace(/\bCup\b/g, "カップ").replace(/\bGO\b/g, "GO").trim();
+  s = s.replace(/([ァ-ヶー])\s+(?=[ァ-ヶ])/g, "$1");   // 「メガ キャッチ カップ」→「メガキャッチカップ」
   return /リーグ/.test(s) ? s : `${s}（${base}）`;
 }
 const nm = (x) => esc(nameJa(x.name));
@@ -183,7 +188,7 @@ function leagueCard(lg, label, ev, now){
   return `<article class="lg ${lg.kind === "special" ? "special" : ""}">
     <div class="lh"><span class="kind ${lg.kind}">${KIND_JA[lg.kind] || ""}</span><span class="lname">${esc(leagueName(lg, label))}</span><span class="ease ${ecls}">${etxt}</span></div>
     <div class="en">${esc(label)}</div>
-    <div class="meta">${live ? "開催中 ・ " : ""}${st ? `${fmtD(st)} ${fmtT(st)}` : ""}〜${en ? `${fmtD(en)} ${fmtT(en)}` : ""}</div>
+    <div class="meta">${live ? "開催中 ・ " : ""}${st ? `${fmtD(st)} ${fmtT(st)}` : ""}〜${en ? `${fmtD(en)} ${fmtT(en)}` : ""}${live && en - now < DAY_MS ? ` <span class="soon end">まもなく終了</span>` : live && now - st < DAY_MS ? ` <span class="soon new">新しく始まった</span>` : ""}</div>
     ${lg.kind !== "normal" ? rulesHtml(lg) : `<div class="meta">${CP_JA(lg.cp)} ・ メガシンカしたポケモンは使えない</div>`}
     <h3>おすすめポケモン TOP${best.length}</h3>${best.map((x, i) => row(x, i + 1)).join("") || `<div class="meta">ランキングがありません</div>`}
     ${cheap.length ? `<h3>育成コストが少なくて済むおすすめ</h3>${cheap.map(x => row(x, top.indexOf(x) + 1)).join("")}` : ""}
@@ -191,6 +196,7 @@ function leagueCard(lg, label, ev, now){
   </article>`;
 }
 // 並び順：特別ルール → メガエディションなど・通常（CP上限の低い順：スーパー → ハイパー → マスター）
+const DAY_MS = 86400000;
 const ORDER = (x) => (x.lg.kind === "special" ? 0 : 1) * 100000 + x.lg.cp;
 function render(){
   const main = document.getElementById("main");
