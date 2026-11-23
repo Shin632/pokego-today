@@ -94,14 +94,35 @@ footer a{color:var(--sub)}
 /* 押しやすさ：開閉ボタン・リンクの押せる範囲を広げる（高さ40px前後） */
 details.box>summary{padding:10px 0}
 .x{min-width:40px;min-height:40px}
+.vh{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+.shotbtn{display:block;text-align:center;font-size:16px;padding:12px;margin-top:10px;cursor:pointer}
+.verdict{border-radius:12px;padding:12px;font-size:15px;line-height:1.5}
+.verdict .vt{font-size:19px;font-weight:800}
+.verdict.yes{background:color-mix(in srgb,#16a34a 14%,var(--panel));border:2px solid #16a34a}
+.verdict.no{background:var(--bg);border:2px dashed var(--line)}
+.verdict.wait{background:var(--bg);border:1px dashed var(--line);color:var(--sub)}
+.ocrst{font-size:13px;color:var(--sub);margin-top:8px}
+.ocrnote{font-size:12px;color:#b45309;margin-top:2px}
+@media (prefers-color-scheme: dark){.ocrnote{color:#fbbf24}}
 </style>
 </head>
 <body>
 <div class="wrap">
   <nav class="nav"><a href="index.html">📅 イベント</a><a href="search.html">🔍 検索</a><a href="iv.html">⚖️ 育成判定</a><a href="spawns.html">🌿 野生</a><a href="raids.html">🐉 レイド</a><a href="rocket.html">🚀 ロケット団</a><a href="research.html">📋 リサーチ</a><a href="gbl.html">⚔️ バトルリーグ</a><a href="shop.html" class="cur">🛒 ボックス判定</a><a href="ranks.html">🏆 育成TOP10</a></nav>
   <h1>ショップのボックス判定</h1>
-  <p class="lead">ボックスの値段と中身を入れると、<b>実用性の重視度</b>（レイドパス＞スーパーふかそうち＞その他はおまけ、拡張は最優先）で S〜D を判定します。</p>
+  <p class="lead">今日ショップに並んでいるボックスのスクリーンショットを読み取って、<b>実用性の重視度</b>（レイドパス＞スーパーふかそうち＞その他はおまけ、拡張は最優先）で S〜D を判定し、おすすめがあるかを出します。</p>
 
+  <section class="panel" id="today">
+    <div id="verdict"></div>
+    <label class="btn primary shotbtn" for="shots">📸 ショップのスクショを選ぶ</label>
+    <input id="shots" type="file" accept="image/*" multiple class="vh">
+    <p class="hint">ショップでボックスを押すと出る「中身と値段の画面」をスクリーンショットして選んでください（1つのボックスにつき1枚。何枚でもまとめて選べます）。読み取りはこの端末の中だけで行い、画像はどこにも送りません。初回は読み取りの準備（約9MB。2回目からは速くなります）に少し時間がかかります。Wi-Fiのときに一度試しておくのがおすすめです。</p>
+    <div id="ocrStatus"></div>
+    <h2>今日のボックス</h2>
+    <div class="saved" id="saved"></div>
+  </section>
+
+  <h2 id="formTitle">手で入れる・読み取りを直す</h2>
   <div class="panel" id="form">
     <div class="row2">
       <div><label class="f" for="bname">ボックスの名前（任意）</label><input id="bname" type="text" placeholder="例：レイドボックス" style="width:100%"></div>
@@ -122,10 +143,6 @@ details.box>summary{padding:10px 0}
     </div>
   </div>
 
-  <section>
-    <h2>保存したボックス</h2>
-    <div class="saved" id="saved"></div>
-  </section>
 
   <section>
     <details class="box">
@@ -152,13 +169,15 @@ details.box>summary{padding:10px 0}
   </section>
 
   <footer>
-    <div>※ 非公式のファンツールです。ショップのボックスは日替わりで、人によって並ぶボックスが違う場合があるため、自動では取り込まず手入力にしています。</div>
-    <div>※ 入力したボックスと設定は、この端末のブラウザにだけ保存されます。</div>
+    <div>※ 非公式のファンツールです。ショップのボックスは日替わりで、人によって並ぶボックスが違うことがあり、公開されている情報も無いため、自分のショップ画面のスクリーンショットから読み取ります。</div>
+    <div>※ 文字の読み取りには Tesseract.js（Apache License 2.0）をこのサイトに置いて使っています。画像・読み取ったボックス・設定は、この端末のブラウザにだけ保存されます。前の日のボックスは、日付が変わると自動で消えます。</div>
   </footer>
 </div>
 
 <script src="names-ja.js"></script>
 <script src="common.js"></script>
+<script src="vendor/tesseract/tesseract.min.js"></script>
+<script src="shop-ocr.js"></script>
 <script>
 "use strict";
 // ===== 重視度 =====
@@ -228,12 +247,18 @@ const numMap = (v) => (v && typeof v === "object" && !Array.isArray(v))
   ? Object.fromEntries(Object.entries(v).filter(([k, x]) => itemById[k] && typeof x === "number" && isFinite(x) && x >= 0)) : {};
 let prices = Object.assign(defPrices(), numMap(load(PRICE_KEY, {})));
 let levels = Object.assign(defLevels(), numMap(load(LEVEL_KEY, {})));
+// 日付（この端末の時刻で YYYY-MM-DD）。ボックスは日替わりなので、今日の分だけ使う
+const dayKey = (t) => { const d = new Date(t); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; };
+const today = () => dayKey(Date.now());
 let saved = load(SAVED_KEY, []);
 saved = (Array.isArray(saved) ? saved : [])
   .filter(x => x && typeof x === "object" && Array.isArray(x.rows))
-  .map(x => ({...x, name: String(x.name ?? "ボックス"), price: Number(x.price) || 0,
+  .map(x => ({...x, name: String(x.name ?? "ボックス"), price: x.price === null || x.price === "" ? null : Number(x.price) || 0,
+    day: typeof x.day === "string" ? x.day : dayKey(Number(x.at) || Date.now()),
+    notes: Array.isArray(x.notes) ? x.notes.map(String).slice(0, 5) : [],
     rows: x.rows.filter(r => r && itemById[r.id] && Number(r.qty) > 0).map(r => ({id: r.id, qty: Number(r.qty)}))}))
-  .filter(x => x.rows.length);
+  .filter(x => x.rows.length && x.day === today());   // 前の日のボックスは消す
+store(SAVED_KEY, saved);
 const blankDraft = () => ({name: "", price: "", rows: [{id: "raid_pass", qty: ""}]});
 let draft = load(DRAFT_KEY, blankDraft());
 if (!draft || typeof draft !== "object" || !Array.isArray(draft.rows) || !draft.rows.length) draft = blankDraft();
@@ -336,7 +361,7 @@ document.getElementById("clearForm").addEventListener("click", () => { draft = b
 document.getElementById("save").addEventListener("click", () => {
   const ev = evaluate(draft);
   if (!ev.ok){ document.getElementById("result").scrollIntoView({behavior: "smooth", block: "center"}); return; }
-  saved.unshift({name: draft.name || "ボックス", price: Number(draft.price), rows: draft.rows.filter(r => Number(r.qty) > 0).map(r => ({id: r.id, qty: Number(r.qty)})), at: Date.now()});
+  saved.unshift({name: draft.name || "ボックス", price: Number(draft.price), rows: draft.rows.filter(r => Number(r.qty) > 0).map(r => ({id: r.id, qty: Number(r.qty)})), at: Date.now(), day: today(), notes: []});
   saved = saved.slice(0, 30);
   store(SAVED_KEY, saved);
   draft = blankDraft();
@@ -346,15 +371,20 @@ document.getElementById("save").addEventListener("click", () => {
 
 // ===== 保存したボックス =====
 function renderSaved(){
+  // 開いたまま日付が変わったら、前の日の分を消す
+  if (saved.some(b => b.day !== today())){ saved = saved.filter(b => b.day === today()); store(SAVED_KEY, saved); }
+  renderVerdict();
   const el = document.getElementById("saved");
-  if (!saved.length){ el.innerHTML = `<div class="empty">まだありません。上で判定して「保存」すると、ここに並びます。</div>`; return; }
+  if (!saved.length){ el.innerHTML = `<div class="empty">まだありません。上の「スクショを選ぶ」で読み取るか、下で手で入れて保存してください。</div>`; return; }
   el.innerHTML = saved.map((b, i) => {
     const ev = evaluate(b), d = new Date(b.at);
     const items = b.rows.map(r => `${itemName(r.id)}×${r.qty}`).join("、");
     const ratio = ev.ok && ev.ratio != null ? ` ・ ${ev.ratio.toFixed(2)}倍` : "";
     const pass = ev.ok && ev.passes ? ` ・ パス1枚 約${Math.round(ev.passCost)}` : "";
     return `<div class="sv"><div class="grade g-${ev.grade || "C"}">${ev.grade || "？"}</div>
-      <div><div class="t">${ev.ok && ev.upgrades.length ? `<span class="upg">★ 拡張入り</span> ` : ""}${esc(b.name)}（${b.price.toLocaleString()}コイン${ratio}${pass}）</div><div class="d">${esc(items)}</div><div class="d">${fmtD(d)} ${fmtT(d)} に保存</div></div>
+      <div><div class="t">${ev.ok && ev.upgrades.length ? `<span class="upg">★ 拡張入り</span> ` : ""}${esc(b.name)}（${b.price == null ? "値段が読み取れていません" : b.price.toLocaleString() + "コイン"}${ratio}${pass}）</div><div class="d">${esc(items)}</div>
+        ${(b.notes || []).map(n => `<div class="ocrnote">⚠ ${esc(n)}（「直す」で確認してください）</div>`).join("")}
+        <div class="d">${b.src === "ocr" ? "スクショから読み取り" : "手で入力"} ・ ${fmtT(d)}</div></div>
       <div style="display:flex;flex-direction:column;gap:4px"><button class="btn small" type="button" data-edit="${i}">直す</button><button class="btn small danger" type="button" data-del="${i}">消す</button></div></div>`;
   }).join("") + `<div style="text-align:right"><button class="btn small danger" type="button" id="delAll">すべて消す</button></div>`;
 }
@@ -364,10 +394,61 @@ document.getElementById("saved").addEventListener("click", e => {
   if (del){ saved.splice(+del.dataset.del, 1); store(SAVED_KEY, saved); renderSaved(); return; }
   if (edit){
     const b = saved.splice(+edit.dataset.edit, 1)[0]; store(SAVED_KEY, saved);
-    draft = {name: b.name, price: String(b.price), rows: b.rows.filter(r => itemById[r.id]).map(r => ({id: r.id, qty: String(r.qty)}))};
+    draft = {name: b.name, price: b.price == null ? "" : String(b.price), rows: b.rows.filter(r => itemById[r.id]).map(r => ({id: r.id, qty: String(r.qty)}))};
     if (!draft.rows.length) draft.rows.push({id: "raid_pass", qty: ""});
     renderForm(); renderSaved(); document.getElementById("form").scrollIntoView({behavior: "smooth", block: "start"});
   }
+});
+
+// ===== 今日のおすすめ =====
+const RECOMMEND = new Set(["S", "A"]);
+function renderVerdict(){
+  const el = document.getElementById("verdict");
+  const evs = saved.map(b => ({b, ev: evaluate(b)}));
+  const rec = evs.filter(x => x.ev.ok && RECOMMEND.has(x.ev.grade)).sort((p, q) => (q.ev.ratio ?? 99) - (p.ev.ratio ?? 99));
+  const unknown = evs.filter(x => !x.ev.ok).length;
+  if (!saved.length){
+    el.innerHTML = `<div class="verdict wait"><div class="vt">今日のボックスはまだ読み取っていません</div>下のボタンからショップ画面のスクリーンショットを選んでください。</div>`;
+  } else if (rec.length){
+    el.innerHTML = `<div class="verdict yes"><div class="vt">✅ 今日のおすすめ ${rec.length}個</div>${rec.map(x => `<b>${esc(x.b.name)}</b>（${x.ev.grade}・${x.ev.price.toLocaleString()}コイン${x.ev.ratio != null ? `・${x.ev.ratio.toFixed(2)}倍` : ""}${x.ev.passes ? `・パス1枚 約${Math.round(x.ev.passCost)}` : ""}${x.ev.upgrades.length ? "・拡張入り" : ""}）`).join("<br>")}
+      ${unknown ? `<div class="hint">値段や中身を読み取れなかったボックスが${unknown}個あります（下で直すと判定に入ります）</div>` : ""}</div>`;
+  } else {
+    el.innerHTML = `<div class="verdict no"><div class="vt">今日のおすすめはありません</div>読み取った${saved.length}個のボックスに、S・A判定のものはありませんでした${unknown ? `（ただし${unknown}個は値段や中身を読み取れていません。下で直すと判定に入ります）` : ""}。</div>`;
+  }
+}
+
+// ===== スクリーンショットの読み取り =====
+document.getElementById("shots").addEventListener("change", async (e) => {
+  const files = [...e.target.files].filter(f => /^image\//.test(f.type));
+  e.target.value = "";
+  if (!files.length) return;
+  const st = document.getElementById("ocrStatus");
+  const btn = document.querySelector(".shotbtn"); btn.style.pointerEvents = "none"; btn.style.opacity = ".6";
+  let ok = 0, ng = 0;
+  for (let i = 0; i < files.length; i++){
+    const head = `${files.length > 1 ? `${i + 1}/${files.length}枚目：` : ""}`;
+    st.innerHTML = `<div class="ocrst">${head}読み取り中…</div>`;
+    try {
+      const r = await readBoxFromImage(files[i], (m) => {
+        if (m.status && typeof m.progress === "number")
+          st.innerHTML = `<div class="ocrst">${head}${/load|initializ/.test(m.status) ? "読み取りの準備中" : "読み取り中"}… ${Math.round(m.progress * 100)}%</div>`;
+      });
+      if (!r.rows.length){ ng++; continue; }
+      // 値段を読めなかったとき：よく見るボックスなら、いつもの値段を仮に入れる（日によって違うので確認してもらう）
+      if (r.price == null && r.name){
+        const t = TEMPLATES.find(t => ocrNorm(t.name) === ocrNorm(r.name));
+        if (t){ r.price = t.price; r.notes = r.notes.filter(n => !/値段/.test(n)).concat(`値段を読み取れなかったので、いつもの値段（${t.price}コイン）を入れました。違っていたら直してください`); }
+      }
+      saved.unshift({name: r.name || "ボックス", price: r.price, rows: r.rows, at: Date.now(), day: today(), src: "ocr", notes: r.notes});
+      ok++;
+    } catch (ex){
+      ng++;
+      st.innerHTML = `<div class="ocrst">${head}読み取りに失敗しました（${esc(ex.message || ex)}）</div>`;
+    }
+  }
+  saved = saved.slice(0, 30); store(SAVED_KEY, saved); renderSaved();
+  st.innerHTML = `<div class="ocrst">${ok}枚読み取りました${ng ? `。${ng}枚はボックスの中身が見つかりませんでした（ボックスを押したあとの「中身の画面」か確認してください）` : ""}</div>`;
+  btn.style.pointerEvents = ""; btn.style.opacity = "";
 });
 
 // ===== 単品価格・重視度の設定 =====
