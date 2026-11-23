@@ -269,6 +269,11 @@ function typeInfo(ev){
 const NUMWORDS = {one:1,two:2,three:3,four:4,five:5,six:6,seven:7,eight:8,nine:9,ten:10,twenty:20,thirty:30,fifty:50,hundred:100,double:2,triple:3};
 const toNum = (w) => { const k = String(w).toLowerCase(); return NUMWORDS[k] ?? w; };
 // 資源（長いものから判定）
+/** レイドの種類の英語 → 日本語（「Super Mega Raid Battles」→「スーパーメガレイド」） */
+function raidWhereJa(w){
+  const s = String(w).toLowerCase();
+  return /super mega/.test(s) ? "スーパーメガレイド" : /mega/.test(s) ? "メガレイド" : /shadow/.test(s) ? "シャドウレイド" : /max/.test(s) ? "マックスバトル" : "レイドバトル";
+}
 const RESOURCES = [
   [/\bRare Candy XL\b/i, "ふしぎなアメXL"], [/\bRare Candy\b/i, "ふしぎなアメ"], [/\bCandy XL\b/i, "アメXL"], [/\bCandy\b/i, "アメ"],
   [/\bStardust\b/i, "ほしのすな"], [/\bXP\b/, "XP"], [/\bMax Particles?\b/i, "マックス粒子"], [/\bMega Energy\b/i, "メガエナジー"],
@@ -320,9 +325,9 @@ const BONUS_RULES = [
   [/^(\d+(?:\.\d+)?)\s*[x×]\s+chance for Trainers level (\d+) and up to receive Candy XL from (.+)$/i,
     (n, lv, from) => `TL${lv}以上：${findIn(ACTIONS, from) || from}にアメXLをもらえる確率 ${n}倍`],
   [/^(\d+(?:\.\d+)?)\s*[x×]\s+chance (?:to|of) (?:receive|receiving|get|getting|earn|earning) (.+?) (?:from|when|for) (.+)$/i,
-    (n, what, from) => `${findIn(ACTIONS, from) || from}に${findIn(RESOURCES, what) || jaMons(what)}をもらえる確率 ${n}倍`],
+    (n, what, from) => { const a = findIn(ACTIONS, from) || from; return `${a}${/とき$/.test(a) ? "に" : "で"}${findIn(RESOURCES, what) || jaMons(what)}をもらえる確率 ${n}倍`; }],
   [/^Increased chance (?:to|of) (?:receive|receiving|get|getting|earn|earning) (.+?) (?:from|when|for) (.+)$/i,
-    (what, from) => `${findIn(ACTIONS, from) || from}に${findIn(RESOURCES, what) || jaMons(what)}をもらいやすい`],
+    (what, from) => { const a = findIn(ACTIONS, from) || from; return `${a}${/とき$/.test(a) ? "に" : "で"}${findIn(RESOURCES, what) || jaMons(what)}をもらいやすい`; }],
   // タマゴ
   [/^(1\/2|1\/3|1\/4|½|¼|half|one[- ]quarter|quarter)\s+(?:Egg\s+)?Hatch(?:ing)? Distance(?: when Eggs? (?:are|is) (?:placed|put) (?:into|in) (?:an )?Incubators?.*)?$/i,
     (f) => `タマゴの孵化に必要な距離 ${({"½":"1/2","¼":"1/4",half:"1/2",quarter:"1/4","one-quarter":"1/4","one quarter":"1/4"})[f.toLowerCase()] || f}`],
@@ -330,17 +335,25 @@ const BONUS_RULES = [
   // 出現・色違い
   [/^Increased (?:wild )?(?:Pokémon )?Spawns?(?: .*)?$/i, () => "野生ポケモンの出現数アップ"],
   [/^Increased Shiny (?:rate|chance|odds)$/i, () => "色違いが出やすい"],
+  // 「Increased chance to encounter Shiny Clefable from Super Mega Raids」のように出会う場所が付くもの
+  [/^Increased chance (?:to|of) (?:encounter|encountering|find|finding) (.+?) (?:from|in) (Super Mega Raids|Mega Raids|Shadow Raids|Max Battles|Raids|Raid Battles)$/i,
+    (who, where) => `${raidWhereJa(where)}で${jaMons(who)}に出会いやすい`],
   [/^Increased chance (?:to|of) (?:encounter|encountering|find|finding) (.+?)(?: from (\d+):(\d+) ([ap])\.?m\.? to (\d+):(\d+) ([ap])\.?m\.?(?: local time)?( each day)?)?$/i,
     (who, h1, m1, a1, h2, m2, a2, daily) => `${jaMons(who)}に出会いやすい` + (h1 ? `（${daily ? "毎日" : ""}${TIME12(h1, m1, a1)}〜${TIME12(h2, m2, a2)}）` : "")],
   [/^Increased chance to (?:get|become) Lucky Pokémon (?:in|from|when) trad(?:es|ing).*$/i, () => "交換でキラポケモンになりやすい"],
   [/^Increased chance to become Lucky Friends.*$/i, () => "キラフレンドになりやすい"],
+  // スーパーメガレイドなど：レイドで捕まえたポケモン・レイドバトルの追加報酬
+  [/^(.+?) caught from (Super Mega Raids|Mega Raids|Raids|Raid Battles) will have Mega Level (\d) unlocked$/i,
+    (who, where, lv) => `${raidWhereJa(where)}で捕まえた${jaMons(who)}は、はじめからメガレベル${lv}`],
+  [/^An additional ([\d,]+) (Stardust|XP) from (Super Mega Raid Battles|Super Mega Raids|Mega Raid Battles|Mega Raids|Raid Battles|Raids)$/i,
+    (n, what, where) => `${raidWhereJa(where)}で${what === "XP" ? "XP" : "ほしのすな"} +${n}`],
   // おこう・ルアー
   [/^(\w+)[- ]hour Incense$/i, (h) => `おこうの効果時間 ${toNum(h)}時間`],
   [/^(\w+)[- ]hour Lure(?: Module)?s?$/i, (h) => `ルアーモジュールの効果時間 ${toNum(h)}時間`],
   [/^Incense (?:activated|used) .*?last (?:for )?(\w+) hours?$/i, (h) => `おこうの効果時間 ${toNum(h)}時間`],
   [/^Lure Modules? (?:activated|used) .*?last (?:for )?(\w+) hours?$/i, (h) => `ルアーモジュールの効果時間 ${toNum(h)}時間`],
   // レイドパス
-  [/^(?:Trainers can )?(?:earn|receive|get)(?: up to)? (\w+)(?: free)? Raid Pass(?:es)? (?:by|from) spinning (?:Photo Discs at )?Gyms?$/i,
+  [/^(?:Trainers can )?(?:earn|receive|get)(?: up to)? (\w+)(?: free)? Raid Pass(?:es)? (?:by|from) spinning (?:Photo Discs at )?(?:Gym Photo Discs|Gyms?)$/i,
     (n) => `ジムのフォトディスクを回すとレイドパスを最大${toNum(n)}枚もらえる`],
   [/^Up to (\w+) (?:free )?Raid Pass(?:es)? from (?:spinning )?(?:Gym )?Photo Discs(?: at Gyms)?$/i,
     (n) => `ジムのフォトディスクを回すとレイドパスを最大${toNum(n)}枚もらえる`],
