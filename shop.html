@@ -424,7 +424,7 @@ document.getElementById("shots").addEventListener("change", async (e) => {
   if (!files.length) return;
   const st = document.getElementById("ocrStatus");
   const btn = document.querySelector(".shotbtn"); btn.style.pointerEvents = "none"; btn.style.opacity = ".6";
-  let ok = 0, ng = 0;
+  let ok = 0, ng = 0, fail = 0, failMsg = "";
   for (let i = 0; i < files.length; i++){
     const head = `${files.length > 1 ? `${i + 1}/${files.length}枚目：` : ""}`;
     st.innerHTML = `<div class="ocrst">${head}読み取り中…</div>`;
@@ -442,12 +442,18 @@ document.getElementById("shots").addEventListener("change", async (e) => {
       saved.unshift({name: r.name || "ボックス", price: r.price, rows: r.rows, at: Date.now(), day: today(), src: "ocr", notes: r.notes});
       ok++;
     } catch (ex){
-      ng++;
-      st.innerHTML = `<div class="ocrst">${head}読み取りに失敗しました（${esc(ex.message || ex)}）</div>`;
+      // 読み取りの部品を読み込めなかった（初回で電波が無いなど）／画像を開けなかった
+      fail++;
+      failMsg = /importScripts|fetch|network|load/i.test(String(ex && ex.message || ex))
+        ? "読み取りの準備（部品のダウンロード）ができませんでした。電波のよいところでもう一度試してください（一度準備できれば、次からは速くなります）"
+        : /decode|image|bitmap/i.test(String(ex && ex.message || ex)) ? "画像を開けませんでした（スクリーンショットの画像を選んでください）"
+        : `読み取りに失敗しました（${esc(String(ex && ex.message || ex))}）`;
+      if (/準備/.test(failMsg)) break;   // 準備ができないなら、残りの画像も読めない
     }
   }
   saved = saved.slice(0, 30); store(SAVED_KEY, saved); renderSaved();
-  st.innerHTML = `<div class="ocrst">${ok}枚読み取りました${ng ? `。${ng}枚はボックスの中身が見つかりませんでした（ボックスを押したあとの「中身の画面」か確認してください）` : ""}</div>`;
+  st.innerHTML = fail && !ok && !ng ? `<div class="ocrst">⚠ ${failMsg}</div>`
+    : `<div class="ocrst">${ok}枚読み取りました${ng ? `。${ng}枚はボックスの中身が見つかりませんでした（ボックスを押したあとの「中身の画面」か確認してください）` : ""}${fail ? `。${fail}枚は読み取れませんでした：${failMsg}` : ""}</div>`;
   btn.style.pointerEvents = ""; btn.style.opacity = "";
 });
 

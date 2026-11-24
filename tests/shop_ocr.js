@@ -29,11 +29,14 @@ h1{font-size:22px;text-align:center;margin:0 0 12px}
 ${b.items.map(([n, q]) => `<div class="it"><div class="ic"></div><div>${n}</div><div class="q">×${q}</div></div>`).join('')}
 <div class="buy">${b.price}</div></div></body></html>`;
 
+let BLOCK_OCR = false;   // true にすると、読み取りの部品を読み込めない（電波が無い）状態にする
 function serve(){
   return new Promise(res => {
     const types = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.json': 'application/json', '.gz': 'application/gzip', '.wasm': 'application/wasm', '.png': 'image/png' };
     const srv = http.createServer((req, rsp) => {
-      const p = path.join(ROOT, decodeURIComponent(req.url.split('?')[0]));
+      const u = decodeURIComponent(req.url.split('?')[0]);
+      if (BLOCK_OCR && /vendor\/tesseract\/(lang|.*wasm|worker)/.test(u)){ req.socket.destroy(); return; }
+      const p = path.join(ROOT, u);
       if (!p.startsWith(ROOT) || !fs.existsSync(p) || fs.statSync(p).isDirectory()){ rsp.writeHead(404); return rsp.end(); }
       rsp.writeHead(200, { 'content-type': types[path.extname(p)] || 'application/octet-stream' });
       fs.createReadStream(p).pipe(rsp);
@@ -99,6 +102,18 @@ function serve(){
     const st = await p.$eval('#ocrStatus', e => e.innerText);
     const n = (await p.evaluate(() => JSON.parse(localStorage.getItem('pogo-shop-saved-v1') || '[]'))).length;
     check('ocr: ボックス一覧の画面（中身なし）は取り込まず、中身の画面を選ぶよう案内する', n === 1 && /中身の画面/.test(st), `${n}件 ${st}`);
+  }
+  // 2c) 読み取りの部品を読み込めない（初回で電波が無い）ときは、その理由を出す
+  {
+    const q = await (await b.newContext({ locale: 'ja-JP' })).newPage();
+    await q.goto(url); await q.waitForTimeout(400);
+    BLOCK_OCR = true;
+    await q.setInputFiles('#shots', [files[0]]);
+    await q.waitForFunction(() => /準備|読み取りました|失敗/.test(document.getElementById('ocrStatus').innerText), null, { timeout: 60000 }).catch(() => {});
+    const st = await q.$eval('#ocrStatus', e => e.innerText);
+    check('ocr: 部品を読み込めないときは「準備ができませんでした」と出す', /準備.*できませんでした/.test(st), st);
+    BLOCK_OCR = false;
+    await q.context().close();
   }
   // 3) 日付が変わると、前の日のボックスは消える
   await p.evaluate(() => { const s = JSON.parse(localStorage.getItem('pogo-shop-saved-v1')); s.forEach(x => x.day = '2000-01-01'); localStorage.setItem('pogo-shop-saved-v1', JSON.stringify(s)); });
