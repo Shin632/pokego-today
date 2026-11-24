@@ -141,8 +141,10 @@ function judge(name){
   const ev = MEGAS && MEGAS.evoUse ? MEGAS.evoUse[k] || null : null;
   const prize = PRIZE_MONS.has(base), u = ev ? ev.u : 0, pvp = ev && ev.pvp;
   const dust = MEGAS && MEGAS.catchDust ? MEGAS.catchDust[k] || 0 : 0;
-  const cls = prize || u >= HIT_U || dust >= DUST_HIT ? "hit" : (MEGAS && MEGAS.evoUse && !prize && u === 0 && !pvp ? "miss" : "");
+  const coll = COLLECTION_ONLY.get(base) || "";
+  const cls = coll ? "miss" : prize || u >= HIT_U || dust >= DUST_HIT ? "hit" : (MEGAS && MEGAS.evoUse && !prize && u === 0 && !pvp ? "miss" : "");
   const why = [];
+  if (coll) why.push(coll);
   if (dust >= DUST_HIT) why.push(`ほしのすな稼ぎ：捕まえると +${dust}（通常より多い）`);
   if (ev && ev.use) why.push(`${nameJa(ev.best)}：${ev.use}`);
   if (prize) why.unshift("人気・貴重なポケモン");

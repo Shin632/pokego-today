@@ -114,6 +114,61 @@ def parse_page(html):
     return cats, samples
 
 
+EVENTS_URL = "https://raw.githubusercontent.com/bigfoott/ScrapedDuck/data/events.json"
+JST = dt.timezone(dt.timedelta(hours=9))
+
+
+def norm_event(name):
+    return re.sub(r"[^a-z0-9]+", " ", (name or "").lower()).strip()
+
+
+def parse_time(s):
+    """ScrapedDuck の日時。末尾に Z があれば UTC、無ければ現地時刻（このアプリは日本向けなので日本時間とみなす）"""
+    try:
+        t = dt.datetime.fromisoformat(s.replace("Z", "+00:00"))
+    except Exception:
+        return None
+    return t if t.tzinfo else t.replace(tzinfo=JST)
+
+
+def mark_events(cats, events=None):
+    """イベントのタスク（「〇〇 Tasks」）に、同じ名前のイベントの開始・終了日時（start / end）を付け、もう終わったものは除く。
+    （まだ始まっていないものは残し、ページの側で始まるまで隠す）
+    LeekDuck のリサーチ一覧は、イベントが終わってもしばらくそのタスクが残ることがあるため。
+    同じ名前のイベントが見つからないものはそのまま残す。"""
+    if events is None:
+        try:
+            req = urllib.request.Request(EVENTS_URL, headers={"User-Agent": UA})
+            with urllib.request.urlopen(req, timeout=30) as res:
+                events = json.load(res)
+        except Exception as ex:
+            print(f"::warning::research: イベントの一覧を読めず、終わったイベントのタスクを除けませんでした（{ex}）")
+            return cats
+    by_name = {}
+    for e in events or []:
+        by_name.setdefault(norm_event(e.get("name")), []).append(e)
+    now = dt.datetime.now(dt.timezone.utc)
+    out = []
+    for c in cats:
+        m = re.match(r"^(.+?) Tasks$", c.get("name") or "")
+        evs = by_name.get(norm_event(m.group(1))) if m else None
+        if evs:
+            ends = [(parse_time(e.get("end") or ""), e.get("end")) for e in evs]
+            ends = [x for x in ends if x[0]]
+            starts = [(parse_time(e.get("start") or ""), e.get("start")) for e in evs]
+            starts = [x for x in starts if x[0]]
+            if ends:
+                last = max(ends)
+                if last[0] < now:
+                    print(f"research: 終わったイベントのタスクを除きました：{c['name']}（終了 {last[1]}）")
+                    continue
+                c = dict(c, end=last[1])
+            if starts:
+                c = dict(c, start=min(starts)[1])
+        out.append(c)
+    return out
+
+
 def main(prev_path, out_path):
     try:
         with open(prev_path, encoding="utf-8") as f:
@@ -136,6 +191,8 @@ def main(prev_path, out_path):
         if not prev:
             sys.exit("前回のデータも無いため終了します")
         data = prev
+    if isinstance(data.get("categories"), list):
+        data["categories"] = mark_events(data["categories"])
     with open(out_path, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=1)
 

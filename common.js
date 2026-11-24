@@ -202,7 +202,9 @@ function translateName(ev){
 // 出会えると人気・貴重なポケモン（このアプリの判断。ドラゴン系の進化前、化石、ラプラスなど）
 const PRIZE_MONS = new Set(["Dratini","Larvitar","Bagon","Beldum","Gible","Axew","Deino","Goomy","Jangmo-o","Frigibax","Dreepy",
   "Lapras","Snorlax","Aerodactyl","Omanyte","Kabuto","Lileep","Anorith","Cranidos","Shieldon","Tirtouga","Archen","Tyrunt","Amaura",
-  "Spinda","Ditto","Riolu","Feebas","Scyther","Chansey","Togepi","Ralts","Mawile"]);
+  "Ditto","Riolu","Feebas","Scyther","Chansey","Togepi","Ralts","Mawile"]);
+// コレクション（模様・姿集め）以外に使い道がないポケモン。出現が少なくても、リサーチや野生ではハズレ（グレー）にする
+const COLLECTION_ONLY = new Map([["Spinda", "模様集め（コレクション）以外に使い道がない"]]);
 
 // ===== フィールドリサーチのタスク文の翻訳（research.html と search.html で使う） =====
 const TYPES_JA = {Normal:"ノーマル",Fire:"ほのお",Water:"みず",Grass:"くさ",Electric:"でんき",Ice:"こおり",Fighting:"かくとう",Poison:"どく",

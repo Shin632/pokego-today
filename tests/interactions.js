@@ -252,6 +252,29 @@ const close = async (p, label) => { check(`${label}: JavaScriptエラーなし`,
     await p.click('details.gfold > summary'); await p.waitForTimeout(100);
     const link = await p.$('.grow'); if (link) { await link.click(); await p.waitForTimeout(300); }
     check('research: 割に合うタスクの行を押すとそのタスクへ移動', (await p.evaluate(() => location.hash)).startsWith('#task-'), await p.evaluate(() => location.hash));
+    // 11/24：ボール・きのみの絞り込みは無くした
+    check('research: 「ボール・きのみ」の絞り込みボタンが無い', !(await p.$('[data-f="ball"]')) && !/ボール・きのみ/.test(await p.$eval('#chips', e => e.innerText)), '');
+    // 11/24：開催期間外のイベントのタスクは隠す／ハイパーボールとパッチールはグレー（作ったデータで確かめる）
+    const r = await p.evaluate(() => {
+      const now = Date.now(), H = 3600000;
+      EVENT_SPANS = { 'ended event': [now - 100 * H, now - H], 'live event': [now - H, now + 100 * H], 'future event': [now + H, now + 100 * H] };
+      const mk = (name, rewards) => ({ name, tasks: [{ text: 'Catch 10 Pokémon', rewards }] });
+      CATS_DATA = prepare([
+        mk('Ended Event Tasks', [{ type: 'item', name: 'Stardust', qty: 500 }]),
+        mk('Live Event Tasks', [{ type: 'item', name: 'Ultra Ball', qty: 5 }, { type: 'encounter', name: 'Spinda 4' }, { type: 'item', name: 'Golden Razz Berry', qty: 1 }]),
+        mk('Future Event Tasks', [{ type: 'item', name: 'Stardust', qty: 500 }]),
+        mk('Unknown Event Tasks', [{ type: 'item', name: 'Stardust', qty: 500 }]),
+      ]);
+      filter = 'all'; render();
+      const heads = [...document.querySelectorAll('section.cat:not(.goodsum) h2')].map(h => h.innerText);
+      const rw = [...document.querySelectorAll('.rw')].map(e => ({ t: e.innerText, low: e.classList.contains('low') }));
+      return { heads, rw };
+    });
+    check('research: 終わったイベントのタスクは出さない', r.heads.length === 2 && !r.heads.some(h => /Ended|エンデッド/i.test(h)), r.heads.join(' / '));
+    check('research: まだ始まっていないイベントのタスクは出さない', !r.heads.some(h => /Future|フューチャー/i.test(h)), r.heads.join(' / '));
+    check('research: ハイパーボールはグレー', r.rw.some(x => /ハイパーボール/.test(x.t) && x.low), JSON.stringify(r.rw));
+    check('research: パッチールはグレー', r.rw.some(x => /パッチール/.test(x.t) && x.low), JSON.stringify(r.rw));
+    check('research: 金のズリのみはグレーにしない', r.rw.some(x => /金のズリのみ/.test(x.t) && !x.low), JSON.stringify(r.rw));
     await close(p, 'research');
   }
 

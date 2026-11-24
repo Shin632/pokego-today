@@ -127,7 +127,7 @@ footer a{color:var(--sub)}
   <div class="tools">
     <input class="search" id="q" type="search" aria-label="ポケモン・アイテムで探す" placeholder="ポケモン・アイテムで探す（例：ミニリュウ）" autocomplete="off">
     <div class="chips" id="chips"></div>
-    <div class="legend">🎯＝当たりのポケモン（人気・貴重、進化・メガ後がレイドやジム攻撃のアタッカーとして強い、マスターリーグで強い、またはほしのすなが多くもらえる。タスクのポケモンは個体値が最低10なので、ジム防衛やスーパー・ハイパーリーグ向きなだけのものは当たりにしていません） ／ グレー＝ハズレのポケモン（進化しても育成ランキング上位30位に入らず、PvPでも使われない）と、価値の低いアイテム（ふつうのボール・ふつうの木の実・キズぐすりなど） ／ タイトルがグレー＝割に合わないタスク</div>
+    <div class="legend">🎯＝当たりのポケモン（人気・貴重、進化・メガ後がレイドやジム攻撃のアタッカーとして強い、マスターリーグで強い、またはほしのすなが多くもらえる。タスクのポケモンは個体値が最低10なので、ジム防衛やスーパー・ハイパーリーグ向きなだけのものは当たりにしていません） ／ グレー＝ハズレのポケモン（進化しても育成ランキング上位30位に入らず、PvPでも使われない。パッチールのようにコレクション以外に使い道がないもの）と、価値の低いアイテム（モンスターボール・スーパーボール・ハイパーボール、ふつうの木の実、キズぐすりなど） ／ タイトルがグレー＝割に合わないタスク</div>
   </div>
   <main id="main"><div class="empty">読み込み中…</div></main>
   <footer>
@@ -145,6 +145,10 @@ const SOURCE = "https://raw.githubusercontent.com/Shin632/pokego-today/data/rese
 // 予備：ScrapedDuck（ポケモン報酬のみ）
 const FALLBACK = "https://raw.githubusercontent.com/bigfoott/ScrapedDuck/data/research.json";
 const CACHE_KEY = "pogo-research-cache-v1";
+// イベントの日程（終わったイベントのタスクを隠すのに使う。LeekDuck の一覧には、イベントが終わってもしばらく残ることがある）
+const EVENTS_URL = "https://raw.githubusercontent.com/bigfoott/ScrapedDuck/data/events.json";
+const EVENTS_KEY = "pogo-research-events-v2";
+let EVENT_SPANS = cacheGet(EVENTS_KEY);   // 名前（小文字・英数字のみ）→ [始まり, 終わり]（ミリ秒。同じ名前が複数あればいちばん早い始まりと遅い終わり）
 // ポケモンごとの相棒の距離（よく出るポケモンの目安に使う。tools/build_rankings.py が作る）
 const MEGAS_URL = "https://raw.githubusercontent.com/Shin632/pokego-today/data/megas.json";
 let BUDDY_KM = null, EVO_USE = null;   // EVO_USE：英語名 → {u: 進化・メガ後の役立ち度, best, use}
@@ -287,7 +291,6 @@ const FILTERS = [
   ["dust", "ほしのすな", (r) => r.name === "Stardust"],
   ["mega", "メガエナジー", (r) => /Mega Energy$/.test(r.name)],
   ["candy", "アメ（種類別）", (r) => /. Candy( XL)?$/.test(r.name) && !/^Rare Candy/.test(r.name)],
-  ["ball", "ボール・きのみ", (r) => /Ball$|Berry$/.test(r.name)],
 ];
 let filter = "all", query = "";
 
@@ -295,7 +298,7 @@ let filter = "all", query = "";
 let CATS_DATA = null, updatedAt = null, isFallback = false;
 function fromOwn(d){
   if (!d || !Array.isArray(d.categories)) throw new Error("形式が違います");
-  return d.categories.map(c => ({name: String(c.name || ""), tasks: (c.tasks || []).map(t => ({
+  return d.categories.map(c => ({name: String(c.name || ""), start: c.start ? String(c.start) : "", end: c.end ? String(c.end) : "", tasks: (c.tasks || []).map(t => ({
     text: String(t.text || ""), rewards: (t.rewards || []).map(r => ({type: r.type === "encounter" ? "encounter" : (r.type || "item"),
       name: String(r.name || ""), image: safeUrl(r.image), shiny: !!r.shiny, cpMin: r.cpMin, cpMax: r.cpMax, qty: r.qty}))}))}));
 }
@@ -331,6 +334,31 @@ async function getJson(url){
   try { const res = await fetch(url, {cache: "no-cache", signal: ctl.signal}); if (!res.ok) throw new Error("HTTP " + res.status); return await res.json(); }
   finally { clearTimeout(timer); }
 }
+const evKey = (n) => String(n || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+/** イベントのタスクで、同じ名前のイベントが開催期間の外（もう終わった・まだ始まっていない）もの。名前が見つからないものは残す */
+function catEnded(c, now = Date.now()){
+  const m = c.name.match(/^(.+?) Tasks$/);
+  if (!m || !c.info.event) return false;
+  const sp = EVENT_SPANS && EVENT_SPANS[evKey(m[1])];
+  let start = sp ? sp[0] : NaN, end = sp ? sp[1] : NaN;
+  if (c.start){ const t = new Date(c.start).getTime(); if (!isNaN(t)) start = isNaN(start) ? t : Math.min(start, t); }
+  if (c.end){ const t = new Date(c.end).getTime(); if (!isNaN(t)) end = isNaN(end) ? t : Math.max(end, t); }
+  return (!isNaN(end) && end < now) || (!isNaN(start) && start > now);
+}
+const liveCats = () => (CATS_DATA || []).filter(c => !catEnded(c));
+function loadEvents(){
+  return getJson(EVENTS_URL).then(list => {
+    if (!Array.isArray(list)) return;
+    const spans = {};
+    for (const e of list){
+      // 末尾に Z が無い日時は、各地の現地時刻（ブラウザの時刻として読む）
+      const s0 = new Date(e.start || "").getTime(), e0 = new Date(e.end || "").getTime(), k = evKey(e.name);
+      if (!k || isNaN(s0) || isNaN(e0)) continue;
+      spans[k] = spans[k] ? [Math.min(spans[k][0], s0), Math.max(spans[k][1], e0)] : [s0, e0];
+    }
+    EVENT_SPANS = spans; cacheSet(EVENTS_KEY, spans);
+  }, () => {});
+}
 let loading = false;
 async function refresh(){
   if (loading) return; loading = true;
@@ -338,9 +366,10 @@ async function refresh(){
   const kmP = getJson(MEGAS_URL).then(m => {
     if (m && m.buddyKm){ BUDDY_KM = m.buddyKm; EVO_USE = m.evoUse || null; CATCH_DUST = m.catchDust || null; try { localStorage.setItem("pogo-megas-cache-v1", JSON.stringify(m)); } catch {} }
   }, () => {});
+  const evP = loadEvents();
   try {
     try {
-      await kmP;
+      await kmP; await evP;
       const d = await getJson(SOURCE);
       CATS_DATA = prepare(fromOwn(d)); updatedAt = d.updatedAt ? new Date(d.updatedAt) : new Date(); isFallback = false;
       try { localStorage.setItem(CACHE_KEY, JSON.stringify(d)); } catch {}
@@ -387,16 +416,17 @@ function encounterInfo(r){
   const ml = e && e.ml && e.ml.rank <= ML_HIT ? e.ml : null;
   const pvp = e && e.pvp ? e.pvp : null;
   const dust = CATCH_DUST ? CATCH_DUST[k] || 0 : 0;
-  const cls = prize || ua >= HIT_U || ml || dust >= DUST_HIT ? "hit" : (EVO_USE && !prize && u === 0 && !pvp ? "miss" : "");
+  const coll = COLLECTION_ONLY.get(base) || "";
+  const cls = coll ? "miss" : prize || ua >= HIT_U || ml || dust >= DUST_HIT ? "hit" : (EVO_USE && !prize && u === 0 && !pvp ? "miss" : "");
   // 役立つが当たりにしなかったもの（ジム防衛・スーパー／ハイパーリーグ向き）
   const notForTask = cls === "" && (u >= HIT_U || (pvp && pvp.league !== "マスターリーグ"));
-  return {cls, e, prize, pvp, dust, ml, notForTask};
+  return {cls, e, prize, pvp, dust, ml, notForTask, coll};
 }
 /** 価値の低い報酬：ふつうのボール・ふつうの木の実・キズぐすり・げんきのかけら（すべてのタスク）、
- *  ハイパーボール（割に合うタスクのみ）、ハズレのポケモン（すべてのタスク） */
-const LOW_ITEMS = /^(Poké Ball|Great Ball|Razz Berry|Nanab Berry|Pinap Berry|Potion|Super Potion|Hyper Potion|Revive)$/;
+ *  ハイパーボール、ハズレのポケモン（すべてのタスク） */
+const LOW_ITEMS = /^(Poké Ball|Great Ball|Ultra Ball|Razz Berry|Nanab Berry|Pinap Berry|Potion|Super Potion|Hyper Potion|Revive)$/;
 function isLowValue(r, good){
-  if (r.type !== "encounter") return LOW_ITEMS.test(r.name) || (good && r.name === "Ultra Ball");
+  if (r.type !== "encounter") return LOW_ITEMS.test(r.name);
   const i = encounterInfo(r);
   return !!i && i.cls === "miss";
 }
@@ -419,7 +449,8 @@ function rewardHtml(r, hit, low, prize){
     if (i && i.pvp && !(i.ml && i.pvp.league === "マスターリーグ")) other.push(`PvP：${nameJa(i.pvp.best)}がPvPokeの${i.pvp.league} ${i.pvp.rank}位`);
     if (other.length) parts.push((parts.length ? "ほかに " : "") + other.join("、"));
     if (i && i.notForTask) parts.push("ジム防衛やスーパー・ハイパーリーグ向きだが、タスクのポケモンは個体値が最低10で、野生で捕まえても同じかそれ以上なので当たりにしていない");
-    if (i && i.cls === "miss") parts.push("進化しても育成ランキング上位30位に入らず、PvPでも上位に入らない");
+    if (i && i.coll) parts.push(i.coll);
+    else if (i && i.cls === "miss") parts.push("進化しても育成ランキング上位30位に入らず、PvPでも上位に入らない");
     tip = parts.join(" ／ ");
   }
   if (r.type === "encounter"){
@@ -431,7 +462,7 @@ function rewardHtml(r, hit, low, prize){
 let goodOpen = false;   // 「割に合うタスク」欄は最初はたたんでおく
 function goodSummary(){
   const list = [];
-  for (const c of CATS_DATA) for (const t of c.tasks) if (t.score.good) list.push({c, t});
+  for (const c of liveCats()) for (const t of c.tasks) if (t.score.good) list.push({c, t});
   list.sort((a, b) => b.t.score.ratio - a.t.score.ratio);
   const rows = list.map(({c, t}) => {
     const best = t.score.best.map(r => r.ja + (r.qty ? `×${Number(r.qty).toLocaleString()}` : "")).join("・");
@@ -442,7 +473,7 @@ function goodSummary(){
   return `<section class="cat goodsum"><details class="gfold"${goodOpen ? " open" : ""}>
     <summary><span class="garrow" aria-hidden="true">▶</span>👍 割に合うタスク <span class="count">${list.length}件</span><span class="ghint">${goodOpen ? "タップでたたむ" : "タップで表示"}</span></summary>
     <div class="gbox">${rows || `<div class="gsub">今は目立って割に合うタスクはありません</div>`}
-    <div class="gsub" style="margin-top:6px">※ 割に合うタスクの報酬のうち、<b>ボール</b>はグレーで表示しています。</div>
+    <div class="gsub" style="margin-top:6px">※ 報酬のうち、<b>ふつうのボール（ハイパーボールまで）・ふつうのきのみ・キズぐすり</b>など価値の低いものはグレーで表示しています。</div>
     <details class="how"><summary>判定のしかた</summary>
       <p>データ元には「手間」も「報酬の価値」も無いため、このアプリ独自の目安で点数を付けています。</p>
       <p>・<b>手間</b>：タスクの内容から5段階（例：写真を撮る・ポケストップ3回＝かんたん、レイド＝レイドパスが必要なので大変、タマゴ・km＝歩くので大変）。</p>
@@ -461,7 +492,7 @@ function render(){
   const q = normQ(query.trim());
   let html = "", total = 0;
   if (filter === "all" && !q) html += goodSummary();
-  for (const c of CATS_DATA){
+  for (const c of liveCats()){
     const tasks = c.tasks.filter(t => (!q || t.hay.includes(q)) &&
       (filter === "all" || (filter === "good" ? t.score.good : t.rewards.some(f[2]))));
     if (!tasks.length) continue;
@@ -472,7 +503,7 @@ function render(){
       const hitOf = (r) => (f[2] && filter !== "all" && f[2](r)) || (q && normQ(r.ja + " " + r.name).includes(q));
       // 絞り込みに当たる報酬を前に
       const sc = t.score;
-      // 当たりのポケモンは前へ（🎯）、ハズレのポケモンと割に合うタスクのボールはグレーにして後ろへ
+      // 当たりのポケモンは前へ（🎯）、ハズレのポケモンと価値の低いアイテムはグレーにして後ろへ
       const lowOf = (r) => isLowValue(r, sc.good);
       const rs = [...t.rewards].sort((a, b) => (hitOf(b) - hitOf(a)) || (isPrizeMon(b) - isPrizeMon(a)) || (lowOf(a) - lowOf(b)));
       const badge = sc.great ? `<span class="good-b">👍👍 とても割に合う</span>` : sc.good ? `<span class="good-b">👍 割に合う</span>` : "";
@@ -491,6 +522,13 @@ function render(){
 }
 
 document.getElementById("reload").addEventListener("click", refresh);
+// 開いたままイベントの始まり・終わりの時刻を過ぎたら、表示を切り替える（変わったときだけ描き直す）
+let endedSig = "";
+setInterval(() => {
+  if (!CATS_DATA || document.hidden) return;
+  const sig = CATS_DATA.filter(c => catEnded(c)).map(c => c.name).join("|");
+  if (sig !== endedSig){ endedSig = sig; render(); }
+}, 60000);
 document.getElementById("chips").addEventListener("click", (e) => {
   const b = e.target.closest("[data-f]"); if (!b) return; filter = b.dataset.f; render();
 });
