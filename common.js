@@ -23,6 +23,8 @@ function buildMonRe(){
   // (先頭 or 英字以外)(接頭辞 )?(ポケモン名)( X/Y)?(英字以外 or 末尾)
   return new RegExp("(^|[^A-Za-z])(?:(" + pre + ") )?(" + names.join("|") + ")(?: ([XY]))?(?=[^A-Za-z]|$)", "g");
 }
+// コスチューム（「wearing 〜」）の飾りの名前
+const COSTUME_JA = {"flower crown": "花かんむり"};
 /** 英語の文字列中のポケモン名・フォルム・接続語を日本語化 */
 function jaMons(s){
   if (!s) return s;
@@ -47,6 +49,9 @@ function jaMons(s){
     return "\u0000（" + t + "）";
   });
   out = out.replace(/\s*\u0000/g, ""); // 「名前 （フォルム）」の空白を詰める
+  // 「Cottonee wearing a flower crown」→「モンメン（花かんむり）」。知らない飾りは「コスチューム」とだけ書く
+  out = out.replace(/([぀-ヿ一-鿿）])\s+wearing (?:an? |a pair of )?([A-Za-z' -]+?)(?=$|[,.)]| and )/gi,
+    (m, c, w) => `${c}（${COSTUME_JA[w.trim().toLowerCase()] || "コスチューム"}）`);
   // 日本語化された名前の間の and / , を「・」に
   out = out.replace(/([぀-ヿ一-鿿）XY2]),? and (?=[぀-ヿ一-鿿])/g, "$1・")
            .replace(/([぀-ヿ一-鿿）]), (?=[぀-ヿ一-鿿])/g, "$1・");
@@ -231,6 +236,8 @@ const TASK_RULES = [
   [/^Hatch (\d+|an?) Eggs?$/i, (n) => `タマゴを${N(n)}個かえす`],
   [/^Spin (\d+|an?) PokéStops? or Gyms?$/i, (n) => `ポケストップかジムを${N(n)}回まわす`],
   [/^Spin (\d+|an?) PokéStops?$/i, (n) => `ポケストップを${N(n)}回まわす`],
+  [/^Spin (\d+|an?) PokéStops? you haven't visited before$/i, (n) => `まだ回したことのないポケストップを${N(n)}回まわす`],
+  [/^Use (\d+|an?) Lure Modules? at (?:a )?PokéStops?$/i, (n) => `ポケストップでルアーモジュールを${N(n)}個使う`],
   [/^Take a snapshot of a wild Pokémon$/i, () => "野生のポケモンのGOスナップショットを撮る"],
   [/^Take (\d+|an?) snapshots? of (.+)$/i, (n, w) => `${jaMons(w)}のGOスナップショットを${N(n)}回撮る`],
   [/^Evolve (\d+|an?) Pokémon$/i, (n) => `ポケモンを${N(n)}匹進化させる`],

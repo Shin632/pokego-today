@@ -200,6 +200,8 @@ const num = (w) => /^an?$/i.test(w) ? 1 : +w;
 const EFFORT_RULES = [
   [/^Take (?:a|\d+) snapshots?/i, () => [1, "写真を撮るだけ"]],
   [/^Spin (\d+|an?) PokéStops?(?: or Gyms?)?$/i, (n) => [num(n) <= 3 ? 1 : num(n) <= 5 ? 1.5 : 2.5, "ポケストップを回すだけ"]],
+  [/^Spin (\d+|an?) PokéStops? you haven't visited before$/i, () => [2.5, "近くにまだ回していないポケストップがあるかしだい。場所によっては遠出が必要"]],
+  [/^Use (\d+|an?) Lure Modules?/i, (n) => [num(n) <= 1 ? 2.5 : 3.5, "ルアーモジュールが必要。持っていなければ買うことになる"]],
   [/^Evolve (\d+|an?) Pokémon$/i, (n) => [num(n) <= 1 ? 1.5 : 2.5, "進化させるだけ（アメを使う）"]],
   [/^Power up Pokémon (\d+) times$/i, (n) => [num(n) <= 3 ? 1.5 : num(n) <= 5 ? 2 : num(n) <= 8 ? 2.5 : 3, "強化するだけ（ほしのすなを使う）"]],
   [/^Use (\d+|an?) Berr(?:y|ies)/i, (n) => [num(n) <= 5 ? 1.5 : 2.5, "きのみを使いながら捕まえる"]],
@@ -374,7 +376,7 @@ const DUST_HIT = 600;   // 捕まえたときの追加のほしのすながこ�
 let CATCH_DUST = null;
 // 検索用にそろえる：全角・半角（NFKC）、ひらがな→カタカナ、大文字→小文字。空白は残す（英語名の「rare candy」用）
 const normQ = (s) => String(s || "").normalize("NFKC").toLowerCase().replace(/[ぁ-ゖ]/g, c => String.fromCharCode(c.charCodeAt(0) + 0x60));
-function monKey(r){ return String(r.name || "").replace(/ \(.*\)$/, "").replace(/ \d+$/, ""); }
+function monKey(r){ return String(r.name || "").replace(/ wearing .*$/i, "").replace(/ \(.*\)$/, "").replace(/ \d+$/, ""); }
 function encounterInfo(r){
   if (r.type !== "encounter") return null;
   const k = monKey(r), base = k.replace(/^(Alolan|Galarian|Hisuian|Paldean) /, "");
