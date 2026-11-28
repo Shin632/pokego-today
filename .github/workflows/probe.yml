@@ -1,0 +1,28 @@
+name: probe (temporary)
+on: workflow_dispatch
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: fetch regional pages
+        run: |
+          pip install -q beautifulsoup4
+          cat > p.py <<'PY'
+          import sys, urllib.request
+          from bs4 import BeautifulSoup
+          for u in sys.argv[1:]:
+              print("=====", u)
+              try:
+                  req = urllib.request.Request(u, headers={"User-Agent": "Mozilla/5.0 (compatible; pokego-today-probe/1.0)"})
+                  h = urllib.request.urlopen(req, timeout=30).read().decode("utf-8", "replace")
+                  s = BeautifulSoup(h, "html.parser")
+                  for t in s(["script", "style", "nav", "footer"]): t.decompose()
+                  lines = [l.strip() for l in s.get_text("\n").splitlines() if l.strip()]
+                  print("\n".join(lines[:900]))
+              except Exception as e:
+                  print("FAIL", e)
+          PY
+          python3 p.py \
+            "https://www.serebii.net/pokemongo/regionalpokemon.shtml" \
+            "https://bulbapedia.bulbagarden.net/wiki/Regional_Pok%C3%A9mon_(GO)" \
+            "https://leekduck.com/regional-pokemon/"
