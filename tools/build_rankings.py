@@ -1128,6 +1128,66 @@ def build_pokedex(pokemon, pvp, move_ja=None, move_en=None, dmax=frozenset(), gm
             "cpm": CPM_TABLE[:51], "species": species}
 
 
+# ===== 本編では進化するが、ポケモンGOにはまだ進化先がいないポケモン（ジュラルドン→ブリジュラスなど） =====
+SPECIES_CSV = "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/pokemon_species.csv"
+SPECIES_NAMES_CSV = "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/pokemon_species_names.csv"
+# 本編で、地域の姿からだけ進化するもの（進化先の図鑑番号 → 進化できる姿の id の末尾）
+REGIONAL_EVO_FORM = {862: "_galarian", 863: "_galarian", 864: "_galarian", 865: "_galarian", 866: "_galarian", 867: "_galarian",
+                     903: "_hisuian", 904: "_hisuian", 980: "_paldean"}
+# 本編での進化の決まりのうち、GOで進化できるかに関わるもの（進化先の図鑑番号 → 説明）
+FUTURE_EVO_NOTE = {902: "本編では「しろすじのすがた」のバスラオだけが進化します"}
+
+
+def add_future_evos(species, prev_path=None):
+    """species（build_pokedex の結果）の各ポケモンに、本編にはいるがGOにはまだいない進化先を futureEvo として付ける。
+    本編の進化のつながりは PokeAPI の表を使う。読めなければ前回の pokedex.json の値を使う"""
+    go_dex = {x["dex"] for x in species}
+    found = None
+    try:
+        rows = list(csv.DictReader(io.StringIO(get(SPECIES_CSV).decode("utf-8"))))
+        names = {}
+        for r in csv.reader(io.StringIO(get(SPECIES_NAMES_CSV).decode("utf-8"))):
+            if len(r) >= 3 and r[1] in ("9", "11"):
+                names.setdefault(r[0], {})["en" if r[1] == "9" else "ja"] = r[2]
+        found = {}
+        for r in rows:
+            f = r.get("evolves_from_species_id")
+            if not f:
+                continue
+            child = int(r["id"])
+            if int(f) in go_dex and child not in go_dex:
+                n = names.get(r["id"], {})
+                ent = {"dex": child, "name": n.get("en") or r["identifier"].title(), "ja": n.get("ja") or ""}
+                if child in FUTURE_EVO_NOTE:
+                    ent["note"] = FUTURE_EVO_NOTE[child]
+                found.setdefault(int(f), []).append(ent)
+    except Exception as ex:
+        print(f"::warning::本編の進化（PokeAPI）を読めませんでした: {ex}")
+    if found is None:
+        try:
+            with open(prev_path, encoding="utf-8") as fp:
+                prev = {x["id"]: x["futureEvo"] for x in json.load(fp).get("species", []) if x.get("futureEvo")}
+            for x in species:
+                if x["id"] in prev:
+                    x["futureEvo"] = prev[x["id"]]
+            print("futureEvo: 前回の値を使いました", len(prev))
+        except Exception as ex:
+            print(f"futureEvo: 前回の値も使えませんでした: {ex}")
+        return
+    n = 0
+    for x in species:
+        if "mega" in (x.get("tags") or []):
+            continue
+        evs = [e for e in found.get(x["dex"], [])
+               if e["dex"] not in REGIONAL_EVO_FORM or x["id"].replace("_shadow", "").endswith(REGIONAL_EVO_FORM[e["dex"]])]
+        # 地域の姿は、本編でその姿からだけ進化するもの以外は付けない（例：ガラルのすがたからしか進化しないもの）
+        if re.search(r"_(alolan|galarian|hisuian|paldean)", x["id"]):
+            evs = [e for e in evs if e["dex"] in REGIONAL_EVO_FORM]
+        if evs:
+            x["futureEvo"] = evs; n += 1
+    print("futureEvo:", n, sorted({e["name"] for v in found.values() for e in v}))
+
+
 def build_evo_use(pokemon, lists, pvp=None):
     """リサーチなどで出会うポケモン（通常の姿）が、進化・メガシンカ後にどれくらい役立つか。
     英語名（"Alolan Geodude" 形式）→ {"u": 役立ち度, "best": 役立つ姿, "use": 使い道}（役立ち度0のものは省略）"""
@@ -1460,6 +1520,7 @@ def main(prev_path, out_path, prev_megas_path=None, out_megas_path=None, prev_ra
         except Exception as ex:
             print(f"::warning::GBL: {ex}")
         pokedex_data = build_pokedex(pokemon + extra, PVP, move_ja, move_en, dmax, gmax)
+        add_future_evos(pokedex_data["species"], os.path.join(os.path.dirname(prev_megas_path or "") or ".", "prev_pokedex.json"))
         # 技名（英語 → 日本語）。イベントページの「レガシー技」の説明を訳すのに使う
         megas_data["moveJa"] = {move_en[mid]: move_ja[mid] for mid in move_en if mid in move_ja and move_ja[mid]}
         if out_raids_path:

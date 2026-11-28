@@ -36,7 +36,19 @@ input[type=search],input[type=number]{font:inherit;font-size:17px;color:var(--te
 .opt{display:flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--bg);border-radius:999px;padding:6px 12px;font-size:14px;cursor:pointer;user-select:none}
 .opt input{width:18px;height:18px;margin:0}
 .ivs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
-.ivs input{text-align:center;font-size:20px;font-weight:700}
+.ivs .f{text-align:center}
+/* 個体値のダイヤル（上下にスワイプして0〜15を選ぶ。真ん中の段が選んだ値） */
+.dial{position:relative;height:132px;overflow-y:auto;scroll-snap-type:y mandatory;overscroll-behavior:contain;scrollbar-width:none;
+  border:1px solid var(--line);border-radius:12px;background:var(--bg);outline:none;touch-action:pan-y;
+  -webkit-mask-image:linear-gradient(transparent,#000 30%,#000 70%,transparent);mask-image:linear-gradient(transparent,#000 30%,#000 70%,transparent)}
+.dial::-webkit-scrollbar{display:none}
+.dial:focus-visible{box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 45%,transparent)}
+.dial .pad{height:44px}
+.dial .di{height:44px;display:flex;align-items:center;justify-content:center;scroll-snap-align:center;font-size:20px;font-weight:600;color:var(--sub);cursor:pointer;user-select:none}
+.dial .di.sel{font-size:26px;font-weight:800;color:var(--text)}
+.ivs > div{position:relative}
+.ivs > div::after{content:"";position:absolute;left:4px;right:4px;bottom:44px;height:44px;border-top:2px solid var(--accent);border-bottom:2px solid var(--accent);border-radius:6px;pointer-events:none;opacity:.55}
+.dialhint{font-size:12px;color:var(--sub);margin-top:6px}
 .quick{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
 .qb{appearance:none;font:inherit;font-size:12px;border:1px solid var(--line);background:var(--panel);color:var(--sub);border-radius:999px;padding:3px 10px;cursor:pointer}
 .verdict{margin-top:14px;border-radius:var(--radius);padding:14px;border:2px solid var(--line);background:var(--panel)}
@@ -82,19 +94,17 @@ details.box>summary{padding:10px 0}
     <div class="sugg" id="sugg"></div>
     <div class="chosen" id="chosen"></div>
     <div class="opts">
-      <label class="opt"><input type="checkbox" id="shiny"> ✨ 色違い</label>
-      <label class="opt"><input type="checkbox" id="bg"> 🖼 特別な背景</label>
-      <label class="opt"><input type="checkbox" id="costume"> 🎩 コスチューム</label>
       <label class="opt"><input type="checkbox" id="shadow"> シャドウ</label>
       <label class="opt"><input type="checkbox" id="dmax"> ダイマックス</label>
       <label class="opt"><input type="checkbox" id="gmax"> キョダイマックス</label>
     </div>
     <div class="ivs">
-      <div><label class="f" for="ia">攻撃（0〜15）</label><input id="ia" type="number" inputmode="numeric" min="0" max="15" placeholder="0〜15"></div>
-      <div><label class="f" for="id">防御（0〜15）</label><input id="id" type="number" inputmode="numeric" min="0" max="15" placeholder="0〜15"></div>
-      <div><label class="f" for="ih">HP（0〜15）</label><input id="ih" type="number" inputmode="numeric" min="0" max="15" placeholder="0〜15"></div>
+      <div><div class="f" id="la">攻撃</div><div class="dial" id="ia" role="spinbutton" tabindex="0" aria-labelledby="la" aria-valuemin="0" aria-valuemax="15"></div></div>
+      <div><div class="f" id="ld">防御</div><div class="dial" id="id" role="spinbutton" tabindex="0" aria-labelledby="ld" aria-valuemin="0" aria-valuemax="15"></div></div>
+      <div><div class="f" id="lh">HP</div><div class="dial" id="ih" role="spinbutton" tabindex="0" aria-labelledby="lh" aria-valuemin="0" aria-valuemax="15"></div></div>
     </div>
     <div class="quick"><button class="qb" type="button" data-iv="15,15,15">15/15/15</button><button class="qb" type="button" data-iv="0,15,15">0/15/15</button><button class="qb" type="button" data-iv="clear">個体値を消す</button></div>
+    <div class="dialhint">数字を上下にスワイプ（パソコンはホイール・↑↓キー）して、0〜15を選んでください</div>
   </div>
   <div id="notice"></div>
   <div id="stale"></div>
@@ -105,11 +115,12 @@ details.box>summary{padding:10px 0}
     <ul class="crit">
       <li><b>レイド・ジム</b>：そのポケモン（シャドウにチェックがあればシャドウの姿）と、進化後・メガシンカ後が、育成ランキングに入っているかを見ます（レイド総合・ジム攻撃は50位、タイプ別・ジム防衛は30位まで）。入っていれば、攻撃役は<b>攻撃13以上かつ全体80%以上で◎</b>、攻撃10以上かつ60%以上で○。ジム防衛は防御・HPがともに12以上で◎です。</li>
       <li><b>PvP</b>：進化後も含めて PvPoke のランキング上位（スーパー・ハイパーリーグ100位、マスターリーグ50位以内）にいるポケモンについて、<b>その個体値が4,096通りの中で何位か</b>を計算します（CP上限の中でいちばん高いレベル、最大レベル50。能力値の積で順位づけ）。<b>64位以内で◎、300位以内で○</b>。マスターリーグは個体値が高いほど強いので、全体93%以上で◎、85%以上で○です。</li>
-      <li><b>判定</b>：どれかで◎なら「育成すべき」。◎はないが○がある、または伝説・幻・ウルトラビースト、ダイマックス・キョダイマックス、個体値100%、色違い・特別な背景・コスチュームなら「とっておく」。どれにも当てはまらなければ「逃がしてOK（アメにしてよい）」です。</li>
+      <li><b>判定</b>：どれかで◎なら「育成すべき」。◎はないが○がある、または伝説・幻・ウルトラビースト、ダイマックス・キョダイマックス、個体値100%なら「とっておく」。どれにも当てはまらなければ「逃がしてOK（アメにしてよい）」です。</li>
       <li><b>まだGOで解禁されていないメガシンカ</b>：本編（XY・ORAS、レジェンズ Z-A とその追加コンテンツ）にはメガシンカがあるのに、ポケモンGOではまだ解禁されていないポケモン（進化先も含む）は、🔮で知らせます。解禁後の強さはGOのデータが出るまで分からないので判定には入れませんが、攻撃の個体値が13以上かつ全体80%以上なら、解禁に備えて「とっておく」にします。GOで解禁されると元データに入り、自動で通常の判定に切り替わります。</li>
       <li><b>技構成</b>：レイド・ジムは育成TOP10と同じ計算でいちばん良い技1・技2、PvPは PvPoke のおすすめ（技1と技2を2つ）です。★は今は普通には覚えられない技（すごいわざマシンやイベントが必要）です。</li>
       <li><b>シャドウのリトレーン</b>：シャドウのままの評価と、リトレーンした場合（個体値が各+2、通常の姿。ジムに置ける・メガシンカできる）の評価を比べ、良いほうをすすめます。同じくらいなら、レイド用ならシャドウのまま（攻撃1.2倍）をすすめます。</li>
-      <li>色違い・特別な背景・コスチュームは、強さは通常と同じなので「育成すべき」かどうかの判定には影響しませんが、「逃がしてOK」にはならず「とっておく」以上になります。コスチュームのポケモンは進化できないものが多いので注意してください。キラ・思い出のポケモンかどうかは判定に入っていません。</li>
+      <li><b>まだGOで進化できない進化先</b>：本編では進化するのに、ポケモンGOにはまだ進化先がいないポケモン（例：ジュラルドン→ブリジュラス）も🔮で知らせ、メガシンカと同じく、攻撃の個体値が13以上かつ全体80%以上なら「とっておく」にします。進化先がGOに入ると、自動で通常の判定に切り替わります。</li>
+      <li>色違い・特別な背景・コスチューム・キラ・思い出のポケモンかどうかは判定に入れていません（強さは同じため）。見た目で残したいときは、判定に関係なく残してください。</li>
       <li>ダイマックス・キョダイマックスにチェックすると、マックスバトルでの強さの目安も見ます。ダイマックスできる最終進化の中で、攻撃（種族値）か耐久（防御×HP）が上位25%なら◎、50%なら○（検索ページと同じ）。攻撃役なら攻撃の個体値12以上、耐久役なら防御＋HPが24以上でないときは1段階下げます。技や相手のタイプは入っていないので目安です。マックスバトルでしか手に入らないため、どの場合も「とっておく」以上にします。</li>
     </ul>
   </details>
@@ -253,15 +264,13 @@ const CHART_W = {normal:[],fire:["grass","ice","bug","steel"],water:["fire","gro
 function evaluate(){
   const main = document.getElementById("main");
   if (!chosen){ main.innerHTML = ""; return; }
-  const raw = ["ia", "id", "ih"].map(k => document.getElementById(k).value.trim());
-  if (raw.some(v => v === "" || isNaN(+v) || +v < 0 || +v > 15 || !Number.isInteger(+v))){
-    main.innerHTML = `<div class="notice">攻撃・防御・HPの個体値を、それぞれ0〜15の整数で入れてください。</div>`; return;
+  const raw = ["ia", "id", "ih"].map(getIv);
+  if (raw.some(v => v === null)){
+    main.innerHTML = `<div class="notice">攻撃・防御・HPの個体値を、それぞれダイヤルで0〜15から選んでください。</div>`; return;
   }
-  const ivs = raw.map(Number), [a, d, h] = ivs;
+  const ivs = raw, [a, d, h] = ivs;
   let shadow = document.getElementById("shadow").checked;
   const dmax = document.getElementById("dmax").checked, gmax = document.getElementById("gmax").checked;
-  const shiny = document.getElementById("shiny").checked;
-  const bg = document.getElementById("bg").checked, costume = document.getElementById("costume").checked;
   const total = a + d + h, pct = total / 45;
   const stars = total === 45 ? 4 : total >= 37 ? 3 : total >= 30 ? 2 : total >= 23 ? 1 : 0;
   const fam = family(chosen);
@@ -306,16 +315,18 @@ function evaluate(){
   const megaNames = megaGap.map(m => m.name).join("・");
   const megaGames = [...new Set(megaGap.map(m => m.game))].join("・");
   // 解禁に備えて残す目安：レイドで使うなら攻撃が大事なので、攻撃13以上・全体80%以上
-  const megaKeep = megaGap.length && a >= 13 && pct >= 0.8;
+  const megaKeep = megaGap.length && a >= FUTURE_KEEP.atk && pct >= FUTURE_KEEP.pct;
+  // 本編では進化するが、GOにはまだ進化先がいないもの（ジュラルドン→ブリジュラスなど）。目安はメガシンカと同じ
+  const evoGap = futureEvos(fam);
+  const evoNames = evoGap.map(e => e.ja || nameJa(e.name)).join("・");
+  const evoKeep = evoGap.length && a >= FUTURE_KEEP.atk && pct >= FUTURE_KEEP.pct;
   const keepReasons = [];
   if (megaKeep) keepReasons.push(`本編にある${megaNames}が、ポケモンGOではまだ解禁されていない。解禁に備えて、攻撃の個体値が高いこの個体は残しておく価値がある`);
+  if (evoKeep) keepReasons.push(`本編では${evoNames}に進化するが、ポケモンGOではまだ進化できない。進化できるようになったときに備えて、個体値が高いこの個体は残しておく価値がある`);
   if (rare) keepReasons.push("伝説・幻・ウルトラビーストは手に入る機会が少ない");
   if (gmax) keepReasons.push("キョダイマックスはマックスバトルでしか手に入らず、とても貴重");
   else if (dmax) keepReasons.push("ダイマックスはマックスバトルでしか手に入らない");
   if (total === 45) keepReasons.push("個体値100%");
-  if (shiny) keepReasons.push("色違いは見た目が特別で、コレクションや交換で人気");
-  if (bg) keepReasons.push("特別な背景はイベントや場所でしか手に入らない");
-  if (costume) keepReasons.push("コスチュームはイベント限定で、あとから手に入れにくい");
   let verdict, cls, sum;
   if (best >= 2){ verdict = "🟢 育成すべき"; cls = "v-train"; sum = "使い道があり、個体値もその用途に向いています。"; }
   else if (best >= 1 || keepReasons.length){ verdict = "🟡 とっておく"; cls = "v-keep"; sum = best >= 1 ? "使い道はありますが、もっと良い個体が手に入ったら入れ替えを。" : keepReasons.join("。") + "。"; }
@@ -338,11 +349,9 @@ function evaluate(){
   if (!useRows.length && keepReasons.length){
     if ((gmax || dmax) && !maxUse) useRows.push("<b>マックスバトル</b>：ダイマックス・キョダイマックスはマックスバトル専用の戦力");
     if (megaKeep) useRows.push(`<b>メガシンカの解禁待ち</b>：${esc(megaNames)}（本編の${esc(megaGames)}）がポケモンGOで解禁されたら、レイドのアタッカー候補になります。解禁されると、このページの判定にも自動で反映されます`);
+    if (evoKeep) useRows.push(`<b>進化の解禁待ち</b>：${esc(evoNames)}に進化できるようになったら、使い道が出る可能性があります。進化先がGOに入ると、このページの判定にも自動で反映されます`);
     if (rare) useRows.push("<b>将来に備えて</b>：この個体値では上位の使い道に向いていない（またはランキング外）ですが、入手機会が少ないので残しておく価値があります");
     if (total === 45) useRows.push("<b>記念・コレクション</b>：個体値100%は貴重です");
-    if (shiny) useRows.push("<b>コレクション・交換</b>：色違いは見た目が特別です（強さは通常の色と同じ）");
-    if (bg) useRows.push("<b>コレクション</b>：特別な背景つきの個体は、イベントや場所限定で貴重です（強さは同じ）");
-    if (costume) useRows.push("<b>コレクション</b>：コスチュームはイベント限定の見た目です（強さは同じ）");
   }
   const mk = (m) => `<span class="mk ${m === "◎" ? "g" : m === "○" ? "o" : "x"}">${m}</span>`;
   const mvTxt = (x) => `技1 ${esc(x.fast.ja || x.fast.en)}${x.fast.elite ? "★" : ""}／技2 ${esc(x.charged.ja || x.charged.en)}${x.charged.elite ? "★" : ""}`;
@@ -357,16 +366,20 @@ function evaluate(){
   if (maxUse && MARK_VAL[maxUse.m] < 1) notes.push(`マックスバトルでは、${esc(nameJa(maxUse.f.name))}はダイマックスできる${maxUse.n}種類の中で攻撃 ${maxUse.a}位・耐久 ${maxUse.t}位で、強い方ではありません${maxUse.ivOk ? "" : "（個体値も向いていません）"}。`);
   if (maxUse) notes.push(`マックスバトルの判定は種族値の順位による目安です（技や相手のタイプは入っていません）。${maxUse.role === "atk" ? `攻撃役は攻撃の個体値が大事（この個体：攻撃${a}）` : `耐久役は防御・HPの個体値が大事（この個体：防御${d}・HP${h}）`}${maxUse.ivOk ? "" : "なので、1段階下げています"}。`);
   else if ((dmax || gmax) && shadow) notes.push("シャドウのポケモンはダイマックスできません。");
-  const looks = [shiny && "色違い", bg && "特別な背景", costume && "コスチューム"].filter(Boolean);
-  if (looks.length) notes.push(`${looks.join("・")}でも強さ（種族値・技）は通常と同じです。` + (best >= 1 ? "" : `使い道はありませんが、${looks.join("・")}なので「逃がしてOK」にはしていません。`));
-  if (costume && fam.length > 1) notes.push("コスチュームのポケモンは進化できないものが多いです。上の判定は進化後も含めているので、進化できない場合は進化前の姿のまま使うことになります。");
   if (megaGap.length){
     notes.push(`🔮 本編（${esc(megaGames)}）には <b>${esc(megaNames)}</b> がいますが、ポケモンGOではまだ解禁されていません。` +
       `解禁後の強さはGOのデータが出るまで計算できないため、上の判定には入っていません。` +
       (megaKeep ? "" : `解禁に備えて残すなら、攻撃の個体値が13以上（全体80%以上）の個体がおすすめです（レイドで使うメガシンカは攻撃が大事）。`) +
       (shadow ? "シャドウのままではメガシンカできないので、使うときはリトレーンが必要です。" : ""));
   }
-  keepReasons.filter(r => !megaKeep || !r.startsWith("本編にある")).forEach(r => notes.push(r));
+  if (evoGap.length){
+    const evoNotes = [...new Set(evoGap.map(e => e.note).filter(Boolean))];
+    notes.push(`🔮 本編では <b>${esc(evoNames)}</b> に進化しますが、ポケモンGOではまだ進化できません（進化先が未実装）。` +
+      `進化後の強さはGOのデータが出るまで計算できないため、上の判定には入っていません。` +
+      (evoKeep ? "" : `進化できるようになったときに備えて残すなら、攻撃の個体値が${FUTURE_KEEP.atk}以上（全体${FUTURE_KEEP.pct * 100}%以上）の個体がおすすめです。`) +
+      (evoNotes.length ? esc(evoNotes.join("。")) + "。" : ""));
+  }
+  keepReasons.filter(r => !(megaKeep && r.startsWith("本編にある")) && !(evoKeep && r.startsWith("本編では"))).forEach(r => notes.push(r));
 
   let html = `<div class="verdict ${cls}"><div class="big">${verdict}</div><div class="sum">${esc(sum)}</div></div>`;
   if (purify){
@@ -382,6 +395,53 @@ function evaluate(){
   html += `<h2>📝 メモ</h2>${notes.map(n => `<div class="row">${n}</div>`).join("")}`;
   main.innerHTML = html;
 }
+
+// ===== 個体値のダイヤル =====
+// 上下にスワイプ（ホイール・↑↓キー）して選ぶ。いちばん上の「－」は未選択。真ん中の段の値を使う
+const DIAL_ITEMS = ["－", ...Array.from({length: 16}, (_, i) => String(i))];
+const DIAL_H = 44;   // 1段の高さ（CSS の .dial .di と同じ）
+const IV = {ia: null, id: null, ih: null};
+function getIv(k){ return IV[k]; }
+function markDial(el, idx){
+  el.querySelectorAll(".di").forEach((x, i) => x.classList.toggle("sel", i === idx));
+  el.setAttribute("aria-valuenow", idx > 0 ? String(idx - 1) : "");
+  el.setAttribute("aria-valuetext", idx > 0 ? `${idx - 1}` : "未選択");
+}
+/** 値をセットしてダイヤルを回す（v：0〜15、null で未選択） */
+function setIv(k, v, smooth = false){
+  const el = document.getElementById(k), idx = v === null || v === undefined ? 0 : Math.max(0, Math.min(15, v)) + 1;
+  IV[k] = idx ? idx - 1 : null;
+  markDial(el, idx);
+  el._lock = Date.now() + (smooth ? 600 : 120);   // 自分で回したときのスクロールで値を読み直さない
+  el.scrollTo({top: idx * DIAL_H, behavior: smooth ? "smooth" : "auto"});
+}
+function initDial(k){
+  const el = document.getElementById(k);
+  el.innerHTML = `<div class="pad"></div>${DIAL_ITEMS.map((t, i) => `<div class="di" data-i="${i}">${t}</div>`).join("")}<div class="pad"></div>`;
+  let tm = null;
+  const settle = () => {
+    const idx = Math.max(0, Math.min(DIAL_ITEMS.length - 1, Math.round(el.scrollTop / DIAL_H)));
+    markDial(el, idx);
+    const v = idx ? idx - 1 : null;
+    if (v !== IV[k]){ IV[k] = v; evaluate(); }
+  };
+  el.addEventListener("scroll", () => {
+    if (el._lock && Date.now() < el._lock) return;
+    markDial(el, Math.round(el.scrollTop / DIAL_H));
+    clearTimeout(tm); tm = setTimeout(settle, 120);
+  }, {passive: true});
+  el.addEventListener("click", e => { const d = e.target.closest(".di"); if (d){ const i = +d.dataset.i; setIv(k, i ? i - 1 : null, true); evaluate(); } });
+  el.addEventListener("keydown", e => {
+    const cur = IV[k] === null ? -1 : IV[k];
+    const map = {ArrowUp: cur - 1, ArrowDown: cur + 1, PageUp: cur - 5, PageDown: cur + 5, Home: 0, End: 15};
+    if (!(e.key in map)) return;
+    e.preventDefault();
+    const v = map[e.key];
+    setIv(k, v < 0 ? null : Math.min(15, v)); evaluate();
+  });
+  setIv(k, null);
+}
+["ia", "id", "ih"].forEach(initDial);
 
 // ===== 入力 =====
 function choose(id){
@@ -409,13 +469,13 @@ document.getElementById("q").addEventListener("input", e => {
   }, 120);
 });
 document.getElementById("sugg").addEventListener("click", e => { const b = e.target.closest("[data-id]"); if (b) choose(b.dataset.id); });
-["ia", "id", "ih", "shiny", "bg", "costume", "shadow", "dmax", "gmax"].forEach(k => document.getElementById(k).addEventListener("input", evaluate));
+["shadow", "dmax", "gmax"].forEach(k => document.getElementById(k).addEventListener("input", evaluate));
 document.getElementById("gmax").addEventListener("change", e => { if (e.target.checked) document.getElementById("dmax").checked = false; evaluate(); });
 document.getElementById("dmax").addEventListener("change", e => { if (e.target.checked) document.getElementById("gmax").checked = false; evaluate(); });
 document.querySelector(".quick").addEventListener("click", e => {
   const b = e.target.closest("[data-iv]"); if (!b) return;
-  const v = b.dataset.iv === "clear" ? ["", "", ""] : b.dataset.iv.split(",");
-  ["ia", "id", "ih"].forEach((k, i) => document.getElementById(k).value = v[i]);
+  const v = b.dataset.iv === "clear" ? [null, null, null] : b.dataset.iv.split(",").map(Number);
+  ["ia", "id", "ih"].forEach((k, i) => setIv(k, v[i]));
   evaluate();
 });
 

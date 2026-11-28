@@ -121,6 +121,13 @@ const close = async (p, label) => { check(`${label}: JavaScriptエラーなし`,
     // フォルム違いを同じ系統として出す（改善K）
     await p.fill('#q', 'ロトム'); await p.waitForTimeout(500);
     check('search: ロトムでウォッシュロトムなどのフォルムも出る', /ウォッシュロトム/.test(await p.$eval('#main', e => e.innerText)), '');
+    // 11/28：地域限定の表示（どこで出るか・日本で出るか）と、進化の解禁待ち
+    for (const [id, want, ng] of [['farfetchd', /地域限定ポケモン[\s\S]*日本でも野生で出ます/, null], ['kangaskhan', /地域限定ポケモン[\s\S]*日本では、ふだんは野生で出ません/, null],
+      ['simisage', /地域限定ポケモン[\s\S]*アジア・太平洋[\s\S]*日本でも野生で出ます/, null], ['sirfetchd', null, /地域限定ポケモン/], ['duraludon', /進化の解禁待ち[\s\S]*ブリジュラス[\s\S]*とっておく/, null]]) {
+      await p.evaluate(i => show(i), id); await p.waitForTimeout(150);
+      const t = await p.$eval('#main', e => e.innerText);
+      check(`search: ${id} の地域限定・進化の表示`, (!want || want.test(t)) && (!ng || !ng.test(t)), t.slice(0, 80));
+    }
     await close(p, 'search');
     // ハッシュ付きで開く
     const p2 = await open(b, 'search.html#metagross');
@@ -131,13 +138,30 @@ const close = async (p, label) => { check(`${label}: JavaScriptエラーなし`,
   // ===== iv.html =====
   {
     const p = await open(b, 'iv.html');
-    const setIv = async (a, d, h) => { await p.fill('#ia', String(a)); await p.fill('#id', String(d)); await p.fill('#ih', String(h)); await p.waitForTimeout(120); };
+    // 個体値はダイヤル。スワイプと同じく、ダイヤルをスクロールして止める（null は「－」＝未選択）
+    const setIv = async (a, d, h) => {
+      await p.evaluate((vs) => ['ia', 'id', 'ih'].forEach((k, i) => { document.getElementById(k).scrollTop = (vs[i] === null ? 0 : vs[i] + 1) * 44; }), [a, d, h]);
+      await p.waitForTimeout(350);
+    };
+    // 11/28：色違い・特別な背景・コスチュームのチェックは無くした
+    check('iv: 色違い・特別な背景・コスチュームの項目が無い', !(await p.$('#shiny')) && !(await p.$('#bg')) && !(await p.$('#costume')) && !/色違い|コスチューム/.test(await p.$eval('.panel', e => e.innerText)), '');
+    check('iv: 個体値の入力欄（数字を打つ欄）が無く、ダイヤルが3つある', !(await p.$('input[type=number]')) && (await p.$$('.dial')).length === 3, '');
     await p.fill('#q', 'マリル'); await p.waitForTimeout(350);
-    for (const bad of [['16', '15', '15'], ['-1', '0', '0'], ['1.5', '3', '3'], ['', '3', '3']]) {
-      await setIv(...bad);
-      const t = await p.$eval('#main', e => e.innerText);
-      check(`iv: 不正な個体値 ${bad.join('/')} で注意が出る`, t.includes('0〜15の整数'), t.slice(0, 40));
-    }
+    await setIv(null, 3, 3);
+    check('iv: 未選択のダイヤルがあると、選ぶよう案内が出る', (await p.$eval('#main', e => e.innerText)).includes('ダイヤルで0〜15'), '');
+    // キーボード：End で15、それ以上は15のまま。0から↑で未選択
+    await p.focus('#ia'); await p.keyboard.press('End'); await p.keyboard.press('ArrowDown'); await p.waitForTimeout(150);
+    check('iv: ダイヤルは15より上に行かない', (await p.$eval('#ia', e => e.getAttribute('aria-valuenow'))) === '15', await p.$eval('#ia', e => e.getAttribute('aria-valuenow')));
+    await p.keyboard.press('Home'); await p.keyboard.press('ArrowUp'); await p.waitForTimeout(150);
+    check('iv: 0から↑で未選択に戻る', (await p.$eval('#ia', e => e.getAttribute('aria-valuetext'))) === '未選択', '');
+    // 数字を押すとその値になる
+    await p.click('#ih .di[data-i="1"]'); await p.waitForTimeout(800);
+    check('iv: ダイヤルの数字を押すとその値になる', (await p.$eval('#ih', e => e.getAttribute('aria-valuenow'))) === '0', await p.$eval('#ih', e => e.getAttribute('aria-valuenow')));
+    // 早押しボタンで3つとも回る
+    await p.click('[data-iv="15,15,15"]'); await p.waitForTimeout(300);
+    check('iv: 15/15/15 のボタンで3つのダイヤルが15になる', (await p.$$eval('.dial .di.sel', e => e.map(x => x.textContent))).join('/') === '15/15/15', '');
+    await p.click('[data-iv="clear"]'); await p.waitForTimeout(300);
+    check('iv: 「個体値を消す」でダイヤルが未選択に戻る', (await p.$$eval('.dial .di.sel', e => e.map(x => x.textContent))).join('/') === '－/－/－', '');
     const t0 = Date.now(); await setIv(0, 15, 15); const ms = Date.now() - t0;
     check('iv: マリル 0/15/15 は育成すべき（スーパー1位）', (await p.$eval('#main', e => e.innerText)).includes('育成すべき'), '');
     check('iv: PvP計算が2秒以内', ms < 2000, ms + 'ms');
@@ -169,6 +193,12 @@ const close = async (p, label) => { check(`${label}: JavaScriptエラーなし`,
       await p.fill('#q', ''); await p.fill('#q', n); await p.waitForTimeout(350); await setIv(...iv);
       const t = await p.$eval('#main', e => e.innerText);
       check(`iv: ${n} ${iv.join('/')} は「${want}」で、未解禁のメガシンカ（メガエンブオー）を知らせる`, t.includes(want) && t.includes('🔮') && t.includes('メガエンブオー'), t.slice(0, 50));
+    }
+    // 本編では進化するがGOで進化先が未実装（ジュラルドン→ブリジュラス）。個体値が高ければとっておく
+    for (const [iv, want] of [[[15, 14, 13], 'とっておく'], [[2, 15, 15], null]]) {
+      await p.fill('#q', ''); await p.fill('#q', 'ジュラルドン'); await p.waitForTimeout(350); await setIv(...iv);
+      const t = await p.$eval('#main', e => e.innerText);
+      check(`iv: ジュラルドン ${iv.join('/')} で未実装の進化先（ブリジュラス）を知らせる${want ? '・とっておく' : ''}`, t.includes('🔮') && t.includes('ブリジュラス') && (!want || t.includes(want)), t.slice(0, 60));
     }
     await p.fill('#q', ''); await p.fill('#q', 'ヒトカゲ'); await p.waitForTimeout(350); await setIv(15, 15, 15);
     check('iv: メガシンカが解禁済みのポケモン（ヒトカゲ）には未解禁の注意を出さない', !(await p.$eval('#main', e => e.innerText)).includes('🔮'), '');
@@ -324,7 +354,7 @@ const close = async (p, label) => { check(`${label}: JavaScriptエラーなし`,
     check('offline: 電波なしでも検索できる', (await p.$eval('#main', e => e.innerText)).includes('Charizard'), '');
     await p.goto('file://' + path.join(ROOT, 'iv.html')); await p.waitForTimeout(1300);
     await p.fill('#q', 'マリル'); await p.waitForTimeout(400);
-    await p.fill('#ia', '0'); await p.fill('#id', '15'); await p.fill('#ih', '15'); await p.waitForTimeout(300);
+    await p.click('[data-iv="0,15,15"]'); await p.waitForTimeout(300);
     const t = await p.$eval('#main', e => e.innerText);
     check('offline: 電波なしでも育成判定できる（ランキングも使う）', t.includes('育成すべき') && t.includes('スーパーリーグ'), t.slice(0, 50));
     check('offline: 前回のデータで判定していると知らせる', (await p.$eval('#notice', e => e.innerText)).includes('前回取得したデータ'), '');

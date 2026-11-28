@@ -202,9 +202,12 @@ function translateName(ev){
 // 出会えると人気・貴重なポケモン（このアプリの判断。ドラゴン系の進化前、化石、ラプラスなど）
 const PRIZE_MONS = new Set(["Dratini","Larvitar","Bagon","Beldum","Gible","Axew","Deino","Goomy","Jangmo-o","Frigibax","Dreepy",
   "Lapras","Snorlax","Aerodactyl","Omanyte","Kabuto","Lileep","Anorith","Cranidos","Shieldon","Tirtouga","Archen","Tyrunt","Amaura",
-  "Ditto","Riolu","Feebas","Scyther","Chansey","Togepi","Ralts","Mawile"]);
+  "Riolu","Feebas","Scyther","Chansey","Togepi","Ralts","Mawile"]);
 // コレクション（模様・姿集め）以外に使い道がないポケモン。出現が少なくても、リサーチや野生ではハズレ（グレー）にする
-const COLLECTION_ONLY = new Map([["Spinda", "模様集め（コレクション）以外に使い道がない"]]);
+const COLLECTION_ONLY = new Map([
+  ["Spinda", "模様集め（コレクション）以外に使い道がない"],
+  ["Ditto", "図鑑・コレクション以外に使い道がない（バトルではほぼ使われない）"],
+]);
 
 // ===== フィールドリサーチのタスク文の翻訳（research.html と search.html で使う） =====
 const TYPES_JA = {Normal:"ノーマル",Fire:"ほのお",Water:"みず",Grass:"くさ",Electric:"でんき",Ice:"こおり",Fighting:"かくとう",Poison:"どく",
@@ -376,6 +379,67 @@ function mainMegaForms(dex){
     for (const suf of table[dex] || []) out.push({suffix: suf, game});
   return out;
 }
+// ===== 地域限定ポケモン（決まった地域でしか野生で出ない） =====
+// [出る地域, 日本で野生で出るか]。日本："yes" 出る／"no" ふだんは出ない／"varies" 時期で入れ替わる・情報源で食い違う／"part:説明" 一部だけ
+// 2026/11 にウェブ上の複数の攻略サイトで調べた内容（公式の一覧は無い）。サイトによって範囲の書き方が違うものは広めに書いている
+const REGIONAL_INFO = {
+  farfetchd: ["アジアの一部（日本・韓国・台湾など）", "yes"],
+  kangaskhan: ["オーストラリア", "no"], mr_mime: ["ヨーロッパ", "no"], tauros: ["北アメリカ", "no"], heracross: ["中南米", "no"],
+  corsola: ["赤道付近の暖かい地域", "part:日本では沖縄など南の一部だけで出ます"],
+  torkoal: ["南アジア・東南アジアなど", "no"], tropius: ["アフリカなど（情報源によって範囲が違う）", "no"],
+  relicanth: ["ニュージーランド周辺など", "no"], pachirisu: ["カナダ・アラスカ・ロシアなどの北の寒い地域", "no"],
+  chatot: ["南半球", "no"], carnivine: ["アメリカ南東部", "no"],
+  zangoose: ["2つの地域に分かれ、ハブネークと時期で入れ替わる", "varies"], seviper: ["2つの地域に分かれ、ザングースと時期で入れ替わる", "varies"],
+  lunatone: ["東西の半球で分かれ、ソルロックと時期で入れ替わる", "varies"], solrock: ["東西の半球で分かれ、ルナトーンと時期で入れ替わる", "varies"],
+  volbeat: ["2つの地域に分かれ、イルミーゼと時期で入れ替わる", "varies"], illumise: ["2つの地域に分かれ、バルビートと時期で入れ替わる", "varies"],
+  pansage: ["アジア・太平洋", "yes"], simisage: ["アジア・太平洋", "yes"],
+  pansear: ["ヨーロッパ・中東・アフリカ・インド", "no"], simisear: ["ヨーロッパ・中東・アフリカ・インド", "no"],
+  panpour: ["南北アメリカ", "no"], simipour: ["南北アメリカ", "no"],
+  sawk: ["ヨーロッパ・アジア・オセアニア", "yes"], throh: ["南北アメリカ・アフリカ", "no"],
+  heatmor: ["東半球", "yes"], durant: ["西半球", "no"],
+  bouffalant: ["ニューヨーク周辺", "no"], sigilyph: ["エジプト・ギリシャ周辺", "no"], maractus: ["中南米", "no"],
+  basculin: ["あかすじ・あおすじの姿で出る地域が違う", "varies"],
+  klefki: ["フランス", "no"], hawlucha: ["メキシコ", "no"], comfey: ["ハワイ", "no"], stonjourner: ["イギリス", "no"],
+  shellos: ["にしのうみ・ひがしのうみの姿で出る地域が違う", "part:日本では ひがしのうみ の姿が出ます"],
+  gastrodon: ["にしのうみ・ひがしのうみの姿で出る地域が違う", "part:日本では ひがしのうみ の姿が出ます"],
+  oricorio_sensu: ["アジア・太平洋（まいまいスタイル）", "yes"],
+  oricorio_pau: ["太平洋の島々（ふらふらスタイル）", "part:日本では小笠原諸島の周辺だけで出るとされています"],
+  oricorio_baile: ["ヨーロッパ・アフリカ・中東など（めらめらスタイル）", "no"], oricorio_pom_pom: ["南北アメリカ（ぱちぱちスタイル）", "no"],
+  tatsugiri_curly: ["姿によって出る地域が違う", "unknown"], tatsugiri_droopy: ["姿によって出る地域が違う", "unknown"], tatsugiri_stretchy: ["姿によって出る地域が違う", "unknown"],
+};
+const REGIONAL_JP = {yes: "日本でも野生で出ます", no: "日本では、ふだんは野生で出ません",
+  varies: "日本で出るかは時期しだいです。情報源によって書き方が違います", unknown: "日本でどの姿が出るかは、このアプリでは確かめられていません"};
+/** 地域限定の情報。sp：ポケモン、fam：系統（進化前が地域限定のときも拾う）、tagged：元データ（PvPoke）で地域限定の印があるか
+ *  戻り値：{where, jp, from}（from：地域限定なのが進化前のときそのポケモン）か null */
+function regionalInfo(sp, fam = [], tagged = false){
+  const key = (x) => x.id.replace(/_(mega|mega_x|mega_y|shadow)$/, "");
+  const hit = REGIONAL_INFO[key(sp)];
+  const mk = (h, from) => ({where: h[0], jp: h[1].startsWith("part:") ? h[1].slice(5) : REGIONAL_JP[h[1]] || "", from});
+  if (hit) return mk(hit, null);
+  // 進化前（実際に進化のつながりがあるものだけ。カモネギとネギガナイトのように系統が同じでも姿が違うものは含めない）
+  const anc = new Set([key(sp)]);
+  for (let changed = true; changed;){
+    changed = false;
+    for (const x of fam) if (!anc.has(key(x)) && (x.evo || []).some(e => anc.has(e.replace(/_shadow$/, "")))){ anc.add(key(x)); changed = true; }
+  }
+  const pre = fam.find(x => key(x) !== key(sp) && anc.has(key(x)) && REGIONAL_INFO[key(x)]);
+  if (pre) return mk(REGIONAL_INFO[key(pre)], pre);
+  return tagged ? {where: "決まった地域", jp: "", from: null} : null;
+}
+
+/** 本編では進化するが、ポケモンGOにはまだ進化先がいないもの（ジュラルドン→ブリジュラスなど）。fam：系統のポケモン。
+ *  データ（pokedex.json の futureEvo）は、本編の進化のつながり（PokeAPI）とGOの実装状況を比べて作っている */
+function futureEvos(fam){
+  const seen = new Set(), out = [];
+  for (const f of fam || []) for (const e of f.futureEvo || []){
+    if (seen.has(e.dex)) continue;
+    seen.add(e.dex); out.push({...e, from: f});
+  }
+  return out;
+}
+/** 進化の解禁に備えて残す目安（メガシンカの解禁待ちと同じ）：攻撃13以上・全体80%以上 */
+const FUTURE_KEEP = {atk: 13, pct: 0.8};
+
 /**
  * 本編にはあるが、ポケモンGOではまだ解禁されていないメガシンカ。
  * species：その図鑑番号の通常の姿（{dex, name}）、goForms：GOのデータにあるその図鑑番号のメガ・ゲンシの姿の数

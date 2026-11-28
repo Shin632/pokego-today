@@ -50,6 +50,8 @@ h2{font-size:15.5px;margin:14px 0 6px;display:flex;align-items:center;gap:6px}
 .wk{display:flex;flex-wrap:wrap;gap:6px}
 .wk span{font-size:12.5px;font-weight:700;color:#fff;border-radius:6px;padding:2px 8px}
 .memo{display:grid;gap:4px;font-size:13.5px}
+.regional{margin:8px 0 2px;padding:8px 10px;border-radius:10px;font-size:13.5px;line-height:1.5;background:color-mix(in srgb,#0ea5e9 10%,var(--panel));border:1px solid color-mix(in srgb,#0ea5e9 35%,var(--line))}
+.regional .s{display:block;font-size:12px;color:var(--sub)}
 .act{font-size:14px;font-weight:700;border-radius:10px;padding:8px 10px;margin-bottom:4px}
 .act.ok{background:color-mix(in srgb,#16a34a 12%,var(--panel));color:#15803d}
 .act.weak{background:color-mix(in srgb,#d97706 12%,var(--panel));color:#a16207}
@@ -275,18 +277,25 @@ function activities(sp){
     seenDex.add(f.dex);
     gap.push(...unreleasedMegas(f, SPECIES.filter(x => x.dex === f.dex && /_(mega|primal)/.test(x.id) && !/_shadow/.test(x.id)).length));
   }
-  return {rows, gap};
+  return {rows, gap, evoGap: futureEvos(fam)};
 }
 /** ランキングに入っているのがシャドウの姿だけなら true（このポケモン自身がシャドウのときは除く） */
 const shadowOnly = (sp, xs) => !/_shadow$/.test(sp.id) && xs.length > 0 && xs.every(x => /_shadow$/.test(x.id));
 function activityHtml(sp){
-  const {rows, gap} = activities(sp);
+  const {rows, gap, evoGap} = activities(sp);
   const good = rows.filter(r => r.m !== "△");
   let html = good.length ? `<div class="act ok">活躍の場が<b>${good.length}つ</b>あります</div>`
     : rows.length ? `<div class="act weak">目立った活躍の場はありません（マックスバトルには出せますが、強い方ではありません）</div>`
     : `<div class="act none">活躍の場はありません。レイド・ジム・PvPの上位にも入らず、ダイマックス・メガシンカもできません</div>`;
   html += rows.map(r => `<div class="row">${mk(r.m)}<b>${esc(r.title)}</b>：${r.body}<span class="s">${r.sub}${/シャドウなら/.test(r.title) ? "。ランキングに入っているのはシャドウの姿だけです（GOロケット団・シャドウレイドで手に入ります）" : ""}</span></div>`).join("");
   if (gap.length) html += `<div class="row">🔮 <b>メガシンカの解禁待ち</b>：本編（${esc([...new Set(gap.map(g => g.game))].join("・"))}）には ${esc(gap.map(g => g.name).join("・"))} がいますが、ポケモンGOではまだ解禁されていません<span class="s">解禁されるとアメ集めやレイドで使える可能性があります（今は活躍の場に数えていません）</span></div>`;
+  if (evoGap.length){
+    const names = evoGap.map(e => e.ja || nameJa(e.name)).join("・");
+    const notes = [...new Set(evoGap.map(e => e.note).filter(Boolean))];
+    html += `<div class="row">🔮 <b>進化の解禁待ち</b>：本編では <b>${esc(names)}</b> に進化しますが、ポケモンGOではまだ進化できません（進化先が未実装）` +
+      `<span class="s">今後進化できるようになったときのために、<b>個体値の高い個体（目安：攻撃${FUTURE_KEEP.atk}以上・全体${FUTURE_KEEP.pct * 100}%以上）はとっておく</b>のがおすすめです。` +
+      `進化後の強さはGOのデータが出るまで分からないので、今は活躍の場に数えていません${notes.length ? "。" + esc(notes.join("。")) : ""}</span></div>`;
+  }
   return html;
 }
 
@@ -302,7 +311,8 @@ function difficultyHtml(sp){
   const get = [];
   if (tags.has("mythical")) get.push("幻：イベントのリサーチなどでしか手に入らない");
   else if (tags.has("legendary") || tags.has("ultrabeast")) get.push("伝説：主にレイドで手に入る（野生ではほぼ出ない）");
-  if (tags.has("regional")) get.push("地域限定：決まった地域でしか出ない");
+  const reg = regionalInfo(sp, fam, tags.has("regional"));
+  if (reg) get.push(`地域限定（${reg.from ? `進化前の${nameJa(reg.from.name)}が、` : ""}決まった地域でしか野生で出ない。出る地域：${reg.where}${reg.jp ? "。" + reg.jp : ""}）`);
   if (fam.some(x => PRIZE_MONS.has(x.name.replace(/ \(.*\)$/, "")))) get.push("出現が少ない人気ポケモン（このアプリの判断）");
   const src = sources(sp);
   if (src.length) get.push(`今は ${[...new Set(src.map(x => x.label))].join("・")} で手に入る（下の「今の入手方法」）`);
@@ -375,6 +385,7 @@ function show(id){
   main.innerHTML = `<div class="card">
     <div class="name">${esc(nameJa(sp.name))}${typeBadges(sp.types)}${tags}</div>
     <div class="en">${esc(sp.name)} ・ 図鑑No.${sp.dex}</div>
+    ${regionalHtml(sp)}
     ${variants.length > 1 ? `<div class="variants">${variants.map(v => `<button type="button" class="vb${v.id === sp.id ? " cur" : ""}" data-id="${esc(v.id)}">${esc(nameJa(v.name))}</button>`).join("")}</div>` : ""}
     <h2>🏟 活躍の場</h2>${activityHtml(sp)}
     <h2>📈 育成難易度</h2>${difficultyHtml(sp)}
@@ -383,6 +394,15 @@ function show(id){
     <h2>🛡 弱点と対策</h2>${wkHtml}${resHtml}${ctHtml}
     <h2>📝 育成メモ</h2><div class="memo">${memo.length ? memo.map(m => `<div>${m}</div>`).join("") : `<div class="none">特になし</div>`}</div>
   </div>`;
+}
+/** 地域限定なら、名前のすぐ下に出す（どこで出るか・日本で出るか） */
+function regionalHtml(sp){
+  const fam = useForms(sp).fam;
+  const r = regionalInfo(sp, fam, (sp.tags || []).includes("regional"));
+  if (!r) return "";
+  return `<div class="regional">🌏 <b>地域限定ポケモン</b>（${r.from ? `進化前の${esc(nameJa(r.from.name))}が、` : ""}決まった地域でしか野生で出ない）<br>出る地域：${esc(r.where)}${r.jp ? `。<b>${esc(r.jp)}</b>` : ""}`
+    + `
+    <span class="s">ほかの地域の人との交換や、イベントで期間限定で世界中に出ることもあります。出る地域は変わることがあり、ここに書いた地域はこのアプリがウェブ上の攻略情報から調べた目安です（公式の一覧はありません）</span></div>`;
 }
 /** 最終進化（これ以上進化しない姿）。進化前を入れたときは、その進化先の最終進化を候補にする */
 function finals(sp){
