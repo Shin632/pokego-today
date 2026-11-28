@@ -1,0 +1,576 @@
+{
+ "events": {
+  "clefable-super-mega-raid-day-2026": {
+   "bonuses": [
+    {
+     "section": "Bonuses",
+     "text": "Remote Raid limit increased to 20 from Friday, November 27, at 5:00 p.m. to Saturday, November 28, 2026, at 8:00 p.m. PST"
+    },
+    {
+     "section": "Bonuses",
+     "text": "Receive up to six free Raid Passes from spinning Gym Photo Discs"
+    },
+    {
+     "section": "Bonuses",
+     "text": "Clefable caught from Super Mega Raids will have Mega Level 1 unlocked"
+    },
+    {
+     "section": "Bonuses",
+     "text": "Increased chance of encountering Shiny Clefable from Super Mega Raids"
+    },
+    {
+     "section": "Event Ticket",
+     "text": "Receive up to 14 Raid Passes from spinning Gym Photo Discs"
+    },
+    {
+     "section": "Event Ticket",
+     "text": "Increased chance to get Rare Candy XL from Raid Battles"
+    },
+    {
+     "section": "Event Ticket",
+     "text": "An additional 5,000 XP from Super Mega Raid Battles"
+    },
+    {
+     "section": "Event Ticket",
+     "text": "An additional 5,000 Stardust from Super Mega Raid Battles"
+    }
+   ],
+   "fetchedAt": "2026-11-28T13:03:38Z",
+   "moves": [],
+   "notes": [
+    "These bonuses will be effective on Saturday, November 28, 2026, from 2:00 p.m. to 5:00 p.m. local time.",
+    "Tickets can be gifted to friends at Great Friends or higher. Purchases, including gifts, are non-refundable, subject to applicable law and the Terms of Service. Tickets cannot be purchased with PokéCoins.",
+    "The in-game ticket will be available until Saturday, November 28, 2026, at 5:00 p.m. local time."
+   ],
+   "spawns": []
+  },
+  "deoxys-normal-defense-attack-speed-formes-in-5-star-raid-battles-november-2026": {
+   "bonuses": [],
+   "fetchedAt": "2026-11-28T13:03:45Z",
+   "moves": [],
+   "notes": [],
+   "spawns": []
+  },
+  "duolingo-timed-research-2026": {
+   "bonuses": [],
+   "fetchedAt": "2026-11-28T13:03:55Z",
+   "moves": [],
+   "notes": [],
+   "spawns": []
+  },
+  "gbl-daydream-destinations_great-league-mega-edition_ultra-league-mega-edition_master-league-mega-edition-split-1": {
+   "bonuses": [],
+   "fetchedAt": "2026-11-28T13:03:52Z",
+   "moves": [],
+   "notes": [],
+   "spawns": []
+  },
+  "gigantamax-inteleon-max-battle-day-2026": {
+   "bonuses": [
+    {
+     "section": "Bonuses",
+     "text": "Max Particle collection limit increased to 1,600"
+    },
+    {
+     "section": "Bonuses",
+     "text": "All Power Spots will host Gigantamax Battles"
+    },
+    {
+     "section": "Bonuses",
+     "text": "Power Spots will refresh more frequently"
+    },
+    {
+     "section": "Bonuses",
+     "text": "Additional Power Spots will be active"
+    },
+    {
+     "section": "Bonuses",
+     "text": "8× Max Particles from Power Spots"
+    },
+    {
+     "section": "Bonuses",
+     "text": "Up to three Special Trades for the day"
+    },
+    {
+     "section": "Bonuses",
+     "text": "From December 4 at 4:00 p.m. to December 5 at 8:00 p.m. PST (GMT −8), the daily Remote Raid limit will increase from 10 to 20"
+    },
+    {
+     "section": "Bonuses",
+     "text": "2× Max Particles from exploring*"
+    },
+    {
+     "section": "Bonuses",
+     "text": "1/4 Adventuring distance to receive Max Particles**"
+    },
+    {
+     "section": "Event Ticket",
+     "text": "2× XP from Max Battles"
+    }
+   ],
+   "fetchedAt": "2026-11-28T13:03:49Z",
+   "moves": [],
+   "notes": [
+    "The following bonuses will be active on December 5, 2026, from 12:00 a.m. to 5:00 p.m. local time.",
+    "*Trainers can collect Max Particles via the Nearby menu each day by exploring. Adventure Sync can help make sure your distance counts! Keep an eye on the Nearby menu for the icon that shows when Max Particles are ready to collect.",
+    "**For these bonuses to apply, Trainers must first collect all Max Particles available in the Nearby menu.",
+    "This Timed Research will be effective on Saturday, December 5, 2026, from 2:00 p.m. to 5:00 p.m. local time."
+   ],
+   "spawns": []
+  },
+  "go-pass-december-2026": {
+   "bonuses": [
+    {
+     "section": "Major Milestone Bonuses",
+     "text": "Increased XP from going up a Friendship level"
+    },
+    {
+     "section": "Major Milestone Bonuses",
+     "text": "2× Friendship bonus damage in raids"
+    },
+    {
+     "section": "Major Milestone Bonuses",
+     "text": "Open up to 40 Gifts per day"
+    },
+    {
+     "section": "Major Milestone Bonuses",
+     "text": "Receive up to 125 Gifts per day from spinning PokéStop and Gym Photo Discs"
+    },
+    {
+     "section": "Major Milestone Bonuses",
+     "text": "Hold 10 more Gifts in your Item Bag"
+    },
+    {
+     "section": "Major Milestone Bonuses",
+     "text": "2× Daily Adventure Incense duration"
+    },
+    {
+     "section": "Major Milestone Bonuses",
+     "text": "Increased XP and Stardust from hatching Eggs"
+    },
+    {
+     "section": "Major Milestone Bonuses",
+     "text": "Open up to 50 Gifts per day"
+    },
+    {
+     "section": "Major Milestone Bonuses",
+     "text": "Receive up to 150 Gifts per day from spinning PokéStop and Gym Photo Discs"
+    },
+    {
+     "section": "Major Milestone Bonuses",
+     "text": "Hold up to 20 more Gifts in your Item Bag"
+    }
+   ],
+   "fetchedAt": "2026-11-28T13:03:56Z",
+   "moves": [],
+   "notes": [
+    "Upgrade to the GO Pass Deluxe to strengthen the following bonus:"
+   ],
+   "spawns": []
+  },
+  "go-pass-november-2026": {
+   "bonuses": [
+    {
+     "section": "Major Milestone Bonuses",
+     "text": "One additional Candy for trading Pokémon"
+    },
+    {
+     "section": "Major Milestone Bonuses",
+     "text": "Trainers level 31 and above will receive one guaranteed Candy XL when trading Pokémon"
+    },
+    {
+     "section": "Major Milestone Bonuses",
+     "text": "Open up to 40 Gifts per day"
+    },
+    {
+     "section": "Major Milestone Bonuses",
+     "text": "Receive up to 125 Gifts per day from spinning PokéStop and Gym Photo Discs"
+    },
+    {
+     "section": "Major Milestone Bonuses",
+     "text": "Hold 10 more Gifts in your Item Bag"
+    },
+    {
+     "section": "Major Milestone Bonuses",
+     "text": "2× Daily Adventure Incense duration"
+    },
+    {
+     "section": "Major Milestone Bonuses",
+     "text": "Increased XP and Stardust from hatching Eggs"
+    },
+    {
+     "section": "Major Milestone Bonuses",
+     "text": "Open up to 50 Gifts per day"
+    },
+    {
+     "section": "Major Milestone Bonuses",
+     "text": "Receive up to 150 Gifts per day from spinning PokéStop and Gym Photo Discs"
+    },
+    {
+     "section": "Major Milestone Bonuses",
+     "text": "Hold up to 20 more Gifts in your Item Bag"
+    }
+   ],
+   "fetchedAt": "2026-11-28T13:03:42Z",
+   "moves": [],
+   "notes": [
+    "Upgrade to the GO Pass Deluxe to strengthen the following bonus:"
+   ],
+   "spawns": []
+  },
+  "max-mondays-2026-11-30": {
+   "bonuses": [],
+   "fetchedAt": "2026-11-28T13:03:40Z",
+   "moves": [],
+   "notes": [],
+   "spawns": []
+  },
+  "max-mondays-2026-12-07": {
+   "bonuses": [],
+   "fetchedAt": "2026-11-28T13:03:51Z",
+   "moves": [],
+   "notes": [],
+   "spawns": []
+  },
+  "mega-metagross-in-mega-raids-november-2026": {
+   "bonuses": [],
+   "fetchedAt": "2026-11-28T13:03:46Z",
+   "moves": [],
+   "notes": [],
+   "spawns": []
+  },
+  "mega-slowbro-in-mega-raids-december-2026": {
+   "bonuses": [],
+   "fetchedAt": "2026-11-28T13:03:53Z",
+   "moves": [],
+   "notes": [],
+   "spawns": []
+  },
+  "pokemon-x-adidas-2026": {
+   "bonuses": [],
+   "fetchedAt": "2026-11-28T13:03:59Z",
+   "moves": [],
+   "notes": [],
+   "spawns": []
+  },
+  "pokemonspotlighthour2026-12-03": {
+   "bonuses": [],
+   "fetchedAt": "2026-11-28T13:03:48Z",
+   "moves": [],
+   "notes": [],
+   "spawnSample": "<h2 class=\"event-section-header spawns\" id=\"spawns\">\nSpawns <img src=\"https://cdn.leekduck.com/assets/img/events/icons/wild.png\"/></h2><p>The following Pokémon will appear more frequently in the wild.</p><ul class=\"pkmn-list-flex\"><li class=\"pkmn-list-item\" style=\"z-index: 256;\"><div class=\"pkmn-list-img bug\"><img src=\"https://cdn.leekduck.com/assets/img/pokemon_icons/pm767.icon.png\"/></div><img alt=\"shiny\" class=\"shiny-icon\" src=\"https://cdn.leekduck.com/assets/img/icons/shiny-icon.png\"/><div class=\"pkmn-name\">Wimpod</div></li></ul><section class=\"author-box\"><img alt=\"Leek Duck\" class=\"author-img\" loading=\"lazy\" src=\"/assets/img/leekduck.jpg?v2\"/><div class=\"author-desc\"><h2>Leek Duck</h2><p>Hey, I'm LeekDuck. I create Pokémon GO graphics, resources and report Pokémon GO news. You can find them on X, Facebook, Instagram, Threads, and Bluesky. You can also find me on Twitch and YouTube!</p><ul><li><a href=\"https://x.com/leekduck\" target=\"_blank\"><svg><use href=\"#x-twitter\"></use></svg></a></li><li><a href=\"https://facebook.com/theleekduck\" target=\"_blank\"><svg><use href=\"#facebook\"></use></svg></a></li><li><a href=\"https://instagram.com/leekduck\" target=\"_blank\"><svg><use href=\"#instagram\"></use></svg></a></li><li><a href=\"https://threads.net/@leekduck\" target=\"_blank\"><svg><use href=\"#threads\"></use></svg></a></li><<div class=\"ad-label\" style=\"padding-top: 20px;\">Advertisement</div><div class=\"full-height\" data-cap=\"100\" data-channel=\"leekbeats\" data-expires=\"1779744760\" data-platform=\"twitch\" data-ramp=\"false\" data-start=\"1779571960\" id=\"stream-embed\"></div><script defer=\"\" src=\"https://embed.twitch.tv/embed/v1.js\"></script><script defer=\"\" src=\"/assets/js/stream-player.js?v260405\"></script><br/>",
+   "spawns": [
+    {
+     "context": [
+      "The following Pokémon will appear more frequently in the wild."
+     ],
+     "pokemon": [
+      {
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons/pm767.icon.png",
+       "name": "Wimpod",
+       "shiny": true
+      }
+     ],
+     "section": "Spawns"
+    }
+   ]
+  },
+  "raidhour20261202": {
+   "bonuses": [],
+   "fetchedAt": "2026-11-28T13:03:47Z",
+   "moves": [],
+   "notes": [],
+   "spawns": []
+  },
+  "regidrago-in-5-star-raid-battles-december-2026": {
+   "bonuses": [],
+   "fetchedAt": "2026-11-28T13:03:54Z",
+   "moves": [],
+   "notes": [],
+   "spawns": []
+  },
+  "season-24-twilight-trails": {
+   "bonuses": [
+    {
+     "section": "GO Pass Major Milestone Bonuses",
+     "text": "One guaranteed Candy XL when trading Pokémon for Trainers level 31 and above"
+    },
+    {
+     "section": "GO Pass Major Milestone Bonuses",
+     "text": "One additional Candy for trading Pokémon"
+    },
+    {
+     "section": "GO Pass Major Milestone Bonuses",
+     "text": "Increased limits on opening Gifts, receiving Gifts from PokéStop and Gym Photo Discs, and storing Gifts"
+    },
+    {
+     "section": "GO Pass Major Milestone Bonuses",
+     "text": "2× Daily Adventure Incense duration"
+    },
+    {
+     "section": "GO Pass Major Milestone Bonuses",
+     "text": "Increased XP and Stardust from hatching Eggs"
+    }
+   ],
+   "fetchedAt": "2026-11-28T13:03:41Z",
+   "moves": [],
+   "notes": [],
+   "spawns": []
+  },
+  "season-25-daydream-destinations": {
+   "bonuses": [
+    {
+     "section": "GO Pass Major Milestone Bonuses",
+     "text": "Increased XP from going up a Friendship level"
+    },
+    {
+     "section": "GO Pass Major Milestone Bonuses",
+     "text": "2× Friendship bonus damage in raids"
+    },
+    {
+     "section": "GO Pass Major Milestone Bonuses",
+     "text": "Increased limits on opening Gifts, receiving Gifts from PokéStop and Gym Photo Discs, and storing Gifts"
+    },
+    {
+     "section": "GO Pass Major Milestone Bonuses",
+     "text": "2× Daily Adventure Incense duration"
+    },
+    {
+     "section": "GO Pass Major Milestone Bonuses",
+     "text": "Increased XP and Stardust from hatching Eggs"
+    }
+   ],
+   "fetchedAt": "2026-11-28T13:04:00Z",
+   "moves": [],
+   "notes": [],
+   "spawns": []
+  },
+  "shadow-dialga-in-shadow-raids-december-2026": {
+   "bonuses": [],
+   "fetchedAt": "2026-11-28T13:03:58Z",
+   "moves": [],
+   "notes": [],
+   "spawns": []
+  },
+  "shadow-tornadus-incarnate-forme-in-shadow-raids-november-16-2026": {
+   "bonuses": [],
+   "fetchedAt": "2026-11-28T13:03:43Z",
+   "moves": [],
+   "notes": [],
+   "spawns": []
+  },
+  "tropical-paradise-2026": {
+   "bonuses": [
+    {
+     "section": "Bonuses",
+     "text": "2× Raid XP"
+    },
+    {
+     "section": "Bonuses",
+     "text": "5× Mega Energy for exploring with Slowpoke, Slowbro, or Slowking as your buddy after Mega Evolving Slowbro at least once"
+    }
+   ],
+   "fetchedAt": "2026-11-28T13:03:50Z",
+   "moves": [
+    {
+     "section": "Attack Availability Update",
+     "text": "Starting with this event, Pyukumuku can learn the Fast Attack"
+    },
+    {
+     "section": "Attack Availability Update",
+     "text": "Soak"
+    },
+    {
+     "section": "Attack Availability Update",
+     "text": "."
+    },
+    {
+     "section": "Attack Availability Update",
+     "text": "Trainer Battles:"
+    },
+    {
+     "section": "Attack Availability Update",
+     "text": "6 power"
+    },
+    {
+     "section": "Attack Availability Update",
+     "text": "Raid Battles:"
+    },
+    {
+     "section": "Attack Availability Update",
+     "text": "Starting with this event, Pyukumuku can learn the Fast Attack Soak ."
+    }
+   ],
+   "notes": [],
+   "spawnSample": "<h2 class=\"event-section-header spawns\" id=\"spawns\">\nSpawns <img src=\"https://cdn.leekduck.com/assets/img/events/icons/wild.png\"/></h2><p>The following Pokémon will appear in the wild, along with other event-themed Pokémon.</p><ul class=\"pkmn-list-flex\"><li class=\"pkmn-list-item\"><div class=\"pkmn-list-img pokemon-cutout water pokemon-cutout--sprite\"><img alt=\"Slowpoke\" loading=\"lazy\" src=\"https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pokemon_icon_079_00.png\"/><span aria-label=\"Can be Shiny\" class=\"pokemon-cutout-shiny\" role=\"img\"><svg aria-hidden=\"true\" viewbox=\"0 0 250 250\"><use href=\"#shiny-icon\"></use></svg></span></div><div class=\"pkmn-name\">Slowpoke</div></li><li class=\"pkmn-list-item\"><div class=\"pkmn-list-img pokemon-cutout water pokemon-cutout--sprite\"><img alt=\"Shellder\" loading=\"lazy\" src=\"https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pokemon_icon_090_00.png\"/><span aria-label=\"Can be Shiny\" class=\"pokemon-cutout-shiny\" role=\"img\"><svg aria-hidden=\"true\" viewbox=\"0 0 250 250\"><use hre<p>You might even encounter Snorlax!</p><ul class=\"pkmn-list-flex\"><li class=\"pkmn-list-item\"><div class=\"pkmn-list-img pokemon-cutout normal pokemon-cutout--sprite\"><img alt=\"Snorlax\" loading=\"lazy\" src=\"https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pokemon_icon_143_00.png\"/><span aria-label=\"Can be Shiny\" class=\"pokemon-cutout-shiny\" role=\"img\"><svg aria-hidden=\"true\" viewbox=\"0 0 250 250\"><use href=\"#shiny-icon\"></use></svg></span></div><div class=\"pkmn-name\">Snorlax</div></li></ul><p>Additional Pokémon will be featured at different times during the event.</p><h3 id=\"december-4-at-1000-am-to-december-7-at-800-pm-local-time\">December 4 at 10:00 a.m. to December 7 at 8:00 p.m. local time</h3><ul class=\"pkmn-list-flex\"><li class=\"pkmn-list-item\"><div class=\"pkmn-list-img pokemon-cutout grass pokemon-cutout--sprite\"><img alt=\"Hoppip\" loading=\"lazy\" src=\"https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pokemon_icon_187_00.png\"/><span aria-label=\"Can be Shiny\" class=\"pokemon-cutout-shiny\" role=\"img\"><svg aria-hidden=\"true\" viewbox=\"0 0 250 250\"><use href=\"#shiny-icon\"></use></svg></span></div><div class=\"pkmn-name\">Hoppip</div></li><li class=\"pkmn-list-item\"><div class=\"pkmn-list-img pokemon-cutout water pokemon-cutout--sprite\"><img alt=\"Lotad\" loading=\"lazy\" src=\"https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pokemon_icon_270_00.png\"/><span aria-label=\"Can be Shiny\" class=\"pokemon-cutout-shiny\" role=\"img\"><svg aria-hidden=\"true\"",
+   "spawns": [
+    {
+     "context": [
+      "The following Pokémon will appear in the wild, along with other event-themed Pokémon."
+     ],
+     "pokemon": [
+      {
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pokemon_icon_079_00.png",
+       "name": "Slowpoke",
+       "shiny": false
+      },
+      {
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pokemon_icon_090_00.png",
+       "name": "Shellder",
+       "shiny": false
+      },
+      {
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pokemon_icon_278_00.png",
+       "name": "Wingull",
+       "shiny": false
+      },
+      {
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pokemon_icon_287_00.png",
+       "name": "Slakoth",
+       "shiny": false
+      }
+     ],
+     "section": "Spawns"
+    },
+    {
+     "context": [
+      "You might even encounter Snorlax!"
+     ],
+     "pokemon": [
+      {
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pokemon_icon_143_00.png",
+       "name": "Snorlax",
+       "shiny": false
+      }
+     ],
+     "section": "Spawns"
+    },
+    {
+     "context": [
+      "Additional Pokémon will be featured at different times during the event.",
+      "December 4 at 10:00 a.m. to December 7 at 8:00 p.m. local time"
+     ],
+     "pokemon": [
+      {
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pokemon_icon_187_00.png",
+       "name": "Hoppip",
+       "shiny": false
+      },
+      {
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pokemon_icon_270_00.png",
+       "name": "Lotad",
+       "shiny": false
+      },
+      {
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pokemon_icon_285_00.png",
+       "name": "Shroomish",
+       "shiny": false
+      }
+     ],
+     "section": "Spawns"
+    },
+    {
+     "context": [
+      "You might even encounter Alolan Exeggutor!"
+     ],
+     "pokemon": [
+      {
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pokemon_icon_103_61.png",
+       "name": "Alolan Exeggutor",
+       "shiny": false
+      }
+     ],
+     "section": "Spawns"
+    }
+   ]
+  },
+  "twilight-wishes-2026": {
+   "bonuses": [
+    {
+     "section": "Bonuses",
+     "text": "Increased chance to encounter Shiny Staryu and Shiny Elgyem"
+    },
+    {
+     "section": "Bonuses",
+     "text": "Increased chance to get Lucky Pokémon in trades"
+    },
+    {
+     "section": "Bonuses",
+     "text": "Increased chance to become Lucky Friends"
+    },
+    {
+     "section": "Bonuses",
+     "text": "2× Stardust for catching Pokémon"
+    },
+    {
+     "section": "Bonuses",
+     "text": "GO Pass Deluxe: 3× Stardust for catching Pokémon"
+    }
+   ],
+   "fetchedAt": "2026-11-28T13:03:39Z",
+   "moves": [],
+   "notes": [
+    "Reach Major Milestones on the event GO Pass to unlock the following bonuses.",
+    "You can also earn extra GO Points each day by winning raids, hatching Eggs, and catching Pokémon. See the",
+    "GO Pass section",
+    "for point values."
+   ],
+   "spawnSample": "<h2 class=\"event-section-header spawns\" id=\"spawns\">\nSpawns <img src=\"https://cdn.leekduck.com/assets/img/events/icons/wild.png\"/></h2><p>Staryu and Elgyem have an increased chance of being Shiny during the event.</p><p>The following Pokémon will appear in the wild, along with other event-themed Pokémon.</p><ul class=\"pkmn-list-flex\"><li class=\"pkmn-list-item\"><div class=\"pkmn-list-img pokemon-cutout fairy pokemon-cutout--sprite\"><img alt=\"Clefairy\" loading=\"lazy\" src=\"https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pokemon_icon_035_00.png\"/><span aria-label=\"Can be Shiny\" class=\"pokemon-cutout-shiny\" role=\"img\"><svg aria-hidden=\"true\" viewbox=\"0 0 250 250\"><use href=\"#shiny-icon\"></use></svg></span></div><div class=\"pkmn-name\">Clefairy</div></li><li class=\"pkmn-list-item\"><div class=\"pkmn-list-img pokemon-cutout normal pokemon-cutout--sprite\"><img alt=\"Jigglypuff\" loading=\"lazy\" src=\"https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pokemon_icon_039_00.png\"/><span aria-label=\"Can be Shiny\" class=\"pokemon-cutout-shiny\" role=\"img\"><svg aria-hidden=\"true\" viewbox=\"0 0 250 250\"><use <p>If you’re lucky, you might also encounter Rockruff!</p><ul class=\"pkmn-list-flex\"><li class=\"pkmn-list-item\"><div class=\"pkmn-list-img pokemon-cutout rock pokemon-cutout--sprite\"><img alt=\"Rockruff\" loading=\"lazy\" src=\"https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm744.icon.png\"/><span aria-label=\"Can be Shiny\" class=\"pokemon-cutout-shiny\" role=\"img\"><svg aria-hidden=\"true\" viewbox=\"0 0 250 250\"><use href=\"#shiny-icon\"></use></svg></span></div><div class=\"pkmn-name\">Rockruff</div></li></ul>",
+   "spawns": [
+    {
+     "context": [
+      "Staryu and Elgyem have an increased chance of being Shiny during the event.",
+      "The following Pokémon will appear in the wild, along with other event-themed Pokémon."
+     ],
+     "pokemon": [
+      {
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pokemon_icon_035_00.png",
+       "name": "Clefairy",
+       "shiny": false
+      },
+      {
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pokemon_icon_039_00.png",
+       "name": "Jigglypuff",
+       "shiny": false
+      },
+      {
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pokemon_icon_120_00.png",
+       "name": "Staryu",
+       "shiny": false
+      },
+      {
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pokemon_icon_358_00.png",
+       "name": "Chimecho",
+       "shiny": false
+      },
+      {
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pokemon_icon_517_00.png",
+       "name": "Munna",
+       "shiny": false
+      },
+      {
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pokemon_icon_605_00.png",
+       "name": "Elgyem",
+       "shiny": false
+      }
+     ],
+     "section": "Spawns"
+    },
+    {
+     "context": [
+      "If you’re lucky, you might also encounter Rockruff!"
+     ],
+     "pokemon": [
+      {
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm744.icon.png",
+       "name": "Rockruff",
+       "shiny": false
+      }
+     ],
+     "section": "Spawns"
+    }
+   ]
+  }
+ },
+ "updatedAt": "2026-11-28T13:04:00Z"
+}

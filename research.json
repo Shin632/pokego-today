@@ -1,0 +1,3373 @@
+{
+ "updatedAt": "2026-11-28T13:04:00Z",
+ "categories": [
+  {
+   "name": "Twilight Wishes Tasks",
+   "tasks": [
+    {
+     "text": "Catch 10 Pokémon",
+     "rewards": [
+      {
+       "type": "encounter",
+       "name": "Electrike",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm309.icon.png",
+       "shiny": true,
+       "cpMin": 380,
+       "cpMax": 413,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Cottonee wearing a flower crown",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm546.cSPRING_2024.icon.png",
+       "shiny": true,
+       "cpMin": 271,
+       "cpMax": 300,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Greavard",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm971.icon.png",
+       "shiny": true,
+       "cpMin": 402,
+       "cpMax": 435,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Flamigo",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm973.icon.png",
+       "shiny": true,
+       "cpMin": 1125,
+       "cpMax": 1181,
+       "qty": null
+      }
+     ]
+    },
+    {
+     "text": "Explore 1 km",
+     "rewards": [
+      {
+       "type": "encounter",
+       "name": "Staryu",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm120.icon.png",
+       "shiny": true,
+       "cpMin": 459,
+       "cpMax": 495,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Elgyem",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm605.icon.png",
+       "shiny": true,
+       "cpMin": 554,
+       "cpMax": 593,
+       "qty": null
+      }
+     ]
+    },
+    {
+     "text": "Hatch an Egg",
+     "rewards": [
+      {
+       "type": "encounter",
+       "name": "Maschiff",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm942.icon.png",
+       "shiny": false,
+       "cpMin": 560,
+       "cpMax": 600,
+       "qty": null
+      }
+     ]
+    },
+    {
+     "text": "Spin a PokéStop you haven't visited before",
+     "rewards": [
+      {
+       "type": "item",
+       "name": "Rare Candy XL",
+       "image": "https://cdn.leekduck.com/assets/img/items/Rare%20Candy%20XL.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 1
+      },
+      {
+       "type": "item",
+       "name": "Stardust",
+       "image": "https://cdn.leekduck.com/assets/img/items/Stardust.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 10000
+      }
+     ]
+    },
+    {
+     "text": "Use a Lure Module at a PokéStop",
+     "rewards": [
+      {
+       "type": "encounter",
+       "name": "Applin",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm840.icon.png",
+       "shiny": true,
+       "cpMin": 277,
+       "cpMax": 306,
+       "qty": null
+      }
+     ]
+    },
+    {
+     "text": "Mega Evolve a Pokémon",
+     "rewards": [
+      {
+       "type": "resource",
+       "name": "Beedrill Mega Energy",
+       "image": "https://cdn.leekduck.com/assets/img/mega_energy/Beedrill%20Mega%20Energy.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 25
+      },
+      {
+       "type": "resource",
+       "name": "Houndoom Mega Energy",
+       "image": "https://cdn.leekduck.com/assets/img/mega_energy/Houndoom%20Mega%20Energy.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 25
+      },
+      {
+       "type": "resource",
+       "name": "Manectric Mega Energy",
+       "image": "https://cdn.leekduck.com/assets/img/mega_energy/Manectric%20Mega%20Energy.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 25
+      },
+      {
+       "type": "resource",
+       "name": "Sableye Mega Energy",
+       "image": "https://cdn.leekduck.com/assets/img/mega_energy/Sableye%20Mega%20Energy.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 25
+      }
+     ]
+    }
+   ],
+   "end": "2026-11-30T20:00:00.000",
+   "start": "2026-11-24T10:00:00.000"
+  },
+  {
+   "name": "Twilight Wishes - November 26–30 Tasks",
+   "tasks": [
+    {
+     "text": "Catch 10 Pokémon",
+     "rewards": [
+      {
+       "type": "encounter",
+       "name": "Electrike",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm309.icon.png",
+       "shiny": true,
+       "cpMin": 380,
+       "cpMax": 413,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Cottonee wearing a flower crown",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm546.cSPRING_2024.icon.png",
+       "shiny": true,
+       "cpMin": 271,
+       "cpMax": 300,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Greavard",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm971.icon.png",
+       "shiny": true,
+       "cpMin": 402,
+       "cpMax": 435,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Flamigo",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm973.icon.png",
+       "shiny": true,
+       "cpMin": 1125,
+       "cpMax": 1181,
+       "qty": null
+      }
+     ]
+    },
+    {
+     "text": "Explore 1 km",
+     "rewards": [
+      {
+       "type": "encounter",
+       "name": "Staryu",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm120.icon.png",
+       "shiny": true,
+       "cpMin": 459,
+       "cpMax": 495,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Elgyem",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm605.icon.png",
+       "shiny": true,
+       "cpMin": 554,
+       "cpMax": 593,
+       "qty": null
+      }
+     ]
+    },
+    {
+     "text": "Spin a PokéStop you haven't visited before",
+     "rewards": [
+      {
+       "type": "item",
+       "name": "Rare Candy XL",
+       "image": "https://cdn.leekduck.com/assets/img/items/Rare%20Candy%20XL.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 1
+      },
+      {
+       "type": "item",
+       "name": "Stardust",
+       "image": "https://cdn.leekduck.com/assets/img/items/Stardust.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 10000
+      }
+     ]
+    },
+    {
+     "text": "Use an Incense",
+     "rewards": [
+      {
+       "type": "encounter",
+       "name": "Bramblin",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm946.icon.png",
+       "shiny": false,
+       "cpMin": 343,
+       "cpMax": 375,
+       "qty": null
+      }
+     ]
+    },
+    {
+     "text": "Win a raid",
+     "rewards": [
+      {
+       "type": "encounter",
+       "name": "Gengar wearing a Spooky Festival costume",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm94.cFALL_2022_NOEVOLVE.icon.png",
+       "shiny": true,
+       "cpMin": 1175,
+       "cpMax": 1233,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Drifblim wearing a Halloween Mischief costume",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm426.cHALLOWEEN_2021_NOEVOLVE.icon.png",
+       "shiny": true,
+       "cpMin": 965,
+       "cpMax": 1021,
+       "qty": null
+      }
+     ]
+    },
+    {
+     "text": "Mega Evolve a Pokémon",
+     "rewards": [
+      {
+       "type": "resource",
+       "name": "Beedrill Mega Energy",
+       "image": "https://cdn.leekduck.com/assets/img/mega_energy/Beedrill%20Mega%20Energy.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 25
+      },
+      {
+       "type": "resource",
+       "name": "Houndoom Mega Energy",
+       "image": "https://cdn.leekduck.com/assets/img/mega_energy/Houndoom%20Mega%20Energy.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 25
+      },
+      {
+       "type": "resource",
+       "name": "Manectric Mega Energy",
+       "image": "https://cdn.leekduck.com/assets/img/mega_energy/Manectric%20Mega%20Energy.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 25
+      },
+      {
+       "type": "resource",
+       "name": "Sableye Mega Energy",
+       "image": "https://cdn.leekduck.com/assets/img/mega_energy/Sableye%20Mega%20Energy.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 25
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Catching Tasks",
+   "tasks": [
+    {
+     "text": "Catch 7 Pokémon",
+     "rewards": [
+      {
+       "type": "encounter",
+       "name": "Magikarp",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm129.icon.png",
+       "shiny": true,
+       "cpMin": 99,
+       "cpMax": 117,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Stufful",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm759.icon.png",
+       "shiny": true,
+       "cpMin": 540,
+       "cpMax": 579,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Wimpod",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm767.icon.png",
+       "shiny": true,
+       "cpMin": 191,
+       "cpMax": 215,
+       "qty": null
+      }
+     ]
+    },
+    {
+     "text": "Catch a Dragon-type Pokémon",
+     "rewards": [
+      {
+       "type": "encounter",
+       "name": "Dratini",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm147.icon.png",
+       "shiny": true,
+       "cpMin": 397,
+       "cpMax": 430,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Bagon",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm371.icon.png",
+       "shiny": true,
+       "cpMin": 459,
+       "cpMax": 495,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Axew",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm610.icon.png",
+       "shiny": true,
+       "cpMin": 547,
+       "cpMax": 586,
+       "qty": null
+      },
+      {
+       "type": "item",
+       "name": "Golden Razz Berry",
+       "image": "https://cdn.leekduck.com/assets/img/items/Golden%20Razz%20Berry.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 2
+      },
+      {
+       "type": "item",
+       "name": "Rare Candy",
+       "image": "https://cdn.leekduck.com/assets/img/items/Rare%20Candy.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 3
+      },
+      {
+       "type": "item",
+       "name": "Stardust",
+       "image": "https://cdn.leekduck.com/assets/img/items/Stardust.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 1500
+      },
+      {
+       "type": "item",
+       "name": "Ultra Ball",
+       "image": "https://cdn.leekduck.com/assets/img/items/Ultra%20Ball.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 10
+      }
+     ]
+    },
+    {
+     "text": "Catch a Ditto",
+     "rewards": [
+      {
+       "type": "item",
+       "name": "Golden Razz Berry",
+       "image": "https://cdn.leekduck.com/assets/img/items/Golden%20Razz%20Berry.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 2
+      },
+      {
+       "type": "item",
+       "name": "Rare Candy",
+       "image": "https://cdn.leekduck.com/assets/img/items/Rare%20Candy.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 3
+      },
+      {
+       "type": "item",
+       "name": "Stardust",
+       "image": "https://cdn.leekduck.com/assets/img/items/Stardust.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 1500
+      },
+      {
+       "type": "item",
+       "name": "Ultra Ball",
+       "image": "https://cdn.leekduck.com/assets/img/items/Ultra%20Ball.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 10
+      }
+     ]
+    },
+    {
+     "text": "Catch 7 different species of Pokémon",
+     "rewards": [
+      {
+       "type": "encounter",
+       "name": "Psyduck",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm54.icon.png",
+       "shiny": true,
+       "cpMin": 439,
+       "cpMax": 474,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Seaking",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm119.icon.png",
+       "shiny": true,
+       "cpMin": 877,
+       "cpMax": 926,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Marill",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm183.icon.png",
+       "shiny": true,
+       "cpMin": 172,
+       "cpMax": 197,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Teddiursa",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm216.icon.png",
+       "shiny": true,
+       "cpMin": 530,
+       "cpMax": 569,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Lombre",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm271.icon.png",
+       "shiny": true,
+       "cpMin": 476,
+       "cpMax": 513,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Stunky",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm434.icon.png",
+       "shiny": true,
+       "cpMin": 457,
+       "cpMax": 493,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Liepard",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm510.icon.png",
+       "shiny": true,
+       "cpMin": 744,
+       "cpMax": 791,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Darumaka",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm554.icon.png",
+       "shiny": true,
+       "cpMin": 576,
+       "cpMax": 618,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Clauncher",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm692.icon.png",
+       "shiny": true,
+       "cpMin": 431,
+       "cpMax": 466,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Dedenne",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm702.icon.png",
+       "shiny": true,
+       "cpMin": 743,
+       "cpMax": 789,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Cutiefly",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm742.icon.png",
+       "shiny": true,
+       "cpMin": 349,
+       "cpMax": 380,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Smoliv",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm928.icon.png",
+       "shiny": true,
+       "cpMin": 335,
+       "cpMax": 366,
+       "qty": null
+      }
+     ]
+    },
+    {
+     "text": "Catch 10 Pokémon",
+     "rewards": [
+      {
+       "type": "item",
+       "name": "Pinap Berry",
+       "image": "https://cdn.leekduck.com/assets/img/items/Pinap%20Berry.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 1
+      },
+      {
+       "type": "item",
+       "name": "Poké Ball",
+       "image": "https://cdn.leekduck.com/assets/img/items/Poke%20Ball.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 5
+      },
+      {
+       "type": "item",
+       "name": "Razz Berry",
+       "image": "https://cdn.leekduck.com/assets/img/items/Razz%20Berry.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 3
+      },
+      {
+       "type": "item",
+       "name": "Stardust",
+       "image": "https://cdn.leekduck.com/assets/img/items/Stardust.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 200
+      }
+     ]
+    },
+    {
+     "text": "Catch 10 Grass-type Pokémon",
+     "rewards": [
+      {
+       "type": "encounter",
+       "name": "Sunkern",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm191.icon.png",
+       "shiny": true,
+       "cpMin": 148,
+       "cpMax": 169,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Seedot",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm273.icon.png",
+       "shiny": true,
+       "cpMin": 230,
+       "cpMax": 256,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Shroomish",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm285.icon.png",
+       "shiny": true,
+       "cpMin": 316,
+       "cpMax": 347,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Petilil",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm548.icon.png",
+       "shiny": true,
+       "cpMin": 407,
+       "cpMax": 441,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Skiddo",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm672.icon.png",
+       "shiny": true,
+       "cpMin": 498,
+       "cpMax": 536,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Smoliv",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm928.icon.png",
+       "shiny": true,
+       "cpMin": 335,
+       "cpMax": 366,
+       "qty": null
+      },
+      {
+       "type": "resource",
+       "name": "Sceptile Mega Energy",
+       "image": "https://cdn.leekduck.com/assets/img/mega_energy/Sceptile%20Mega%20Energy.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 10
+      },
+      {
+       "type": "resource",
+       "name": "Venusaur Mega Energy",
+       "image": "https://cdn.leekduck.com/assets/img/mega_energy/Venusaur%20Mega%20Energy.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 10
+      },
+      {
+       "type": "item",
+       "name": "Great Ball",
+       "image": "https://cdn.leekduck.com/assets/img/items/Great%20Ball.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 5
+      },
+      {
+       "type": "item",
+       "name": "Pinap Berry",
+       "image": "https://cdn.leekduck.com/assets/img/items/Pinap%20Berry.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 2
+      },
+      {
+       "type": "item",
+       "name": "Razz Berry",
+       "image": "https://cdn.leekduck.com/assets/img/items/Razz%20Berry.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 6
+      },
+      {
+       "type": "item",
+       "name": "Stardust",
+       "image": "https://cdn.leekduck.com/assets/img/items/Stardust.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 500
+      }
+     ]
+    },
+    {
+     "text": "Catch 10 Ghost-type Pokémon",
+     "rewards": [
+      {
+       "type": "encounter",
+       "name": "Gastly",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm92.icon.png",
+       "shiny": true,
+       "cpMin": 487,
+       "cpMax": 527,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Shuppet",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm353.icon.png",
+       "shiny": true,
+       "cpMin": 401,
+       "cpMax": 436,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Duskull",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm355.icon.png",
+       "shiny": true,
+       "cpMin": 273,
+       "cpMax": 302,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Drifloon",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm425.icon.png",
+       "shiny": true,
+       "cpMin": 475,
+       "cpMax": 513,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Yamask",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm562.icon.png",
+       "shiny": true,
+       "cpMin": 387,
+       "cpMax": 420,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Golett",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm622.icon.png",
+       "shiny": true,
+       "cpMin": 472,
+       "cpMax": 509,
+       "qty": null
+      }
+     ]
+    },
+    {
+     "text": "Catch 10 Dark-type Pokémon",
+     "rewards": [
+      {
+       "type": "encounter",
+       "name": "Murkrow",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm198.icon.png",
+       "shiny": true,
+       "cpMin": 626,
+       "cpMax": 669,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Sneasel",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm215.icon.png",
+       "shiny": true,
+       "cpMin": 831,
+       "cpMax": 879,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Poochyena",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm261.icon.png",
+       "shiny": true,
+       "cpMin": 263,
+       "cpMax": 290,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Purrloin",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm509.icon.png",
+       "shiny": true,
+       "cpMin": 301,
+       "cpMax": 330,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Inkay",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm686.icon.png",
+       "shiny": true,
+       "cpMin": 365,
+       "cpMax": 397,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Nickit",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm827.icon.png",
+       "shiny": true,
+       "cpMin": 278,
+       "cpMax": 306,
+       "qty": null
+      }
+     ]
+    },
+    {
+     "text": "Catch 10 Fire-type Pokémon",
+     "rewards": [
+      {
+       "type": "resource",
+       "name": "Blaziken Mega Energy",
+       "image": "https://cdn.leekduck.com/assets/img/mega_energy/Blaziken%20Mega%20Energy.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 10
+      },
+      {
+       "type": "resource",
+       "name": "Charizard Mega Energy",
+       "image": "https://cdn.leekduck.com/assets/img/mega_energy/Charizard%20Mega%20Energy.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 10
+      },
+      {
+       "type": "item",
+       "name": "Great Ball",
+       "image": "https://cdn.leekduck.com/assets/img/items/Great%20Ball.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 5
+      },
+      {
+       "type": "item",
+       "name": "Pinap Berry",
+       "image": "https://cdn.leekduck.com/assets/img/items/Pinap%20Berry.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 2
+      },
+      {
+       "type": "item",
+       "name": "Razz Berry",
+       "image": "https://cdn.leekduck.com/assets/img/items/Razz%20Berry.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 6
+      },
+      {
+       "type": "item",
+       "name": "Stardust",
+       "image": "https://cdn.leekduck.com/assets/img/items/Stardust.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 500
+      }
+     ]
+    },
+    {
+     "text": "Catch 10 Water-type Pokémon",
+     "rewards": [
+      {
+       "type": "resource",
+       "name": "Blastoise Mega Energy",
+       "image": "https://cdn.leekduck.com/assets/img/mega_energy/Blastoise%20Mega%20Energy.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 10
+      },
+      {
+       "type": "resource",
+       "name": "Swampert Mega Energy",
+       "image": "https://cdn.leekduck.com/assets/img/mega_energy/Swampert%20Mega%20Energy.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 10
+      },
+      {
+       "type": "item",
+       "name": "Great Ball",
+       "image": "https://cdn.leekduck.com/assets/img/items/Great%20Ball.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 5
+      },
+      {
+       "type": "item",
+       "name": "Pinap Berry",
+       "image": "https://cdn.leekduck.com/assets/img/items/Pinap%20Berry.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 2
+      },
+      {
+       "type": "item",
+       "name": "Razz Berry",
+       "image": "https://cdn.leekduck.com/assets/img/items/Razz%20Berry.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 6
+      },
+      {
+       "type": "item",
+       "name": "Stardust",
+       "image": "https://cdn.leekduck.com/assets/img/items/Stardust.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 500
+      }
+     ]
+    },
+    {
+     "text": "Catch 10 Normal-type Pokémon",
+     "rewards": [
+      {
+       "type": "resource",
+       "name": "Pidgeot Mega Energy",
+       "image": "https://cdn.leekduck.com/assets/img/mega_energy/Pidgeot%20Mega%20Energy.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 10
+      },
+      {
+       "type": "item",
+       "name": "Great Ball",
+       "image": "https://cdn.leekduck.com/assets/img/items/Great%20Ball.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 5
+      },
+      {
+       "type": "item",
+       "name": "Pinap Berry",
+       "image": "https://cdn.leekduck.com/assets/img/items/Pinap%20Berry.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 2
+      },
+      {
+       "type": "item",
+       "name": "Razz Berry",
+       "image": "https://cdn.leekduck.com/assets/img/items/Razz%20Berry.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 6
+      },
+      {
+       "type": "item",
+       "name": "Stardust",
+       "image": "https://cdn.leekduck.com/assets/img/items/Stardust.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 500
+      }
+     ]
+    },
+    {
+     "text": "Catch 5 Pokémon with Weather Boost",
+     "rewards": [
+      {
+       "type": "encounter",
+       "name": "Vulpix",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm37.icon.png",
+       "shiny": true,
+       "cpMin": 347,
+       "cpMax": 378,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Poliwag",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm60.icon.png",
+       "shiny": true,
+       "cpMin": 324,
+       "cpMax": 355,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Wingull",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm278.icon.png",
+       "shiny": true,
+       "cpMin": 298,
+       "cpMax": 328,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Hippopotas",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm449.icon.png",
+       "shiny": true,
+       "cpMin": 542,
+       "cpMax": 582,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Snover",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm459.icon.png",
+       "shiny": true,
+       "cpMin": 460,
+       "cpMax": 497,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Roggenrola",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm524.icon.png",
+       "shiny": true,
+       "cpMin": 479,
+       "cpMax": 516,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Vanillite",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm582.icon.png",
+       "shiny": true,
+       "cpMin": 409,
+       "cpMax": 443,
+       "qty": null
+      },
+      {
+       "type": "item",
+       "name": "Pinap Berry",
+       "image": "https://cdn.leekduck.com/assets/img/items/Pinap%20Berry.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 1
+      },
+      {
+       "type": "item",
+       "name": "Poké Ball",
+       "image": "https://cdn.leekduck.com/assets/img/items/Poke%20Ball.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 5
+      },
+      {
+       "type": "item",
+       "name": "Razz Berry",
+       "image": "https://cdn.leekduck.com/assets/img/items/Razz%20Berry.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 3
+      },
+      {
+       "type": "item",
+       "name": "Stardust",
+       "image": "https://cdn.leekduck.com/assets/img/items/Stardust.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 200
+      }
+     ]
+    },
+    {
+     "text": "Catch 10 Pokémon with Weather Boost",
+     "rewards": [
+      {
+       "type": "item",
+       "name": "Great Ball",
+       "image": "https://cdn.leekduck.com/assets/img/items/Great%20Ball.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 5
+      },
+      {
+       "type": "item",
+       "name": "Pinap Berry",
+       "image": "https://cdn.leekduck.com/assets/img/items/Pinap%20Berry.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 2
+      },
+      {
+       "type": "item",
+       "name": "Razz Berry",
+       "image": "https://cdn.leekduck.com/assets/img/items/Razz%20Berry.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 6
+      },
+      {
+       "type": "item",
+       "name": "Stardust",
+       "image": "https://cdn.leekduck.com/assets/img/items/Stardust.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 500
+      }
+     ]
+    },
+    {
+     "text": "Catch 25 Pokémon",
+     "rewards": [
+      {
+       "type": "item",
+       "name": "Rare Candy",
+       "image": "https://cdn.leekduck.com/assets/img/items/Rare%20Candy.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 1
+      }
+     ]
+    },
+    {
+     "text": "Catch 50 Pokémon",
+     "rewards": [
+      {
+       "type": "item",
+       "name": "Poffin",
+       "image": "https://cdn.leekduck.com/assets/img/items/Poffin.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 1
+      }
+     ]
+    },
+    {
+     "text": "Use 5 Berries to help catch Pokémon",
+     "rewards": [
+      {
+       "type": "item",
+       "name": "Great Ball",
+       "image": "https://cdn.leekduck.com/assets/img/items/Great%20Ball.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 5
+      },
+      {
+       "type": "item",
+       "name": "Pinap Berry",
+       "image": "https://cdn.leekduck.com/assets/img/items/Pinap%20Berry.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 2
+      },
+      {
+       "type": "item",
+       "name": "Razz Berry",
+       "image": "https://cdn.leekduck.com/assets/img/items/Razz%20Berry.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 6
+      },
+      {
+       "type": "item",
+       "name": "Stardust",
+       "image": "https://cdn.leekduck.com/assets/img/items/Stardust.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 500
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Throwing Tasks",
+   "tasks": [
+    {
+     "text": "Make 10 Curveball Throws",
+     "rewards": [
+      {
+       "type": "encounter",
+       "name": "Alolan Geodude",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm74.fALOLA.icon.png",
+       "shiny": true,
+       "cpMin": 516,
+       "cpMax": 554,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Electabuzz",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm125.icon.png",
+       "shiny": true,
+       "cpMin": 949,
+       "cpMax": 1000,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Makuhita",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm296.icon.png",
+       "shiny": true,
+       "cpMin": 318,
+       "cpMax": 350,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Swablu",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm333.icon.png",
+       "shiny": true,
+       "cpMin": 322,
+       "cpMax": 353,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Baltoy",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm343.icon.png",
+       "shiny": true,
+       "cpMin": 307,
+       "cpMax": 337,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Dusclops",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm356.icon.png",
+       "shiny": true,
+       "cpMin": 638,
+       "cpMax": 682,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Staravia",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm397.icon.png",
+       "shiny": true,
+       "cpMin": 518,
+       "cpMax": 556,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Emolga",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm587.icon.png",
+       "shiny": true,
+       "cpMin": 657,
+       "cpMax": 700,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Ferroseed",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm597.icon.png",
+       "shiny": true,
+       "cpMin": 370,
+       "cpMax": 403,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Lechonk",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm915.icon.png",
+       "shiny": true,
+       "cpMin": 285,
+       "cpMax": 314,
+       "qty": null
+      }
+     ]
+    },
+    {
+     "text": "Make 10 Nice Throws",
+     "rewards": [
+      {
+       "type": "encounter",
+       "name": "Magmar",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm126.icon.png",
+       "shiny": true,
+       "cpMin": 973,
+       "cpMax": 1026,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Magikarp",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm129.icon.png",
+       "shiny": true,
+       "cpMin": 99,
+       "cpMax": 117,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Sunkern",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm191.icon.png",
+       "shiny": true,
+       "cpMin": 148,
+       "cpMax": 169,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Nuzleaf",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm274.icon.png",
+       "shiny": true,
+       "cpMin": 487,
+       "cpMax": 526,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Roggenrola",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm524.icon.png",
+       "shiny": true,
+       "cpMin": 479,
+       "cpMax": 516,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Galarian Stunfisk",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm618.fGALARIAN.icon.png",
+       "shiny": true,
+       "cpMin": 876,
+       "cpMax": 926,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Stunfisk",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm618.icon.png",
+       "shiny": true,
+       "cpMin": 876,
+       "cpMax": 926,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Trumbeak",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm732.icon.png",
+       "shiny": true,
+       "cpMin": 592,
+       "cpMax": 633,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Mareanie",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm747.icon.png",
+       "shiny": true,
+       "cpMin": 383,
+       "cpMax": 416,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Nymble",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm919.icon.png",
+       "shiny": true,
+       "cpMin": 228,
+       "cpMax": 253,
+       "qty": null
+      }
+     ]
+    },
+    {
+     "text": "Make 2 Excellent Throws",
+     "rewards": [
+      {
+       "type": "encounter",
+       "name": "Dratini",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm147.icon.png",
+       "shiny": true,
+       "cpMin": 397,
+       "cpMax": 430,
+       "qty": null
+      }
+     ]
+    },
+    {
+     "text": "Make 2 Nice Curveball Throws in a row",
+     "rewards": [
+      {
+       "type": "item",
+       "name": "Pinap Berry",
+       "image": "https://cdn.leekduck.com/assets/img/items/Pinap%20Berry.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 1
+      },
+      {
+       "type": "item",
+       "name": "Poké Ball",
+       "image": "https://cdn.leekduck.com/assets/img/items/Poke%20Ball.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 5
+      },
+      {
+       "type": "item",
+       "name": "Razz Berry",
+       "image": "https://cdn.leekduck.com/assets/img/items/Razz%20Berry.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 3
+      },
+      {
+       "type": "item",
+       "name": "Stardust",
+       "image": "https://cdn.leekduck.com/assets/img/items/Stardust.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 200
+      }
+     ]
+    },
+    {
+     "text": "Make 3 Excellent Throws in a row",
+     "rewards": [
+      {
+       "type": "encounter",
+       "name": "Larvitar",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm246.icon.png",
+       "shiny": true,
+       "cpMin": 411,
+       "cpMax": 445,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Beldum",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm374.icon.png",
+       "shiny": true,
+       "cpMin": 385,
+       "cpMax": 418,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Gible",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm443.icon.png",
+       "shiny": true,
+       "cpMin": 441,
+       "cpMax": 477,
+       "qty": null
+      }
+     ]
+    },
+    {
+     "text": "Make 3 Great Curveball Throws",
+     "rewards": [
+      {
+       "type": "item",
+       "name": "Pinap Berry",
+       "image": "https://cdn.leekduck.com/assets/img/items/Pinap%20Berry.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 3
+      },
+      {
+       "type": "item",
+       "name": "Poké Ball",
+       "image": "https://cdn.leekduck.com/assets/img/items/Poke%20Ball.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 10
+      },
+      {
+       "type": "item",
+       "name": "Rare Candy",
+       "image": "https://cdn.leekduck.com/assets/img/items/Rare%20Candy.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 1
+      },
+      {
+       "type": "item",
+       "name": "Razz Berry",
+       "image": "https://cdn.leekduck.com/assets/img/items/Razz%20Berry.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 9
+      },
+      {
+       "type": "item",
+       "name": "Stardust",
+       "image": "https://cdn.leekduck.com/assets/img/items/Stardust.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 1000
+      },
+      {
+       "type": "item",
+       "name": "Ultra Ball",
+       "image": "https://cdn.leekduck.com/assets/img/items/Ultra%20Ball.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 5
+      }
+     ]
+    },
+    {
+     "text": "Make 3 Great Curveball Throws in a row",
+     "rewards": [
+      {
+       "type": "item",
+       "name": "Golden Razz Berry",
+       "image": "https://cdn.leekduck.com/assets/img/items/Golden%20Razz%20Berry.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 2
+      },
+      {
+       "type": "item",
+       "name": "Rare Candy",
+       "image": "https://cdn.leekduck.com/assets/img/items/Rare%20Candy.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 3
+      },
+      {
+       "type": "item",
+       "name": "Stardust",
+       "image": "https://cdn.leekduck.com/assets/img/items/Stardust.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 1500
+      },
+      {
+       "type": "item",
+       "name": "Ultra Ball",
+       "image": "https://cdn.leekduck.com/assets/img/items/Ultra%20Ball.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 10
+      }
+     ]
+    },
+    {
+     "text": "Make 3 Great Throws",
+     "rewards": [
+      {
+       "type": "encounter",
+       "name": "Omanyte",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm138.icon.png",
+       "shiny": true,
+       "cpMin": 620,
+       "cpMax": 662,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Kabuto",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm140.icon.png",
+       "shiny": true,
+       "cpMin": 548,
+       "cpMax": 587,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Clamperl",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm366.icon.png",
+       "shiny": true,
+       "cpMin": 507,
+       "cpMax": 544,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Elgyem",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm605.icon.png",
+       "shiny": true,
+       "cpMin": 554,
+       "cpMax": 593,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Binacle",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm688.icon.png",
+       "shiny": true,
+       "cpMin": 373,
+       "cpMax": 405,
+       "qty": null
+      },
+      {
+       "type": "item",
+       "name": "Pinap Berry",
+       "image": "https://cdn.leekduck.com/assets/img/items/Pinap%20Berry.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 1
+      },
+      {
+       "type": "item",
+       "name": "Poké Ball",
+       "image": "https://cdn.leekduck.com/assets/img/items/Poke%20Ball.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 5
+      },
+      {
+       "type": "item",
+       "name": "Razz Berry",
+       "image": "https://cdn.leekduck.com/assets/img/items/Razz%20Berry.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 3
+      },
+      {
+       "type": "item",
+       "name": "Stardust",
+       "image": "https://cdn.leekduck.com/assets/img/items/Stardust.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 200
+      }
+     ]
+    },
+    {
+     "text": "Make 3 Great Throws in a row",
+     "rewards": [
+      {
+       "type": "encounter",
+       "name": "Lileep",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm345.icon.png",
+       "shiny": true,
+       "cpMin": 515,
+       "cpMax": 553,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Anorith",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm347.icon.png",
+       "shiny": true,
+       "cpMin": 613,
+       "cpMax": 655,
+       "qty": null
+      },
+      {
+       "type": "item",
+       "name": "Pinap Berry",
+       "image": "https://cdn.leekduck.com/assets/img/items/Pinap%20Berry.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 3
+      },
+      {
+       "type": "item",
+       "name": "Poké Ball",
+       "image": "https://cdn.leekduck.com/assets/img/items/Poke%20Ball.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 10
+      },
+      {
+       "type": "item",
+       "name": "Rare Candy",
+       "image": "https://cdn.leekduck.com/assets/img/items/Rare%20Candy.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 1
+      },
+      {
+       "type": "item",
+       "name": "Razz Berry",
+       "image": "https://cdn.leekduck.com/assets/img/items/Razz%20Berry.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 9
+      },
+      {
+       "type": "item",
+       "name": "Stardust",
+       "image": "https://cdn.leekduck.com/assets/img/items/Stardust.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 1000
+      },
+      {
+       "type": "item",
+       "name": "Ultra Ball",
+       "image": "https://cdn.leekduck.com/assets/img/items/Ultra%20Ball.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 5
+      }
+     ]
+    },
+    {
+     "text": "Make 3 Nice Throws in a row",
+     "rewards": [
+      {
+       "type": "item",
+       "name": "Great Ball",
+       "image": "https://cdn.leekduck.com/assets/img/items/Great%20Ball.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 5
+      },
+      {
+       "type": "item",
+       "name": "Pinap Berry",
+       "image": "https://cdn.leekduck.com/assets/img/items/Pinap%20Berry.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 2
+      },
+      {
+       "type": "item",
+       "name": "Stardust",
+       "image": "https://cdn.leekduck.com/assets/img/items/Stardust.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 500
+      },
+      {
+       "type": "item",
+       "name": "Ultra Ball",
+       "image": "https://cdn.leekduck.com/assets/img/items/Ultra%20Ball.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 2
+      }
+     ]
+    },
+    {
+     "text": "Make 5 Curveball Throws in a row",
+     "rewards": [
+      {
+       "type": "item",
+       "name": "Great Ball",
+       "image": "https://cdn.leekduck.com/assets/img/items/Great%20Ball.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 5
+      },
+      {
+       "type": "item",
+       "name": "Pinap Berry",
+       "image": "https://cdn.leekduck.com/assets/img/items/Pinap%20Berry.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 2
+      },
+      {
+       "type": "item",
+       "name": "Razz Berry",
+       "image": "https://cdn.leekduck.com/assets/img/items/Razz%20Berry.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 6
+      },
+      {
+       "type": "item",
+       "name": "Stardust",
+       "image": "https://cdn.leekduck.com/assets/img/items/Stardust.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 500
+      }
+     ]
+    },
+    {
+     "text": "Make 5 Great Curveball Throws in a row",
+     "rewards": [
+      {
+       "type": "encounter",
+       "name": "Spinda 4",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm327.f03.icon.png",
+       "shiny": true,
+       "cpMin": 486,
+       "cpMax": 523,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Spinda 5",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm327.f04.icon.png",
+       "shiny": true,
+       "cpMin": 486,
+       "cpMax": 523,
+       "qty": null
+      }
+     ]
+    },
+    {
+     "text": "Make 5 Nice Throws",
+     "rewards": [
+      {
+       "type": "encounter",
+       "name": "Alolan Diglett",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm50.fALOLA.icon.png",
+       "shiny": true,
+       "cpMin": 264,
+       "cpMax": 292,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Diglett",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm50.icon.png",
+       "shiny": true,
+       "cpMin": 262,
+       "cpMax": 289,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Sudowoodo",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm185.icon.png",
+       "shiny": true,
+       "cpMin": 871,
+       "cpMax": 920,
+       "qty": null
+      },
+      {
+       "type": "item",
+       "name": "Pinap Berry",
+       "image": "https://cdn.leekduck.com/assets/img/items/Pinap%20Berry.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 1
+      },
+      {
+       "type": "item",
+       "name": "Poké Ball",
+       "image": "https://cdn.leekduck.com/assets/img/items/Poke%20Ball.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 5
+      },
+      {
+       "type": "item",
+       "name": "Razz Berry",
+       "image": "https://cdn.leekduck.com/assets/img/items/Razz%20Berry.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 3
+      },
+      {
+       "type": "item",
+       "name": "Stardust",
+       "image": "https://cdn.leekduck.com/assets/img/items/Stardust.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 200
+      }
+     ]
+    },
+    {
+     "text": "Make an Excellent Throw",
+     "rewards": [
+      {
+       "type": "item",
+       "name": "Great Ball",
+       "image": "https://cdn.leekduck.com/assets/img/items/Great%20Ball.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 5
+      },
+      {
+       "type": "item",
+       "name": "Pinap Berry",
+       "image": "https://cdn.leekduck.com/assets/img/items/Pinap%20Berry.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 2
+      },
+      {
+       "type": "item",
+       "name": "Stardust",
+       "image": "https://cdn.leekduck.com/assets/img/items/Stardust.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 500
+      },
+      {
+       "type": "item",
+       "name": "Ultra Ball",
+       "image": "https://cdn.leekduck.com/assets/img/items/Ultra%20Ball.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 2
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Battling Tasks",
+   "tasks": [
+    {
+     "text": "Battle in a raid",
+     "rewards": [
+      {
+       "type": "item",
+       "name": "Rare Candy",
+       "image": "https://cdn.leekduck.com/assets/img/items/Rare%20Candy.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 1
+      }
+     ]
+    },
+    {
+     "text": "Win a raid",
+     "rewards": [
+      {
+       "type": "encounter",
+       "name": "Lapras",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm131.icon.png",
+       "shiny": true,
+       "cpMin": 1076,
+       "cpMax": 1131,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Vaporeon",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm134.icon.png",
+       "shiny": true,
+       "cpMin": 1275,
+       "cpMax": 1335,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Jolteon",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm135.icon.png",
+       "shiny": true,
+       "cpMin": 1180,
+       "cpMax": 1238,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Flareon",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm136.icon.png",
+       "shiny": true,
+       "cpMin": 1239,
+       "cpMax": 1298,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Snorlax",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm143.icon.png",
+       "shiny": true,
+       "cpMin": 1320,
+       "cpMax": 1382,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Piloswine",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm221.icon.png",
+       "shiny": true,
+       "cpMin": 953,
+       "cpMax": 1005,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Sealeo",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm364.icon.png",
+       "shiny": true,
+       "cpMin": 690,
+       "cpMax": 735,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Metang",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm375.icon.png",
+       "shiny": true,
+       "cpMin": 694,
+       "cpMax": 738,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Luxio",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm404.icon.png",
+       "shiny": true,
+       "cpMin": 595,
+       "cpMax": 636,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Gabite",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm444.icon.png",
+       "shiny": true,
+       "cpMin": 757,
+       "cpMax": 803,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Lampent",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm608.icon.png",
+       "shiny": true,
+       "cpMin": 688,
+       "cpMax": 732,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Fletchinder",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm662.icon.png",
+       "shiny": true,
+       "cpMin": 589,
+       "cpMax": 629,
+       "qty": null
+      }
+     ]
+    },
+    {
+     "text": "Battle in 3 raids",
+     "rewards": [
+      {
+       "type": "item",
+       "name": "Poffin",
+       "image": "https://cdn.leekduck.com/assets/img/items/Poffin.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 1
+      }
+     ]
+    },
+    {
+     "text": "Win a three-star raid or higher",
+     "rewards": [
+      {
+       "type": "encounter",
+       "name": "Tirtouga",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm564.icon.png",
+       "shiny": true,
+       "cpMin": 597,
+       "cpMax": 638,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Archen",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm566.icon.png",
+       "shiny": true,
+       "cpMin": 741,
+       "cpMax": 789,
+       "qty": null
+      }
+     ]
+    },
+    {
+     "text": "Win 5 raids",
+     "rewards": [
+      {
+       "type": "encounter",
+       "name": "Alolan Exeggutor",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm103.fALOLA.icon.png",
+       "shiny": true,
+       "cpMin": 1233,
+       "cpMax": 1292,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Alolan Marowak",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm105.fALOLA.icon.png",
+       "shiny": true,
+       "cpMin": 741,
+       "cpMax": 786,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Aerodactyl",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm142.icon.png",
+       "shiny": true,
+       "cpMin": 1136,
+       "cpMax": 1193,
+       "qty": null
+      }
+     ]
+    },
+    {
+     "text": "Win a Max Battle",
+     "rewards": [
+      {
+       "type": "item",
+       "name": "Stardust",
+       "image": "https://cdn.leekduck.com/assets/img/items/Stardust.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 1000
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Exploring Tasks",
+   "tasks": [
+    {
+     "text": "Earn 10000 Stardust",
+     "rewards": [
+      {
+       "type": "item",
+       "name": "Silver Pinap Berry",
+       "image": "https://cdn.leekduck.com/assets/img/items/Silver%20Pinap%20Berry.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 1
+      }
+     ]
+    },
+    {
+     "text": "Earn 10000 XP",
+     "rewards": [
+      {
+       "type": "item",
+       "name": "Golden Razz Berry",
+       "image": "https://cdn.leekduck.com/assets/img/items/Golden%20Razz%20Berry.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 1
+      }
+     ]
+    },
+    {
+     "text": "Explore 2 km",
+     "rewards": [
+      {
+       "type": "encounter",
+       "name": "Growlithe",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm58.icon.png",
+       "shiny": true,
+       "cpMin": 495,
+       "cpMax": 533,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Galarian Ponyta",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm77.fGALARIAN.icon.png",
+       "shiny": true,
+       "cpMin": 683,
+       "cpMax": 727,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Ponyta",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm77.icon.png",
+       "shiny": true,
+       "cpMin": 683,
+       "cpMax": 727,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Galarian Slowpoke",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm79.fGALARIAN.icon.png",
+       "shiny": true,
+       "cpMin": 487,
+       "cpMax": 525,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Slowpoke",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm79.icon.png",
+       "shiny": true,
+       "cpMin": 487,
+       "cpMax": 525,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Lapras",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm131.icon.png",
+       "shiny": true,
+       "cpMin": 1076,
+       "cpMax": 1131,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Houndour",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm228.icon.png",
+       "shiny": true,
+       "cpMin": 491,
+       "cpMax": 529,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Electrike",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm309.icon.png",
+       "shiny": true,
+       "cpMin": 380,
+       "cpMax": 413,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Wailmer",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm320.icon.png",
+       "shiny": true,
+       "cpMin": 584,
+       "cpMax": 629,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Herdier",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm507.icon.png",
+       "shiny": true,
+       "cpMin": 636,
+       "cpMax": 678,
+       "qty": null
+      }
+     ]
+    },
+    {
+     "text": "Hatch an Egg",
+     "rewards": [
+      {
+       "type": "encounter",
+       "name": "Alolan Marowak",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm105.fALOLA.icon.png",
+       "shiny": true,
+       "cpMin": 741,
+       "cpMax": 786,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Scyther",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm123.icon.png",
+       "shiny": true,
+       "cpMin": 1104,
+       "cpMax": 1160,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Noctowl",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm164.icon.png",
+       "shiny": true,
+       "cpMin": 819,
+       "cpMax": 867,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Sudowoodo",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm185.icon.png",
+       "shiny": true,
+       "cpMin": 871,
+       "cpMax": 920,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Nincada",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm290.icon.png",
+       "shiny": true,
+       "cpMin": 299,
+       "cpMax": 329,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Lileep",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm345.icon.png",
+       "shiny": true,
+       "cpMin": 515,
+       "cpMax": 553,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Anorith",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm347.icon.png",
+       "shiny": true,
+       "cpMin": 613,
+       "cpMax": 655,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Combee",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm415.icon.png",
+       "shiny": true,
+       "cpMin": 188,
+       "cpMax": 212,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Audino",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm531.icon.png",
+       "shiny": true,
+       "cpMin": 676,
+       "cpMax": 721,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Trubbish",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm568.icon.png",
+       "shiny": true,
+       "cpMin": 395,
+       "cpMax": 428,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Cubchoo",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm613.icon.png",
+       "shiny": true,
+       "cpMin": 422,
+       "cpMax": 458,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Stufful",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm759.icon.png",
+       "shiny": true,
+       "cpMin": 540,
+       "cpMax": 579,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Wimpod",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm767.icon.png",
+       "shiny": true,
+       "cpMin": 191,
+       "cpMax": 215,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Fidough",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm926.icon.png",
+       "shiny": true,
+       "cpMin": 389,
+       "cpMax": 422,
+       "qty": null
+      }
+     ]
+    },
+    {
+     "text": "Hatch 2 Eggs",
+     "rewards": [
+      {
+       "type": "encounter",
+       "name": "Sneasel",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm215.icon.png",
+       "shiny": true,
+       "cpMin": 831,
+       "cpMax": 879,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Mawile",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm303.icon.png",
+       "shiny": true,
+       "cpMin": 658,
+       "cpMax": 700,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Feebas",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm349.icon.png",
+       "shiny": true,
+       "cpMin": 99,
+       "cpMax": 117,
+       "qty": null
+      },
+      {
+       "type": "item",
+       "name": "Rare Candy",
+       "image": "https://cdn.leekduck.com/assets/img/items/Rare%20Candy.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 1
+      }
+     ]
+    },
+    {
+     "text": "Hatch 5 Eggs",
+     "rewards": [
+      {
+       "type": "item",
+       "name": "Poffin",
+       "image": "https://cdn.leekduck.com/assets/img/items/Poffin.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 1
+      }
+     ]
+    },
+    {
+     "text": "Spin 3 PokéStops or Gyms",
+     "rewards": [
+      {
+       "type": "encounter",
+       "name": "Doduo",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm84.icon.png",
+       "shiny": true,
+       "cpMin": 477,
+       "cpMax": 514,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Remoraid",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm223.icon.png",
+       "shiny": true,
+       "cpMin": 358,
+       "cpMax": 391,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Ralts",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm280.icon.png",
+       "shiny": true,
+       "cpMin": 206,
+       "cpMax": 231,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Aron",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm304.icon.png",
+       "shiny": true,
+       "cpMin": 522,
+       "cpMax": 560,
+       "qty": null
+      },
+      {
+       "type": "item",
+       "name": "Great Ball",
+       "image": "https://cdn.leekduck.com/assets/img/items/Great%20Ball.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 5
+      },
+      {
+       "type": "item",
+       "name": "Pinap Berry",
+       "image": "https://cdn.leekduck.com/assets/img/items/Pinap%20Berry.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 2
+      },
+      {
+       "type": "item",
+       "name": "Razz Berry",
+       "image": "https://cdn.leekduck.com/assets/img/items/Razz%20Berry.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 6
+      },
+      {
+       "type": "item",
+       "name": "Stardust",
+       "image": "https://cdn.leekduck.com/assets/img/items/Stardust.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 500
+      }
+     ]
+    },
+    {
+     "text": "Spin 5 PokéStops",
+     "rewards": [
+      {
+       "type": "encounter",
+       "name": "Alolan Sandshrew",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm27.fALOLA.icon.png",
+       "shiny": true,
+       "cpMin": 516,
+       "cpMax": 554,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Sandshrew",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm27.icon.png",
+       "shiny": true,
+       "cpMin": 503,
+       "cpMax": 540,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Dunsparce",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm206.icon.png",
+       "shiny": true,
+       "cpMin": 679,
+       "cpMax": 724,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Sneasel",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm215.icon.png",
+       "shiny": true,
+       "cpMin": 831,
+       "cpMax": 879,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Galarian Zigzagoon",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm263.fGALARIAN.icon.png",
+       "shiny": true,
+       "cpMin": 193,
+       "cpMax": 218,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Zigzagoon",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm263.icon.png",
+       "shiny": true,
+       "cpMin": 193,
+       "cpMax": 218,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Snorunt",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm361.icon.png",
+       "shiny": true,
+       "cpMin": 349,
+       "cpMax": 380,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Bidoof",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm399.icon.png",
+       "shiny": true,
+       "cpMin": 280,
+       "cpMax": 309,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Hippopotas",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm449.icon.png",
+       "shiny": true,
+       "cpMin": 542,
+       "cpMax": 582,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Trubbish",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm568.icon.png",
+       "shiny": true,
+       "cpMin": 395,
+       "cpMax": 428,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Ducklett",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm580.icon.png",
+       "shiny": true,
+       "cpMin": 335,
+       "cpMax": 367,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Dewpider",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm751.icon.png",
+       "shiny": true,
+       "cpMin": 277,
+       "cpMax": 306,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Skwovet",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm819.icon.png",
+       "shiny": true,
+       "cpMin": 371,
+       "cpMax": 404,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Blipbug",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/poke_capture_0824_000_mf_n_00000000_f_n.png",
+       "shiny": false,
+       "cpMin": 133,
+       "cpMax": 153,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Arrokuda",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm846.icon.png",
+       "shiny": false,
+       "cpMin": 355,
+       "cpMax": 387,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Tarountula",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm917.icon.png",
+       "shiny": false,
+       "cpMin": 219,
+       "cpMax": 244,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Nacli",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm932.icon.png",
+       "shiny": false,
+       "cpMin": 381,
+       "cpMax": 414,
+       "qty": null
+      }
+     ]
+    },
+    {
+     "text": "Spin 5 PokéStops or Gyms",
+     "rewards": [
+      {
+       "type": "encounter",
+       "name": "Growlithe",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm58.icon.png",
+       "shiny": true,
+       "cpMin": 495,
+       "cpMax": 533,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Hisuian Growlithe",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm58.fHISUIAN.icon.png",
+       "shiny": true,
+       "cpMin": 527,
+       "cpMax": 566,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Galarian Slowpoke",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm79.fGALARIAN.icon.png",
+       "shiny": true,
+       "cpMin": 487,
+       "cpMax": 525,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Slowpoke",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm79.icon.png",
+       "shiny": true,
+       "cpMin": 487,
+       "cpMax": 525,
+       "qty": null
+      }
+     ]
+    },
+    {
+     "text": "Take a snapshot of a wild Pokémon",
+     "rewards": [
+      {
+       "type": "encounter",
+       "name": "Trapinch",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm328.icon.png",
+       "shiny": true,
+       "cpMin": 507,
+       "cpMax": 546,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Croagunk",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm453.icon.png",
+       "shiny": true,
+       "cpMin": 375,
+       "cpMax": 408,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Cottonee",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm546.icon.png",
+       "shiny": true,
+       "cpMin": 271,
+       "cpMax": 300,
+       "qty": null
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Training Tasks",
+   "tasks": [
+    {
+     "text": "Evolve a Pokémon",
+     "rewards": [
+      {
+       "type": "encounter",
+       "name": "Seadra",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm117.icon.png",
+       "shiny": true,
+       "cpMin": 848,
+       "cpMax": 897,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Eevee",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm133.icon.png",
+       "shiny": true,
+       "cpMin": 424,
+       "cpMax": 459,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Ursaring",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm217.icon.png",
+       "shiny": true,
+       "cpMin": 1203,
+       "cpMax": 1262,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Magcargo",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm219.icon.png",
+       "shiny": true,
+       "cpMin": 685,
+       "cpMax": 729,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Grumpig",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm326.icon.png",
+       "shiny": true,
+       "cpMin": 964,
+       "cpMax": 1015,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Whirlipede",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm544.icon.png",
+       "shiny": true,
+       "cpMin": 454,
+       "cpMax": 490,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Eelektrik",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm603.icon.png",
+       "shiny": true,
+       "cpMin": 691,
+       "cpMax": 735,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Diggersby",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm660.icon.png",
+       "shiny": true,
+       "cpMin": 605,
+       "cpMax": 646,
+       "qty": null
+      }
+     ]
+    },
+    {
+     "text": "Power up Pokémon 15 times",
+     "rewards": [
+      {
+       "type": "item",
+       "name": "Rare Candy",
+       "image": "https://cdn.leekduck.com/assets/img/items/Rare%20Candy.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 3
+      }
+     ]
+    },
+    {
+     "text": "Power up Pokémon 3 times",
+     "rewards": [
+      {
+       "type": "encounter",
+       "name": "Bulbasaur",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm1.icon.png",
+       "shiny": true,
+       "cpMin": 442,
+       "cpMax": 477,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Charmander",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm4.icon.png",
+       "shiny": true,
+       "cpMin": 387,
+       "cpMax": 420,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Squirtle",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm7.icon.png",
+       "shiny": true,
+       "cpMin": 372,
+       "cpMax": 405,
+       "qty": null
+      }
+     ]
+    },
+    {
+     "text": "Power up Pokémon 5 times",
+     "rewards": [
+      {
+       "type": "encounter",
+       "name": "Snivy",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm495.icon.png",
+       "shiny": true,
+       "cpMin": 333,
+       "cpMax": 364,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Tepig",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm498.icon.png",
+       "shiny": true,
+       "cpMin": 428,
+       "cpMax": 464,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Oshawott",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm501.icon.png",
+       "shiny": true,
+       "cpMin": 413,
+       "cpMax": 448,
+       "qty": null
+      },
+      {
+       "type": "resource",
+       "name": "Aggron Mega Energy",
+       "image": "https://cdn.leekduck.com/assets/img/mega_energy/Aggron%20Mega%20Energy.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 10
+      },
+      {
+       "type": "resource",
+       "name": "Beedrill Mega Energy",
+       "image": "https://cdn.leekduck.com/assets/img/mega_energy/Beedrill%20Mega%20Energy.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 10
+      },
+      {
+       "type": "resource",
+       "name": "Blastoise Mega Energy",
+       "image": "https://cdn.leekduck.com/assets/img/mega_energy/Blastoise%20Mega%20Energy.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 10
+      },
+      {
+       "type": "resource",
+       "name": "Charizard Mega Energy",
+       "image": "https://cdn.leekduck.com/assets/img/mega_energy/Charizard%20Mega%20Energy.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 10
+      },
+      {
+       "type": "resource",
+       "name": "Manectric Mega Energy",
+       "image": "https://cdn.leekduck.com/assets/img/mega_energy/Manectric%20Mega%20Energy.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 10
+      },
+      {
+       "type": "resource",
+       "name": "Pidgeot Mega Energy",
+       "image": "https://cdn.leekduck.com/assets/img/mega_energy/Pidgeot%20Mega%20Energy.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 10
+      },
+      {
+       "type": "resource",
+       "name": "Venusaur Mega Energy",
+       "image": "https://cdn.leekduck.com/assets/img/mega_energy/Venusaur%20Mega%20Energy.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 10
+      }
+     ]
+    },
+    {
+     "text": "Power up Pokémon 7 times",
+     "rewards": [
+      {
+       "type": "encounter",
+       "name": "Rowlet",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm722.icon.png",
+       "shiny": true,
+       "cpMin": 418,
+       "cpMax": 453,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Litten",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm725.icon.png",
+       "shiny": true,
+       "cpMin": 409,
+       "cpMax": 443,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Popplio",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm728.icon.png",
+       "shiny": true,
+       "cpMin": 448,
+       "cpMax": 483,
+       "qty": null
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Buddy & Friendship Tasks",
+   "tasks": [
+    {
+     "text": "Earn 2 Candies walking with your buddy",
+     "rewards": [
+      {
+       "type": "encounter",
+       "name": "Jigglypuff",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm39.icon.png",
+       "shiny": true,
+       "cpMin": 277,
+       "cpMax": 310,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Buneary",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm427.icon.png",
+       "shiny": true,
+       "cpMin": 501,
+       "cpMax": 539,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Glameow",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm431.icon.png",
+       "shiny": true,
+       "cpMin": 367,
+       "cpMax": 400,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Bunnelby",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm659.icon.png",
+       "shiny": true,
+       "cpMin": 212,
+       "cpMax": 237,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Litleo",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm667.icon.png",
+       "shiny": true,
+       "cpMin": 571,
+       "cpMax": 611,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Dedenne",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm702.icon.png",
+       "shiny": true,
+       "cpMin": 743,
+       "cpMax": 789,
+       "qty": null
+      }
+     ]
+    },
+    {
+     "text": "Earn 3 Candies walking with your buddy",
+     "rewards": [
+      {
+       "type": "encounter",
+       "name": "Galarian Stunfisk",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm618.fGALARIAN.icon.png",
+       "shiny": true,
+       "cpMin": 876,
+       "cpMax": 926,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Stunfisk",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm618.icon.png",
+       "shiny": true,
+       "cpMin": 876,
+       "cpMax": 926,
+       "qty": null
+      }
+     ]
+    },
+    {
+     "text": "Send 3 Gifts and add a sticker to each",
+     "rewards": [
+      {
+       "type": "encounter",
+       "name": "Clefairy",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm35.icon.png",
+       "shiny": true,
+       "cpMin": 458,
+       "cpMax": 495,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Jigglypuff",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm39.icon.png",
+       "shiny": true,
+       "cpMin": 277,
+       "cpMax": 310,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Eevee",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm133.icon.png",
+       "shiny": true,
+       "cpMin": 424,
+       "cpMax": 459,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Togetic",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm176.icon.png",
+       "shiny": true,
+       "cpMin": 688,
+       "cpMax": 732,
+       "qty": null
+      }
+     ]
+    },
+    {
+     "text": "Trade a Pokémon",
+     "rewards": [
+      {
+       "type": "encounter",
+       "name": "Poliwhirl",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm61.icon.png",
+       "shiny": true,
+       "cpMin": 568,
+       "cpMax": 608,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Kadabra",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm64.icon.png",
+       "shiny": true,
+       "cpMin": 832,
+       "cpMax": 882,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Machoke",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm67.icon.png",
+       "shiny": true,
+       "cpMin": 822,
+       "cpMax": 870,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Haunter",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm93.icon.png",
+       "shiny": true,
+       "cpMin": 792,
+       "cpMax": 841,
+       "qty": null
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Team GO Rocket Tasks",
+   "tasks": [
+    {
+     "text": "Defeat a Team GO Rocket Grunt",
+     "rewards": [
+      {
+       "type": "encounter",
+       "name": "Arbok",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm24.icon.png",
+       "shiny": true,
+       "cpMin": 777,
+       "cpMax": 823,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Meowth",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm52.icon.png",
+       "shiny": true,
+       "cpMin": 292,
+       "cpMax": 320,
+       "qty": null
+      },
+      {
+       "type": "encounter",
+       "name": "Weezing",
+       "image": "https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm110.icon.png",
+       "shiny": true,
+       "cpMin": 932,
+       "cpMax": 982,
+       "qty": null
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Sponsored Tasks",
+   "tasks": [
+    {
+     "text": "Catch 8 Pokémon",
+     "rewards": [
+      {
+       "type": "item",
+       "name": "Rare Candy",
+       "image": "https://cdn.leekduck.com/assets/img/items/Rare%20Candy.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 1
+      },
+      {
+       "type": "item",
+       "name": "Stardust",
+       "image": "https://cdn.leekduck.com/assets/img/items/Stardust.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 1000
+      }
+     ]
+    },
+    {
+     "text": "Send 3 Gifts to friends",
+     "rewards": [
+      {
+       "type": "item",
+       "name": "Rare Candy",
+       "image": "https://cdn.leekduck.com/assets/img/items/Rare%20Candy.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 1
+      },
+      {
+       "type": "item",
+       "name": "Stardust",
+       "image": "https://cdn.leekduck.com/assets/img/items/Stardust.png",
+       "shiny": false,
+       "cpMin": null,
+       "cpMax": null,
+       "qty": 1000
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "samples": [
+  {
+   "raw": "×1 Rare Candy XL ×1",
+   "html": "<li class=\"reward\" data-reward-type=\"item\"><span class=\"reward-bubble resource-reward\"><img class=\"reward-image\" src=\"https://cdn.leekduck.com/assets/img/items/Rare Candy XL.png\"/><div class=\"quantity\">×1</div></span><span class=\"reward-label\">Rare Candy XL <span>×1</span></span></li>"
+  },
+  {
+   "raw": "×10000 Stardust ×10000",
+   "html": "<li class=\"reward\" data-reward-type=\"item\"><span class=\"reward-bubble resource-reward\"><img class=\"reward-image\" src=\"https://cdn.leekduck.com/assets/img/items/Stardust.png\"/><div class=\"quantity\">×10000</div></span><span class=\"reward-label\">Stardust <span>×10000</span></span></li>"
+  },
+  {
+   "raw": "×25 Beedrill Mega Energy ×25",
+   "html": "<li class=\"reward\" data-reward-filter=\"less\" data-reward-type=\"resource\"><span class=\"reward-bubble resource-reward\"><img class=\"reward-image\" src=\"https://cdn.leekduck.com/assets/img/mega_energy/Beedrill Mega Energy.png\"/><div class=\"resource-info\"><img class=\"reward-image\" src=\"https://cdn.leekduck.com/assets/img/pokemon_icons_crop/pm15.icon.png\"/></div><div class=\"quantity\">×25</div></span><span class=\"reward-label\">Beedrill Mega Energy <span>×25</span></span></li>"
+  }
+ ]
+}
