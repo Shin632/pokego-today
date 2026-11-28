@@ -121,7 +121,7 @@ const info = (p) => p.evaluate(() => ({
   for (const k of Object.keys(saved)) for (const bad of ['{', 'null', '[1,2,"x"]', '{"a":1}', '[{"items":null,"price":"abc"}]']) {
     const p = await open(b, 'shop.html', { storage: { [k]: bad } });
     const t = await p.$eval('body', e => e.innerText);
-    check(`shop: 保存データ ${k}=${bad} でも開ける`, !p.errors.length && t.includes('ボックスの名前'), p.errors.join(' / ').slice(0, 150));
+    check(`shop: 保存データ ${k}=${bad} でも開ける`, !p.errors.length && t.includes('ボックスの種類'), p.errors.join(' / ').slice(0, 150));
     await p.ctx.close();
   }
   console.log(`保存に使うキー: ${Object.keys(saved).join(', ')}（最初から: ${keys.join(', ') || 'なし'}）`);

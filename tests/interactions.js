@@ -135,6 +135,20 @@ const close = async (p, label) => { check(`${label}: JavaScriptエラーなし`,
     await close(p2, 'search hash');
   }
 
+  // ===== iOS の「連絡先を自動入力」が出ないように（11/28）=====
+  // Safari は、入力欄の見出し・例文・id・name や直前の説明に「名前」「name」があると、人の名前の欄とみなす
+  for (const pg of ['search.html', 'iv.html', 'research.html', 'shop.html']) {
+    const p = await open(b, pg);
+    const bad = await p.evaluate(() => [...document.querySelectorAll('input[type=search], input[type=text], input:not([type])')].flatMap(el => {
+      const lab = el.id ? [...document.querySelectorAll(`label[for="${el.id}"]`)].map(l => l.textContent).join(' ') : '';
+      const prev = el.previousElementSibling ? el.previousElementSibling.textContent : '';
+      const txt = [el.id, el.name, el.placeholder, el.getAttribute('aria-label'), lab, prev].join(' ');
+      return /名前|氏名|name/i.test(txt) ? [`#${el.id}: ${txt.trim().slice(0, 60)}`] : [];
+    }));
+    check(`autofill: ${pg} の入力欄に「名前」「name」が無い（iOS の連絡先の自動入力を出さない）`, !bad.length, bad.join(' / '));
+    await close(p, 'autofill ' + pg);
+  }
+
   // ===== iv.html =====
   {
     const p = await open(b, 'iv.html');

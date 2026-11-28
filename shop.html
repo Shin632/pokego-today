@@ -125,7 +125,7 @@ details.box>summary{padding:10px 0}
   <h2 id="formTitle">手で入れる・読み取りを直す</h2>
   <div class="panel" id="form">
     <div class="row2">
-      <div><label class="f" for="bname">ボックスの名前（任意）</label><input id="bname" type="text" placeholder="例：レイドボックス" style="width:100%"></div>
+      <div><label class="f" for="bkind">ボックスの種類（任意）</label><input id="bkind" type="text" placeholder="例：レイドボックス" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" style="width:100%"></div>
       <div><label class="f" for="bprice">値段（ポケコイン）</label><input id="bprice" type="number" inputmode="numeric" min="0" placeholder="例：275" style="width:100%"></div>
     </div>
     <div class="lbl">よく見るボックスから入れる（中身と値段が入ります。値段は日によって違うので確認してください）</div>
@@ -311,7 +311,7 @@ function resultHtml(ev){
 // ===== 入力フォーム =====
 const optionsHtml = (sel) => ITEMS.map(([id, name]) => `<option value="${id}"${id === sel ? " selected" : ""}>${esc(name)}</option>`).join("");
 function renderForm(){
-  document.getElementById("bname").value = draft.name || "";
+  document.getElementById("bkind").value = draft.name || "";
   document.getElementById("bprice").value = draft.price ?? "";
   document.getElementById("tpls").innerHTML = TEMPLATES.map((t, i) => `<button class="btn tpl" type="button" data-t="${i}">${esc(t.name)}</button>`).join("");
   document.getElementById("quick").innerHTML = QUICK.map(id => `<button class="btn" type="button" data-q="${id}">＋${esc(itemName(id).replace(/（.*）/, ""))}</button>`).join("");
@@ -325,7 +325,7 @@ function renderResult(){
   document.getElementById("result").innerHTML = resultHtml(evaluate(draft));
   store(DRAFT_KEY, draft);
 }
-document.getElementById("bname").addEventListener("input", e => { draft.name = e.target.value; store(DRAFT_KEY, draft); });
+document.getElementById("bkind").addEventListener("input", e => { draft.name = e.target.value; store(DRAFT_KEY, draft); });
 document.getElementById("bprice").addEventListener("input", e => { draft.price = e.target.value; renderResult(); });
 const onRow = (e) => {
   const row = e.target.closest(".it"); if (!row) return; const i = +row.dataset.i;
